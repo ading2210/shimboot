@@ -11,6 +11,7 @@ create_loop() {
   echo $loop_device
 }
 
+#useful in the future... maybe
 make_mountable() {
   sh lib/ssd_util.sh --no_resign_kernel --remove_rootfs_verification -i $1
   printf '\000' | dd of=$1 seek=$((0x464 + 3)) conv=notrunc count=1 bs=1 
@@ -60,6 +61,7 @@ partition_disk() {
 }
 
 safe_mount() {
+  umount $2 || /bin/true
   rm -rf $2
   mkdir -p $2
   mount $1 $2

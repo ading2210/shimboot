@@ -11,11 +11,11 @@ fi
 . ./build_image.sh
 
 print_help() {
-  echo "Usage: ./build.sh path_to_shim"
+  echo "Usage: ./build.sh output_path shim_path"
 }
 
 check_deps() {
-  local needed_commands="cpio binwalk pcregrep cgpt realpath"
+  local needed_commands="cpio binwalk pcregrep realpath"
   for command in $needed_commands; do
     if ! command -v $command &> /dev/null; then
       echo $command
@@ -41,7 +41,8 @@ if [ "${missing_commands}" ]; then
   exit 1
 fi
 
-shim_path=$(realpath "${1}")
+output_path=$(realpath "${1}")
+shim_path=$(realpath "${2}")
 
 echo "created loop device for shim"
 shim_loop=$(create_loop "${shim_path}")
@@ -78,5 +79,22 @@ cd $previous_dir
 echo "patching initramfs"
 patch_initramfs $initramfs_dir
 
+echo "creating disk image"
+create_image $output_path 20 200
+
+echo "creating loop device for the image"
+image_loop=$(create_loop ${output_path})
+
+echo "creating partitions on the disk image"
+create_partitions $image_loop "${kernel_dir}/kernel.bin"
+
+echo "copying data into the image"
+rootfs_dir=/tmp/rootfs
+rm $rootfs_dir -rf 
+mkdir $rootfs_dir
+touch $rootfs_dir/testfile
+populate_partitions $image_loop $initramfs_dir $rootfs_dir
+
 echo "cleaning up loop devices"
 losetup -d $shim_loop
+losetup -d $image_loop
