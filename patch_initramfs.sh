@@ -7,10 +7,11 @@ if [ "$DEBUG" ]; then
   set -x
 fi
 
-initramfs_path=$(realpath $1)
+patch_initramfs() {
+  initramfs_path=$(realpath $1)
 
-rm "${initramfs_path}/init" -f
-cp bootloader/init.sh "${initramfs_path}/bin/init"
-cp bootloader/bootstrap.sh "${initramfs_path}/bin/bootstrap.sh"
+  rm "${initramfs_path}/init" -f
+  cp -r bootloader/* "${initramfs_path}/"
 
-find ${initramfs_path}/bin -name "*" -exec chmod +x {} \;
+  find ${initramfs_path}/bin -name "*" -exec chmod +x {} \;
+}

@@ -7,6 +7,8 @@ if [ "$DEBUG" ]; then
   set -x
 fi
 
+. ./patch_initramfs.sh
+
 print_help() {
   echo "Usage: ./build.sh path_to_shim"
 }
@@ -79,7 +81,7 @@ echo "shim initramfs extracted to ${initramfs_dir}"
 cd $previous_dir
 
 echo "patching initramfs"
-exec ./patch_initramfs.sh $initramfs_dir
+patch_initramfs $initramfs_dir
 
 echo "cleaning up loop devices"
 losetup -d $shim_loop
