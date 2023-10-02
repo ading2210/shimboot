@@ -8,6 +8,7 @@ if [ "$DEBUG" ]; then
 fi
 
 . ./patch_initramfs.sh
+. ./build_image.sh
 
 print_help() {
   echo "Usage: ./build.sh path_to_shim"
@@ -20,12 +21,6 @@ check_deps() {
       echo $command
     fi
   done
-}
-
-create_loop() {
-  local loop_device=$(losetup -f)
-  losetup -P $loop_device "${1}"
-  echo $loop_device
 }
 
 if [ "$EUID" -ne 0 ]; then

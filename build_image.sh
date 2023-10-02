@@ -5,6 +5,12 @@ if [ "$DEBUG" ]; then
   set -x
 fi
 
+create_loop() {
+  local loop_device=$(losetup -f)
+  losetup -P $loop_device "${1}"
+  echo $loop_device
+}
+
 make_mountable() {
   sh lib/ssd_util.sh --no_resign_kernel --remove_rootfs_verification -i $1
   printf '\000' | dd of=$1 seek=$((0x464 + 3)) conv=notrunc count=1 bs=1 
@@ -14,7 +20,7 @@ partition_disk() {
   local image_path=$(realpath "${1}")
   local bootloader_size=${2}
 
-  #create partitions
+  #create partition table with fdisk
   ( 
     echo g #new gpt disk label
 
@@ -53,6 +59,50 @@ partition_disk() {
   ) | fdisk $image_path
 }
 
+safe_mount() {
+  rm -rf $2
+  mkdir -p $2
+  mount $1 $2
+}
+
+create_partitions() {
+  local image_loop=$(realpath "${1}")
+  local kernel_path=$(realpath "${2}")
+
+  #create stateful
+  mkfs.ext4 "${image_loop}p1"
+  #copy kernel
+  dd if=$kernel_path of="${image_loop}p2" bs=1M oflag=sync
+  #create bootloader partition
+  mkfs.ext2 "${image_loop}p3"
+  #create rootfs partition
+  mkfs.ext4 "${image_loop}p4"
+}
+
+populate_partitions() {
+  local image_loop=$(realpath "${1}")
+  local bootloader_dir=$(realpath "${2}")
+  local rootfs_dir=$(realpath "${3}")
+
+  #mount and write empty file to stateful
+  local stateful_mount=/tmp/shim_stateful
+  safe_mount "${image_loop}p1" $stateful_mount
+  mkdir -p $stateful_mount/dev_image/etc/
+  touch $stateful_mount/dev_image/etc/lsb-factory
+  umount $stateful_mount
+
+  #mount and write to bootloader rootfs
+  local bootloader_mount=/tmp/shim_bootloader
+  safe_mount "${image_loop}p3" $bootloader_mount
+  cp -r $bootloader_dir/* $bootloader_mount
+  umount $bootloader_mount
+
+  local rootfs_mount=/tmp/shim_rootfs
+  safe_mount "${image_loop}p4" $rootfs_mount
+  cp -r $rootfs_dir/* $rootfs_mount
+  umount $rootfs_mount
+}
+
 create_image() {
   local image_path=$(realpath "${1}")
   local bootloader_size=${2}
@@ -65,4 +115,10 @@ create_image() {
   partition_disk $image_path $bootloader_size
 }
 
-create_image ./test.bin 20 200
+if [ $0 == "./build_image.sh" ]; then
+  create_image ./test.bin 20 200
+  image_loop=$(create_loop ./test.bin)
+  create_partitions $image_loop /tmp/shim_kernel/kernel.bin
+  populate_partitions $image_loop ./tmp/shim_initramfs ./lib
+  losetup -d $image_loop
+fi
