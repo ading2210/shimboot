@@ -56,10 +56,13 @@ echo "extracting initramfs cpio archive"
 initramfs_dir=/tmp/shim_initramfs
 rm -rf $initramfs_dir
 cat $cpio_file | cpio -D $initramfs_dir -imd --quiet
-
 echo "shim initramfs extracted to ${initramfs_dir}"
 
+#leave /tmp
 cd $previous_dir
+
+echo "patching initramfs"
+exec ./patch_initramfs.sh $initramfs_dir
 
 echo "cleaning up loop devices"
 losetup -d $shim_loop
