@@ -11,9 +11,18 @@ print_help() {
   echo "Usage: ./build.sh path_to_shim"
 }
 
+check_deps() {
+  local needed_commands="cpio binwalk pcregrep"
+  for command in $needed_commands; do
+    if ! command -v $command &> /dev/null; then
+      echo $command
+    fi
+  done
+}
+
 create_loop() {
   local loop_device=$(losetup -f)
-  losetup -P $loop_device $1
+  losetup -P $loop_device "${1}"
   echo $loop_device
 }
 
@@ -27,10 +36,18 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-shim_path=$(realpath $1)
+missing_commands=$(check_deps)
+if [ "${missing_commands}" ]; then
+  echo "You are missing dependencies needed for this script."
+  echo "Commands needed:"
+  echo "${missing_commands}"
+  exit 1
+fi
+
+shim_path=$(realpath "${1}")
 
 echo "created loop device for shim"
-shim_loop=$(create_loop $shim_path)
+shim_loop=$(create_loop "${shim_path}")
 kernel_loop="${shim_loop}p2" #KERN-A should always be p2
 
 echo "copying shim kernel to new file in /tmp"

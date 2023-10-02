@@ -29,10 +29,6 @@ enable_debug_console() {
 
 
 main() {
-  # Setup environment.
-  #kill_frecon
-  #tty_init
-
   info "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
   info "TTY: ${TTY}, LOG: ${LOG_TTY}, INFO: ${INFO_TTY}, DEBUG: ${DEBUG_TTY}"
   echo "idk please work"

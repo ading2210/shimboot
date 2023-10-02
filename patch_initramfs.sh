@@ -10,6 +10,7 @@ fi
 initramfs_path=$(realpath $1)
 
 rm "${initramfs_path}/init" -f
-cp bootloader/init.sh "${initramfs_path}/sbin/init"
-cp bootloader/bootstrap.sh "${initramfs_path}/sbin/bootstrap.sh"
-chmod +x "${initramfs_path}/sbin/*.sh"
+cp bootloader/init.sh "${initramfs_path}/bin/init"
+cp bootloader/bootstrap.sh "${initramfs_path}/bin/bootstrap.sh"
+
+find ${initramfs_path}/bin -name "*" -exec chmod +x {} \;
