@@ -15,7 +15,7 @@ print_help() {
 }
 
 check_deps() {
-  local needed_commands="cpio binwalk pcregrep realpath"
+  local needed_commands="cpio binwalk pcregrep realpath cgpt"
   for command in $needed_commands; do
     if ! command -v $command &> /dev/null; then
       echo $command
@@ -61,7 +61,7 @@ binwalk_out=$(binwalk --extract kernel.bin --run-as=root)
 #i can't be bothered to learn how to use sed
 extracted_file=$(echo $binwalk_out | pcregrep -o1 "\d+\s+0x([0-9A-F]+)\s+gzip compressed data")
 
-echo "extracting initramfs archive from kernel"
+echo "extracting initramfs archive from kernel (this may take a while)"
 cd _kernel.bin.extracted/
 binwalk --extract $extracted_file --run-as=root > /dev/null
 cd "_${extracted_file}.extracted/"

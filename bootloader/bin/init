@@ -13,7 +13,7 @@ set -x
 . /lib/init.sh
 
 setup_environment() {
-  initialize
+  #initialize
 
   # Install additional utility programs.
   /bin/busybox --install /bin || true

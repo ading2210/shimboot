@@ -17,6 +17,11 @@ make_mountable() {
   printf '\000' | dd of=$1 seek=$((0x464 + 3)) conv=notrunc count=1 bs=1 
 }
 
+#set required flags on the kernel partition
+make_bootable() {
+  cgpt add -i 2 -S 1 -T 5 -P 10 -l kernel $1
+}
+
 partition_disk() {
   local image_path=$(realpath "${1}")
   local bootloader_size=${2}
@@ -61,7 +66,7 @@ partition_disk() {
 }
 
 safe_mount() {
-  umount $2 || /bin/true
+  umount $2 2> /dev/null || /bin/true
   rm -rf $2
   mkdir -p $2
   mount $1 $2
@@ -75,6 +80,7 @@ create_partitions() {
   mkfs.ext4 "${image_loop}p1"
   #copy kernel
   dd if=$kernel_path of="${image_loop}p2" bs=1M oflag=sync
+  make_bootable $image_loop
   #create bootloader partition
   mkfs.ext2 "${image_loop}p3"
   #create rootfs partition
@@ -117,6 +123,7 @@ create_image() {
   partition_disk $image_path $bootloader_size
 }
 
+#for testing only
 if [ $0 == "./build_image.sh" ]; then
   create_image ./test.bin 20 200
   image_loop=$(create_loop ./test.bin)
