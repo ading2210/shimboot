@@ -23,14 +23,14 @@ invoke_terminal() {
 
 enable_debug_console() {
   local tty="$1"
-  info -e '\033[1;33m[cros_debug] enabled on '${tty}'.\033[m'
+  echo -e '\033[1;33m[cros_debug] enabled on '${tty}'.\033[m'
   invoke_terminal "${tty}" "[Bootstrap Debug Console]" "/bin/busybox sh"
 }
 
 
 main() {
-  info "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
-  info "TTY: ${TTY}, LOG: ${LOG_TTY}, INFO: ${INFO_TTY}, DEBUG: ${DEBUG_TTY}"
+  echo "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
+  echo "TTY: ${TTY}, LOG: ${LOG_TTY}, echo: ${echo_TTY}, DEBUG: ${DEBUG_TTY}"
   echo "idk please work"
 
   enable_debug_console "/dev/pts/0"
