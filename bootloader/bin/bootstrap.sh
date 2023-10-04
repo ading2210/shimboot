@@ -38,16 +38,56 @@ find_rootfs_partitions() {
     if [ ! "${partitions}" ]; then
       continue
     fi
-    echo $partitions
+    echo "${disk}${partitions}"
   done
+}
+
+#from original bootstrap.sh
+move_mounts() {
+  local BASE_MOUNTS="/sys /proc /dev"
+  local NEWROOT_MNT="$1"
+  for mnt in $BASE_MOUNTS; do
+    # $mnt is a full path (leading '/'), so no '/' joiner
+    mkdir -p "$NEWROOT_MNT$mnt"
+    mount -n -o move "$mnt" "$NEWROOT_MNT$mnt"
+  done
+}
+
+#from original bootstrap.sh
+use_new_root() {
+  local NEWROOT_MNT="$1"
+  move_mounts $NEWROOT_MNT
+  # Chroot into newroot, erase the contents of the old /, and exec real init.
+  echo "About to switch root... Check VT2/3/4 if you stuck for a long time."
+  # If you have problem getting console after switch_root, try to debug by:
+  #  1. Try a simple shell.
+  #     exec <"${TTY}" >"${TTY}" 2>&1
+  #     exec switch_root "${NEWROOT_MNT}" /bin/sh
+  #  2. Try to invoke factory installer directly
+  #     exec switch_root "${NEWROOT_MNT}" /usr/sbin/factory_shim_service.sh
+  # -v prints upstart info in kmsg (available in INFO_TTY).
+  exec switch_root "${NEWROOT_MNT}" /sbin/init
 }
 
 main() {
   echo "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
   echo "TTY: ${TTY}, LOG: ${LOG_TTY}, echo: ${echo_TTY}, DEBUG: ${DEBUG_TTY}"
   echo "idk please work"
+
+  sleep 5
   
-  find_rootfs_partitions
+  local rootfs_partitions=$(find_rootfs_partitions)
+  for rootfs_partition in $rootfs_partitions; do
+    local IFS=: read -r part_path part_name <<< $rootfs_partition
+    echo "found bootable partition ${part_path}: ${part_name}"
+  done
+  
+  sleep 5
+
+  mkdir /newroot
+  mount /dev/sda4 /newroot
+  use_new_root /newroot
+
   enable_debug_console "/dev/pts/0"
 }
 

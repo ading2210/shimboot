@@ -11,7 +11,7 @@ fi
 . ./build_image.sh
 
 print_help() {
-  echo "Usage: ./build.sh output_path shim_path"
+  echo "Usage: ./build.sh output_path shim_path rootfs_dir"
 }
 
 check_deps() {
@@ -43,6 +43,7 @@ fi
 
 output_path=$(realpath "${1}")
 shim_path=$(realpath "${2}")
+rootfs_dir=$(realpath "${3}")
 
 echo "created loop device for shim"
 shim_loop=$(create_loop "${shim_path}")
@@ -87,7 +88,7 @@ echo "patching initramfs"
 patch_initramfs $initramfs_dir
 
 echo "creating disk image"
-create_image $output_path 20 200
+create_image $output_path 20 1200
 
 echo "creating loop device for the image"
 image_loop=$(create_loop ${output_path})
@@ -96,10 +97,6 @@ echo "creating partitions on the disk image"
 create_partitions $image_loop "${kernel_dir}/kernel.bin"
 
 echo "copying data into the image"
-rootfs_dir=/tmp/rootfs
-rm $rootfs_dir -rf 
-mkdir $rootfs_dir
-touch $rootfs_dir/testfile
 populate_partitions $image_loop $initramfs_dir $rootfs_dir
 
 echo "cleaning up loop devices"
