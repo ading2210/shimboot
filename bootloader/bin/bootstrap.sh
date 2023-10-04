@@ -27,12 +27,19 @@ enable_debug_console() {
   invoke_terminal "${tty}" "[Bootstrap Debug Console]" "/bin/busybox sh"
 }
 
+find_rootfs_partitions() {
+  disks=$(fdisk -l | sed -n "s/Disk \(\/dev\/.*\):.*/\1/p")
+  for disk in $disks; do
+    echo $disk
+  done
+}
 
 main() {
   echo "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
   echo "TTY: ${TTY}, LOG: ${LOG_TTY}, echo: ${echo_TTY}, DEBUG: ${DEBUG_TTY}"
   echo "idk please work"
-
+  
+  find_rootfs_partitions
   enable_debug_console "/dev/pts/0"
 }
 

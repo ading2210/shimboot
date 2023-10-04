@@ -59,6 +59,11 @@ partition_disk() {
     echo #accept default parition number
     echo #accept default first sector
     echo #accept default size to fill rest of image
+    echo x #enter expert mode
+    echo n #change the partition name
+    echo #accept default partition number
+    echo "shimboot_rootfs:default" #set partition name
+    echo r #return to normal more
 
     #write changes
     echo w

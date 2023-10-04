@@ -15,7 +15,7 @@ print_help() {
 }
 
 check_deps() {
-  local needed_commands="cpio binwalk pcregrep realpath cgpt"
+  local needed_commands="cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk"
   for command in $needed_commands; do
     if ! command -v $command &> /dev/null; then
       echo $command
