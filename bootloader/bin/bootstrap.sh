@@ -9,7 +9,7 @@
 
 #original: https://chromium.googlesource.com/chromiumos/platform/initramfs/+/refs/heads/main/factory_shim/bootstrap.sh
 
-set +x
+set -x
 
 invoke_terminal() {
   local tty="$1"
@@ -28,9 +28,17 @@ enable_debug_console() {
 }
 
 find_rootfs_partitions() {
-  disks=$(fdisk -l | sed -n "s/Disk \(\/dev\/.*\):.*/\1/p")
+  local disks=$(fdisk -l | sed -n "s/Disk \(\/dev\/.*\):.*/\1/p")
+  if [ ! "${disks}" ]; then
+    return 1
+  fi
+
   for disk in $disks; do
-    echo $disk
+    local partitions=$(fdisk -l $disk | sed -n "s/^[ ]\+\([0-9]\+\).*shimboot_rootfs:\(.*\)$/\1:\2/p")
+    if [ ! "${partitions}" ]; then
+      continue
+    fi
+    echo $partitions
   done
 }
 
