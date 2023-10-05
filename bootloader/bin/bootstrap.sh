@@ -9,7 +9,7 @@
 
 #original: https://chromium.googlesource.com/chromiumos/platform/initramfs/+/refs/heads/main/factory_shim/bootstrap.sh
 
-set -x
+set +x
 
 invoke_terminal() {
   local tty="$1"
@@ -44,51 +44,40 @@ find_rootfs_partitions() {
 
 #from original bootstrap.sh
 move_mounts() {
-  local BASE_MOUNTS="/sys /proc /dev"
-  local NEWROOT_MNT="$1"
-  for mnt in $BASE_MOUNTS; do
+  local base_mounts="/sys /proc /dev"
+  local newroot_mnt="$1"
+  for mnt in $base_mounts; do
     # $mnt is a full path (leading '/'), so no '/' joiner
-    mkdir -p "$NEWROOT_MNT$mnt"
-    mount -n -o move "$mnt" "$NEWROOT_MNT$mnt"
+    mkdir -p "$newroot_mnt$mnt"
+    mount -n -o move "$mnt" "$newroot_mnt$mnt"
   done
-}
-
-#from original bootstrap.sh
-use_new_root() {
-  local NEWROOT_MNT="$1"
-  move_mounts $NEWROOT_MNT
-  # Chroot into newroot, erase the contents of the old /, and exec real init.
-  echo "About to switch root... Check VT2/3/4 if you stuck for a long time."
-  # If you have problem getting console after switch_root, try to debug by:
-  #  1. Try a simple shell.
-  #     exec <"${TTY}" >"${TTY}" 2>&1
-  #     exec switch_root "${NEWROOT_MNT}" /bin/sh
-  #  2. Try to invoke factory installer directly
-  #     exec switch_root "${NEWROOT_MNT}" /usr/sbin/factory_shim_service.sh
-  # -v prints upstart info in kmsg (available in INFO_TTY).
-  exec switch_root "${NEWROOT_MNT}" /sbin/init
 }
 
 main() {
   echo "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
-  echo "TTY: ${TTY}, LOG: ${LOG_TTY}, echo: ${echo_TTY}, DEBUG: ${DEBUG_TTY}"
   echo "idk please work"
 
-  sleep 5
+  enable_debug_console "/dev/pts/1"
   
+  find_rootfs_partitions
   local rootfs_partitions=$(find_rootfs_partitions)
   for rootfs_partition in $rootfs_partitions; do
-    local IFS=: read -r part_path part_name <<< $rootfs_partition
-    echo "found bootable partition ${part_path}: ${part_name}"
+    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
+    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
+    echo "found bootable partition ${part_name} on ${part_path}"
   done
   
-  sleep 5
-
+  echo "moving mounts to newroot"
   mkdir /newroot
   mount /dev/sda4 /newroot
-  use_new_root /newroot
+  move_mounts /newroot
 
-  enable_debug_console "/dev/pts/0"
+  echo "switching root"
+  sleep 2
+  mkdir -p /newroot/bootloader
+  pivot_root /newroot /newroot/bootloader
+  local tty="/dev/pts/0"
+  exec /sbin/init < "$tty" >> "$tty" 2>&1
 }
 
 main "$@"
