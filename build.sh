@@ -88,7 +88,11 @@ echo "patching initramfs"
 patch_initramfs $initramfs_dir
 
 echo "creating disk image"
-create_image $output_path 20 1200
+rootfs_size=$(du -sm $rootfs_dir | cut -f 1)
+rootfs_part_size=$(($rootfs_size * 11 / 10 + 10))
+#create a 20mb bootloader partition
+#rootfs partition is 10% larger than its contents
+create_image $output_path 20 $rootfs_part_size
 
 echo "creating loop device for the image"
 image_loop=$(create_loop ${output_path})
