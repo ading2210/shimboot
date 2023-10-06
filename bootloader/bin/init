@@ -19,7 +19,8 @@ main() {
   setup_environment
   # In case an error is not handled by bootstrapping, stop here
   # so that an operator can see installation stop.
-  exec bootstrap.sh || sleep 1d
+  local tty="/dev/pts/0"
+  exec bootstrap.sh < "$tty" >> "$tty" 2>&1 || sleep 1d
 }
 
 main "$@"

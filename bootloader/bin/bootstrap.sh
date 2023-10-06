@@ -9,6 +9,7 @@
 
 #original: https://chromium.googlesource.com/chromiumos/platform/initramfs/+/refs/heads/main/factory_shim/bootstrap.sh
 
+#set -x
 set +x
 
 invoke_terminal() {
@@ -53,31 +54,96 @@ move_mounts() {
   done
 }
 
+print_selector() {
+  local rootfs_partitions="$1"
+  local i=1
+
+  echo "┌──────────────────────┐"
+  echo "│ Shimboot OS Selector │"
+  echo "└──────────────────────┘"
+
+  if [ "${rootfs_partitions}" ]; then
+    for rootfs_partition in $rootfs_partitions; do
+      #i don't know of a better way to split a string in the busybox shell
+      local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
+      local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
+      echo "${i}) ${part_name} on ${part_path}"
+      i=$((i+1))
+    done
+  else
+    echo "no bootable partitions found. please see the shimboot documentation to mark a partition as bootable."
+  fi
+
+  echo "q) reboot"
+  echo "s) enter a shell"
+}
+
+get_selection() {
+  local rootfs_partitions="$1"
+  local i=1
+
+  read -p "Your selection: " selection
+  if [ "$selection" = "q" ]; then
+    echo "rebooting now."
+    reboot -f
+  elif [ "$selection" = "s" ]; then
+    reset
+    enable_debug_console "/dev/pts/0"
+    return 0
+  fi
+
+  for rootfs_partition in $rootfs_partitions; do
+    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
+    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
+
+    if [ "$selection" = "$i" ]; then
+      echo "selected $part_path"
+      sleep 2
+      boot_target $part_path
+      return 0
+    fi
+
+    i=$((i+1))
+  done
+  
+  echo "invalid selection"
+  return 1
+}
+
+boot_target() {
+  local target="$1"
+  #scuffed way to get init to output to the right tty
+  #x11 doesn't use tty1 anyways so this shouldn't cause issues
+  mount -o bind /dev/pts/0 /dev/tty1
+
+  echo "moving mounts to newroot"
+  mkdir /newroot
+  mount $target /newroot
+  move_mounts /newroot
+
+  echo "switching root"
+  mkdir -p /newroot/bootloader
+  pivot_root /newroot /newroot/bootloader
+  local tty="/dev/pts/0"
+  exec /sbin/init 5 < "$tty" >> "$tty" 2>&1
+}
+
 main() {
   echo "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
   echo "idk please work"
 
   enable_debug_console "/dev/pts/1"
-  
-  find_rootfs_partitions
-  local rootfs_partitions=$(find_rootfs_partitions)
-  for rootfs_partition in $rootfs_partitions; do
-    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-    echo "found bootable partition ${part_name} on ${part_path}"
-  done
-  
-  echo "moving mounts to newroot"
-  mkdir /newroot
-  mount /dev/sda4 /newroot
-  move_mounts /newroot
 
-  echo "switching root"
-  sleep 2
-  mkdir -p /newroot/bootloader
-  pivot_root /newroot /newroot/bootloader
-  local tty="/dev/pts/0"
-  exec /sbin/init < "$tty" >> "$tty" 2>&1
+  local rootfs_partitions=$(find_rootfs_partitions)
+
+  while true; do
+    clear
+    print_selector "${rootfs_partitions}"
+    if get_selection "${rootfs_partitions}"; then
+      break
+    fi
+    sleep 2
+  done
 }
 
 main "$@"
