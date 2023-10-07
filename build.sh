@@ -8,6 +8,7 @@ if [ "$DEBUG" ]; then
 fi
 
 . ./patch_initramfs.sh
+. ./patch_rootfs.sh
 . ./build_image.sh
 
 print_help() {
@@ -28,7 +29,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-if [ -z "$1" ]; then
+if [ -z "$3" ]; then
   print_help
   exit 1
 fi
@@ -89,7 +90,7 @@ patch_initramfs $initramfs_dir
 
 echo "creating disk image"
 rootfs_size=$(du -sm $rootfs_dir | cut -f 1)
-rootfs_part_size=$(($rootfs_size * 11 / 10 + 10))
+rootfs_part_size=$(($rootfs_size * 11 / 10 + 50))
 #create a 20mb bootloader partition
 #rootfs partition is 10% larger than its contents
 create_image $output_path 20 $rootfs_part_size
@@ -100,8 +101,19 @@ image_loop=$(create_loop ${output_path})
 echo "creating partitions on the disk image"
 create_partitions $image_loop "${kernel_dir}/kernel.bin"
 
+echo "mounting the original shim rootfs"
+shim_rootfs="/tmp/shim_rootfs"
+make_mountable "${shim_loop}p3"
+safe_mount "${shim_loop}p3" $shim_rootfs
+
 echo "copying data into the image"
-populate_partitions $image_loop $initramfs_dir $rootfs_dir
+rootfs_mount=/tmp/new_rootfs
+populate_partitions $image_loop $initramfs_dir $rootfs_dir $rootfs_mount
+
+echo "copying modules into the rootfs"
+patch_rootfs $shim_rootfs $rootfs_mount || echo "failed patching rootfs"
+umount $rootfs_mount
+umount $shim_rootfs
 
 echo "cleaning up loop devices"
 losetup -d $shim_loop

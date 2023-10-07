@@ -146,5 +146,6 @@ main() {
   done
 }
 
+trap - EXIT
 main "$@"
 sleep 1d

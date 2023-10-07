@@ -8,7 +8,7 @@ if [ "$DEBUG" ]; then
 fi
 
 patch_initramfs() {
-  initramfs_path=$(realpath $1)
+  local initramfs_path=$(realpath $1)
 
   rm "${initramfs_path}/init" -f
   cp -r bootloader/* "${initramfs_path}/"
