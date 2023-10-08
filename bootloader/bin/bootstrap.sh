@@ -39,7 +39,9 @@ find_rootfs_partitions() {
     if [ ! "${partitions}" ]; then
       continue
     fi
-    echo "${disk}${partitions}"
+    for partition in $partitions; do
+      echo "${disk}${partition}"
+    done
   done
 }
 
