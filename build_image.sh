@@ -11,10 +11,9 @@ create_loop() {
   echo $loop_device
 }
 
-#useful in the future... maybe
+#original shim rootfses have a non standard ext2 filesystem
 make_mountable() {
-  sh lib/ssd_util.sh --no_resign_kernel --remove_rootfs_verification -i $1
-  printf '\000' | dd of=$1 seek=$((0x464 + 3)) conv=notrunc count=1 bs=1 
+  printf '\000' | dd of=$1 seek=$((0x464 + 3)) conv=notrunc count=1 bs=1 status=none
 }
 
 #set required flags on the kernel partition
@@ -110,7 +109,8 @@ populate_partitions() {
   cp -r $bootloader_dir/* $bootloader_mount
   umount $bootloader_mount
 
-  local rootfs_mount=/tmp/shim_rootfs
+  #write rootfs to image
+  local rootfs_mount=/tmp/new_rootfs
   safe_mount "${image_loop}p4" $rootfs_mount
   cp -r $rootfs_dir/* $rootfs_mount
   umount $rootfs_mount

@@ -8,14 +8,20 @@ This is a set of scripts for patching a Chrome OS RMA shim to serve as a bootloa
 - ~~switch_root into an actual rootfs~~
 - ~~start X11 in the actual rootfs~~
 - ~~ui improvements in the bootloader~~
-- load all needed drivers
-- autostart X11
+- ~~load all needed drivers~~
+- ~~autostart X11~~
+- ~~host repo for patched systemd packages~~
+- ~~use debootstrap to install debian~~
 
 ## Usage:
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
-2. Download a [Devuan live ISO](https://www.devuan.org/get-devuan). Run it inside a VM and install it to a disk image. Mount the disk image in the host. (Use `losetup -P` for this.)
-3. Run `sudo DEBUG=1 ./build.sh`. The `rootfs_dir` argument should point to where you mounted the rootfs in part 2.
-4. Flash the generated image to a USB drive or SD card.
+2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
+3. Clone this repository and cd into it.
+4. Run `mkdir -P data/rootfs` to make a directory for the rootfs.
+5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
+6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to build the base rootfs.
+7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs`. This will generate a disk image at image.bin. 
+8. Flash the generated image to a USB drive or SD card.
 
 ## License:
 ```
