@@ -45,3 +45,5 @@ debootstrap $release_name $rootfs_dir http://deb.debian.org/debian/
 cp -r rootfs/* $rootfs_dir
 chroot_command="DEBUG=${DEBUG} release_name=${release_name} /opt/setup_rootfs.sh"
 chroot $rootfs_dir /bin/bash -c "${chroot_command}"
+
+echo "rootfs has been created"

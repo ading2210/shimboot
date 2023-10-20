@@ -27,3 +27,11 @@ apt-get upgrade -y
 
 #install desktop
 apt-get install -y xfce4 xfce4-goodies network-manager blueman firefox-esr sudo
+
+echo "Enter a root password:"
+passwd root
+
+read -p "Enter the username for the user account: " username
+useradd -m -s /bin/bash -G sudo $username
+echo "Enter the password for ${username}:"
+passwd $username
