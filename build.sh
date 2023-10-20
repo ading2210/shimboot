@@ -110,10 +110,10 @@ echo "copying data into the image"
 rootfs_mount=/tmp/new_rootfs
 populate_partitions $image_loop $initramfs_dir $rootfs_dir $rootfs_mount
 
-echo "copying modules into the rootfs"
-patch_rootfs $shim_rootfs $rootfs_mount || echo "failed patching rootfs"
-umount $rootfs_mount
-umount $shim_rootfs
+#echo "copying modules into the rootfs"
+#patch_rootfs $shim_rootfs $rootfs_mount || echo "failed patching rootfs"
+#umount $rootfs_mount
+#umount $shim_rootfs
 
 echo "cleaning up loop devices"
 losetup -d $shim_loop
