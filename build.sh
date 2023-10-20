@@ -8,7 +8,6 @@ if [ "$DEBUG" ]; then
 fi
 
 . ./patch_initramfs.sh
-. ./patch_rootfs.sh
 . ./build_image.sh
 
 print_help() {
@@ -107,13 +106,7 @@ make_mountable "${shim_loop}p3"
 safe_mount "${shim_loop}p3" $shim_rootfs
 
 echo "copying data into the image"
-rootfs_mount=/tmp/new_rootfs
-populate_partitions $image_loop $initramfs_dir $rootfs_dir $rootfs_mount
-
-#echo "copying modules into the rootfs"
-#patch_rootfs $shim_rootfs $rootfs_mount || echo "failed patching rootfs"
-#umount $rootfs_mount
-#umount $shim_rootfs
+populate_partitions $image_loop $initramfs_dir $rootfs_dir
 
 echo "cleaning up loop devices"
 losetup -d $shim_loop

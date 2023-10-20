@@ -9,13 +9,14 @@ if [ "$DEBUG" ]; then
 fi
 
 custom_repo="https://shimboot.ading.dev/debian"
+custom_repo_domain="shimboot.ading.dev"
 sources_entry="deb [trusted=yes] ${custom_repo} ${release_name} main"
 
 #add shimboot repos
 echo -e "${sources_entry}\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list
 tee -a /etc/apt/preferences << END
 Package: *
-Pin: origin "${custom_repo}"
+Pin: origin ${custom_repo_domain}
 Pin-Priority: 1001
 END
 

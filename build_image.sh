@@ -95,7 +95,6 @@ populate_partitions() {
   local image_loop=$(realpath "${1}")
   local bootloader_dir=$(realpath "${2}")
   local rootfs_dir=$(realpath "${3}")
-  local rootfs_mount=$(realpath "${4}")
 
   #mount and write empty file to stateful
   local stateful_mount=/tmp/shim_stateful
@@ -111,8 +110,10 @@ populate_partitions() {
   umount $bootloader_mount
 
   #write rootfs to image
+  local rootfs_mount=/tmp/new_rootfs
   safe_mount "${image_loop}p4" $rootfs_mount
   cp -r $rootfs_dir/* $rootfs_mount
+  umount $rootfs_mount
 }
 
 create_image() {
