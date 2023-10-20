@@ -127,7 +127,7 @@ boot_target() {
   mkdir -p /newroot/bootloader
   pivot_root /newroot /newroot/bootloader
   local tty="/dev/pts/0"
-  exec /sbin/init 5 < "$tty" >> "$tty" 2>&1
+  exec /sbin/init < "$tty" >> "$tty" 2>&1
 }
 
 main() {

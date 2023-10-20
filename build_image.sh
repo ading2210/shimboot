@@ -66,7 +66,7 @@ partition_disk() {
 
     #write changes
     echo w
-  ) | fdisk $image_path
+  ) | fdisk $image_path > /dev/null
 }
 
 safe_mount() {
@@ -112,7 +112,7 @@ populate_partitions() {
   #write rootfs to image
   local rootfs_mount=/tmp/new_rootfs
   safe_mount "${image_loop}p4" $rootfs_mount
-  cp -r $rootfs_dir/* $rootfs_mount
+  rsync --archive --human-readable --hard-links --info=progress2 --sparse $rootfs_dir/ $rootfs_mount/
   umount $rootfs_mount
 }
 
@@ -123,7 +123,8 @@ create_image() {
   
   #stateful + kernel + bootloader + rootfs
   local total_size=$((1 + 32 + $bootloader_size + $rootfs_size))
-  dd if=/dev/zero of=$image_path bs=1M oflag=sync count=$total_size status=progress
+  rm -rf "${image_path}"
+  fallocate -l "${total_size}M" "${image_path}"
 
   partition_disk $image_path $bootloader_size
 }

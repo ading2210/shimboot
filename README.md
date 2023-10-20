@@ -12,12 +12,26 @@ This is a set of scripts for patching a Chrome OS RMA shim to serve as a bootloa
 - ~~autostart X11~~
 - ~~host repo for patched systemd packages~~
 - ~~use debootstrap to install debian~~
-- prompt user for hostname and account when creating the rootfs
+- ~~prompt user for hostname and account when creating the rootfs~~
 - auto load iwlmvm
+- get wifi fully working
 - host prebuilt images
 - write detailed documentation
 
+### Long Term Goals:
+- get zram to work
+- eliminate binwalk dependency
+- get audio to work
+
 ## Usage:
+
+### Prerequisites:
+- A seperate Linux PC for the build process (preferably something Debian-based)
+- A USB that is at least 8GB in size
+- At least 20GB of free disk space
+- An x86-based Chromebook
+
+### Instructions:
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
 2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
 3. Clone this repository and cd into it.

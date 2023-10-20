@@ -15,7 +15,7 @@ print_help() {
 }
 
 check_deps() {
-  local needed_commands="cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk"
+  local needed_commands="cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
   for command in $needed_commands; do
     if ! command -v $command &> /dev/null; then
       echo $command
@@ -89,9 +89,9 @@ patch_initramfs $initramfs_dir
 
 echo "creating disk image"
 rootfs_size=$(du -sm $rootfs_dir | cut -f 1)
-rootfs_part_size=$(($rootfs_size * 11 / 10 + 50))
+rootfs_part_size=$(($rootfs_size * 11 / 10))
 #create a 20mb bootloader partition
-#rootfs partition is 10% larger than its contents
+#rootfs partition is 20% larger than its contents
 create_image $output_path 20 $rootfs_part_size
 
 echo "creating loop device for the image"
@@ -111,3 +111,4 @@ populate_partitions $image_loop $initramfs_dir $rootfs_dir
 echo "cleaning up loop devices"
 losetup -d $shim_loop
 losetup -d $image_loop
+echo "done"
