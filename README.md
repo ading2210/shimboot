@@ -12,6 +12,10 @@ This is a set of scripts for patching a Chrome OS RMA shim to serve as a bootloa
 - ~~autostart X11~~
 - ~~host repo for patched systemd packages~~
 - ~~use debootstrap to install debian~~
+- prompt user for hostname and account when creating the rootfs
+- auto load iwlmvm
+- host prebuilt images
+- write detailed documentation
 
 ## Usage:
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
@@ -19,9 +23,11 @@ This is a set of scripts for patching a Chrome OS RMA shim to serve as a bootloa
 3. Clone this repository and cd into it.
 4. Run `mkdir -P data/rootfs` to make a directory for the rootfs.
 5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
-6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to build the base rootfs.
-7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs`. This will generate a disk image at image.bin. 
+6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
+7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
 8. Flash the generated image to a USB drive or SD card.
+
+Note that these instructions are currently incomplete.
 
 ## License:
 ```
