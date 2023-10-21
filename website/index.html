@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Shimboot</title>
+
+    <meta property="og:title" content="Shimboot">
+    <meta property="og:url" content="https://shimboot.ading.dev">
+    <meta property="og:description" content="Boot a desktop Linux distribution from a Chrome OS RMA shim.">
+    
+    <style>
+      @font-face {
+        font-family: "unifont";
+        src: url("font/unifont-15.1.02.otf"); 
+      }
+      
+      body {
+        background-color: black;
+        -webkit-font-smoothing: none;
+        -moz-osx-font-smoothing: grayscale;
+        font-smooth: never;
+      }
+      @media (resolution: 1dppx), (resolution: 2dppx), (resolution: 3dppx), (resolution: 4dppx) {
+        body {
+          -moz-osx-font-smoothing: grayscale;
+          font-smooth: never;
+          filter: contrast(100.00001%);
+        }
+      }
+      
+      * {
+        color: white;
+        font-family: "unifont", monospace;
+        line-height: 1;
+      }
+      pre {
+        white-space: pre-wrap;
+        max-width: 600px;
+        margin: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <pre>
+┌───────────────────────────────┐
+│ Chrome OS RMA Shim Bootloader │
+└───────────────────────────────┘
+<a href="#info" style="text-decoration: none;">1) Info</a>
+<a href="#explaination" style="text-decoration: none;">2) Explanation</a>
+<a href="#prebuilt" style="text-decoration: none;">3) Prebuilt Images</a>
+<a href="#build" style="text-decoration: none;">4) Build Instructions</a>
+<a href="#usage" style="text-decoration: none;">5) Usage</a>
+<a href="#copyright" style="text-decoration: none;">6) Copyright</a>
+
+<b id="info">Info:</b>
+Shimboot is a collection of scripts for patching a Chrome OS RMA shim to serve as a bootloader for a standard Linux distribution. It allows you to boot a full desktop Debian install on a Chromebook, without needing to unenroll it or modify the firmware.
+
+<b id="info">Explanation:</b>
+Chrome OS RMA shims are bootable disk images which are designed to run a variety of diagnostic utilities on Chromebooks, and they'll work even if the device is enterprise enrolled. Unfortunately for Google, there exists a <a href="https://sh1mmer.me/">security flaw</a> in which the root filesystem of the RMA shim is not verified. This lets us replace the rootfs with anything we want, including a full Linux distribution.
+
+Simply replacing the shim's rootfs doesn't work, however, as it boots to an environment friendly to the RMA shim, not regular Linux distros. To get around this, a separate bootloader is required to transition from the shim environment to the main rootfs. This bootloader then does a <a href="https://man7.org/linux/man-pages/man8/pivot_root.8.html">pivot_root</a> to enter the rootfs, where it runs the init system.
+
+Another problem is encountered at this stage: the Chrome OS kernel will complain about systemd's mounts, and the boot process will hang. A simple workaround is to <a href="https://github.com/ading2210/chromeos-systemd">apply a patch</a> to systemd, and then it can be recompiled and hosted at a <a href="https://shimboot.ading.dev/debian/">repo somewhere</a>.
+
+After copying all the firmware from the recovery image and shim to the rootfs, we're able to boot to a mostly working XFCE desktop.
+
+<b id="prebuilt">Prebuilt Images:</b>
+Prebuilt images are available <a href="https://dl.ading.dev/shimboot/">here</a>. If there is not a prebuilt image for your board, you must manually build the shimboot image. 
+
+For these images, the root password is "root". The name of the default user is "user" and its password is "user" as well. You should change these credentials as soon as possible.
+
+<b id="build">Build Instructions:</b>
+1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
+2. Download a Chrome OS <a href="https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS">recovery image</a> for your board.
+3. Clone this repository and cd into it.
+4. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
+5. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
+6. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
+
+<b id="usage">Usage:</b>
+1. Obtain a shimboot image by downloading a prebuilt one or building it yourself.
+2. Flash the shimboot image to a USB drive or SD card.
+3. Enable developer mode on your Chromebook. Even if it's enrolled and dev mode is blocked, it'll still work.
+4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
+
+<b id="copyright">Copyright:</b>
+Shimboot is licensed under the <a href="https://www.gnu.org/licenses/gpl-3.0.txt">GNU GPL v3</a>. Unless otherwise indicated, all code has been written by me, <a href="https://ading.dev">@ading2210</a>.
+
+Credit for fixing the original bug in systemd goes to <a href="https://github.com/r58Playz">@r58playz</a>.
+
+  ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
+  Copyright (C) 2023 ading2210
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+    
+    </pre>
+  </body>
+</html>
