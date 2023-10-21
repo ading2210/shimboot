@@ -28,7 +28,10 @@ copy_modules() {
   local reco_rootfs=$(realpath $2)
   local target_rootfs=$(realpath $3)
 
-  cp -r "${shim_rootfs}/lib/modules/"* "${target_rootfs}/lib/modules/"
+  rm -rf "${target_rootfs}/lib/modules"
+  cp -r "${shim_rootfs}/lib/modules" "${target_rootfs}/lib/modules"
+
+  mkdir -p "${target_rootfs}/lib/firmware"
   cp -r --remove-destination "${shim_rootfs}/lib/firmware/"* "${target_rootfs}/lib/firmware/"
   cp -r --remove-destination "${reco_rootfs}/lib/firmware/"* "${target_rootfs}/lib/firmware/"
 

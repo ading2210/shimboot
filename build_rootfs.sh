@@ -41,7 +41,7 @@ fi
 rootfs_dir=$(realpath "${1}")
 release_name="${2}"
 
-debootstrap $release_name $rootfs_dir http://deb.debian.org/debian/
+debootstrap --arch amd64 $release_name $rootfs_dir http://deb.debian.org/debian/
 cp -ar rootfs/* $rootfs_dir
 
 chroot_mounts="proc sys dev run"
