@@ -43,7 +43,7 @@ copy_firmware() {
     download_firmware $firmware_path
   fi
 
-  cp -r --remove-destination "${firmware_path}/"* "${target_rootfs}/lib/modules/"
+  cp -r --remove-destination "${firmware_path}/"* "${target_rootfs}/lib/firmware/"
 }
 
 download_firmware() {

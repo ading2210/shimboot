@@ -28,6 +28,19 @@ apt-get upgrade -y
 #install desktop
 apt-get install -y xfce4 xfce4-goodies network-manager blueman firefox-esr sudo
 
+#set up hostname and username
+read -p "Enter the hostname for the system: " hostname
+echo "${hostname}" > /etc/hostname
+tee -a /etc/hosts << END
+127.0.0.1 localhost
+127.0.1.1 ${hostname}
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+END
+
 echo "Enter a root password:"
 passwd root
 
@@ -35,3 +48,6 @@ read -p "Enter the username for the user account: " username
 useradd -m -s /bin/bash -G sudo $username
 echo "Enter the password for ${username}:"
 passwd $username
+
+#clean apt caches
+apt-get clean

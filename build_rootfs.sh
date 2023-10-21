@@ -43,7 +43,18 @@ release_name="${2}"
 
 debootstrap $release_name $rootfs_dir http://deb.debian.org/debian/
 cp -r rootfs/* $rootfs_dir
+
+chroot_mounts="proc sys dev run"
+for mountpoint in $chroot_mounts; do
+  mount --make-rslave --rbind "/${mountpoint}" "${rootfs_dir}/$mountpoint"
+done
+
 chroot_command="DEBUG=${DEBUG} release_name=${release_name} /opt/setup_rootfs.sh"
 chroot $rootfs_dir /bin/bash -c "${chroot_command}"
+
+chroot_mounts="proc sys dev run"
+for mountpoint in $chroot_mounts; do
+  umount "${rootfs_dir}/$mountpoint"
+done
 
 echo "rootfs has been created"

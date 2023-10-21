@@ -128,12 +128,3 @@ create_image() {
 
   partition_disk $image_path $bootloader_size
 }
-
-#for testing only
-if [ $0 == "./build_image.sh" ]; then
-  create_image ./test.bin 20 200
-  image_loop=$(create_loop ./test.bin)
-  create_partitions $image_loop /tmp/shim_kernel/kernel.bin
-  populate_partitions $image_loop ./tmp/shim_initramfs ./lib
-  losetup -d $image_loop
-fi
