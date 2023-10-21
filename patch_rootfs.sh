@@ -31,6 +31,9 @@ copy_modules() {
   cp -r "${shim_rootfs}/lib/modules/"* "${target_rootfs}/lib/modules/"
   cp -r --remove-destination "${shim_rootfs}/lib/firmware/"* "${target_rootfs}/lib/firmware/"
   cp -r --remove-destination "${reco_rootfs}/lib/firmware/"* "${target_rootfs}/lib/firmware/"
+
+  mkdir -p "${target_rootfs}/lib/modprobe.d/"
+  mkdir -p "${target_rootfs}/etc/modprobe.d/"
   cp -r "${reco_rootfs}/lib/modprobe.d/"* "${target_rootfs}/lib/modprobe.d/"
   cp -r "${reco_rootfs}/etc/modprobe.d/"* "${target_rootfs}/etc/modprobe.d/"
 }

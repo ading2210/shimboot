@@ -2,6 +2,23 @@
 
 This is a set of scripts for patching a Chrome OS RMA shim to serve as a bootloader for a standard Linux disto.
 
+## About:
+Chrome OS RMA shims are disk images which are bootable from Chromebooks, and they'll work even if the device is enterprise enrolled. Unfortunately for Google, there exists a security flaw where the root filesystem of the RMA shim is not verfied. This lets us replace the rootfs with anything we want, including a full Linux distribution.
+
+Simply replacing the shim's rootfs doesn't work, as it boots in an environment friendly to the RMA shim, not regular Linux distros. To get around this, a seperate bootloader is required to transition from the shim environment to the main rootfs. This bootloader then does `pivot_root` to enter the rootfs, where it then starts the init system.
+
+Another problem is encountered at this stage: the Chrome OS kernel will complain about systemd's mounts, and the boot process will hang. A simple workaroudn is to [apply a patch](https://github.com/ading2210/chromeos-systemd) to systemd, and then it can be recompiled and hosted at a [repo somewhere](https://shimboot.ading.dev/debian/).
+
+After copying all the firmware from the recovery image and shim to the rootfs, we're able to boot to a mostly working XFCE desktop.
+
+### Partition Layout:
+1. 1MB dummy stateful partition
+2. 32MB Chrome OS kernel
+3. 20MB bootloader
+4. The rootfs partitions fill the rest of the disk
+
+Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for the bootloader to recognize them.
+
 ## Current Development Roadmap:
 - ~~build the image automatically~~
 - ~~boot to a shell~~
@@ -16,7 +33,7 @@ This is a set of scripts for patching a Chrome OS RMA shim to serve as a bootloa
 - ~~auto load iwlmvm~~
 - get wifi fully working
 - host prebuilt images
-- write detailed documentation
+- ~~write detailed documentation~~
 
 ### Long Term Goals:
 - get zram to work
@@ -40,6 +57,7 @@ This is a set of scripts for patching a Chrome OS RMA shim to serve as a bootloa
 6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
 7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
 8. Flash the generated image to a USB drive or SD card.
+9. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and enter the shimboot bootloader.
 
 Note that these instructions are currently incomplete.
 
