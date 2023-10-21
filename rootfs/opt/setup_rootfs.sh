@@ -26,7 +26,7 @@ apt-get update
 apt-get upgrade -y 
 
 #install desktop
-apt-get install -y xfce4 xfce4-goodies network-manager blueman firefox-esr sudo
+apt-get install -y task-xfce-desktop cloud-utils 
 
 #set up hostname and username
 read -p "Enter the hostname for the system: " hostname

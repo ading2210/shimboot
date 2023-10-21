@@ -42,7 +42,7 @@ rootfs_dir=$(realpath "${1}")
 release_name="${2}"
 
 debootstrap $release_name $rootfs_dir http://deb.debian.org/debian/
-cp -r rootfs/* $rootfs_dir
+cp -ar rootfs/* $rootfs_dir
 
 chroot_mounts="proc sys dev run"
 for mountpoint in $chroot_mounts; do
@@ -54,7 +54,7 @@ chroot $rootfs_dir /bin/bash -c "${chroot_command}"
 
 chroot_mounts="proc sys dev run"
 for mountpoint in $chroot_mounts; do
-  umount "${rootfs_dir}/$mountpoint"
+  umount -l "${rootfs_dir}/$mountpoint"
 done
 
 echo "rootfs has been created"
