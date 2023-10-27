@@ -22,7 +22,7 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 ## Status:
 
 ### What Works:
-- Systmed
+- Systemd
 - X11
 - XFCE
 - Backlight
@@ -69,12 +69,13 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
 2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
 3. Clone this repository and cd into it.
-4. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
-5. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
-6. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
-7. Flash the generated image to a USB drive or SD card.
-8. Enable developer mode on your Chromebook. Even if it's enrolled and dev mode is blocked, it'll still work for running shimboot.
-9. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
+4. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
+5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
+6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
+7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
+8. Flash the generated image to a USB drive or SD card.
+9. Enable developer mode on your Chromebook. Even if it's enrolled and dev mode is blocked, it'll still work for running shimboot.
+10. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
 
 Note that these instructions are currently incomplete.
 

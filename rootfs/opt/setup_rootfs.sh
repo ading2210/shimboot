@@ -25,8 +25,11 @@ apt-get install -y ca-certificates
 apt-get update
 apt-get upgrade -y 
 
+#enable shimboot services
+systemctl enable kill-frecon.service
+
 #install desktop
-apt-get install -y task-xfce-desktop cloud-utils 
+apt-get install -y task-xfce-desktop cloud-utils
 
 #set up hostname and username
 read -p "Enter the hostname for the system: " hostname

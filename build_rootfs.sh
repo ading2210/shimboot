@@ -52,7 +52,6 @@ done
 chroot_command="DEBUG=${DEBUG} release_name=${release_name} /opt/setup_rootfs.sh"
 chroot $rootfs_dir /bin/bash -c "${chroot_command}"
 
-chroot_mounts="proc sys dev run"
 for mountpoint in $chroot_mounts; do
   umount -l "${rootfs_dir}/$mountpoint"
 done
