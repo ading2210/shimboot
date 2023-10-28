@@ -20,6 +20,7 @@ After copying all the firmware from the recovery image and shim to the rootfs, w
 Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for the bootloader to recognize them.
 
 ## Status:
+Driver support depends on the device you are using shimboot on. This list is for the [`dedede`](https://chrome100.dev/board/dedede/) board, which is the only device I was able to do extensive testing on. The `patch_rootfs.sh` script attempts to copy all the firmware from the shim and recovery image into the rootfs, so expect most things to work on other boards.
 
 ### What Works:
 - Systemd
@@ -49,7 +50,7 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 - ~~prompt user for hostname and account when creating the rootfs~~
 - ~~auto load iwlmvm~~
 - get wifi fully working
-- host prebuilt images
+- ~~host prebuilt images~~
 - ~~write detailed documentation~~
 
 ### Long Term Goals:
@@ -65,7 +66,7 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 - At least 20GB of free disk space
 - An x86-based Chromebook
 
-### Instructions:
+### Build Instructions:
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
 2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
 3. Clone this repository and cd into it.
@@ -73,13 +74,30 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
 6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
 7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
-8. Flash the generated image to a USB drive or SD card.
-9. Enable developer mode on your Chromebook. Even if it's enrolled and dev mode is blocked, it'll still work for running shimboot.
-10. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
 
-Note that these instructions are currently incomplete.
+### Booting the Image:
+1. Obtain a shimboot image by downloading a [prebuilt one](https://dl.ading.dev/shimboot/) or building it yourself. 
+2. Flash the shimboot image to a USB drive or SD card. Use the [Chromebook Recovery Utility](https://chrome.google.com/webstore/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm) or [dd](https://linux.die.net/man/1/dd) if you're on Linux.
+3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section).
+4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
+5. Boot into Debian and log in with the username and password that you configured earlier. The default username/password for the prebuilt images is `user/user`.
+6. Expand the rootfs partition so that it fills up the entire disk by running `sudo growpart /dev/sdX 4` (replacing `sdX` with the block device corresponding to your disk) to expand the partition, then running `sudo resize2fs /dev/sdX` to expand the filesystem.
 
-## License:
+## FAQ:
+
+#### I want to use a different Linux distribution. How can I do that?
+Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs dir into `build.sh`.
+
+#### How can I install a desktop environment other than XFCE?
+Simply edit `rootfs/opt/setup_rootfs.sh`, and change the line after the `#install desktop` comment. By default, this is set to install XFCE using the `task-xfce-desktop` package, but you can change this to install whatever you want.
+
+#### Will this prevent me from using Chrome OS normally?
+Shimboot does not touch the internal storage at all, so you will be able to use Chrome OS as if nothing happened. However, if you are on an enterprise enrolled device, booting Chrome OS again will force a powerwash due to the attempted switch into developer mode.
+
+## Copyright:
+Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
+
+### Copyright Notice:
 ```
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
 Copyright (C) 2023 ading2210
