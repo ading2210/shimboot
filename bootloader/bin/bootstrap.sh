@@ -24,7 +24,7 @@ invoke_terminal() {
 
 enable_debug_console() {
   local tty="$1"
-  echo -e '\033[1;33m[cros_debug] enabled on '${tty}'.\033[m'
+  echo -e "debug console enabled on ${tty}"
   invoke_terminal "${tty}" "[Bootstrap Debug Console]" "/bin/busybox sh"
 }
 
@@ -56,6 +56,26 @@ move_mounts() {
   done
 }
 
+print_license() {
+  cat << EOF 
+ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
+Copyright (C) 2023 ading2210
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+EOF
+}
+
 print_selector() {
   local rootfs_partitions="$1"
   local i=1
@@ -78,6 +98,7 @@ print_selector() {
 
   echo "q) reboot"
   echo "s) enter a shell"
+  echo "l) view license"
 }
 
 get_selection() {
@@ -92,6 +113,12 @@ get_selection() {
     reset
     enable_debug_console "/dev/pts/0"
     return 0
+  elif [ "$selection" = "l" ]; then
+    clear
+    print_license
+    echo
+    read -p "press [enter] to return to the bootloader menu"
+    return 1
   fi
 
   for rootfs_partition in $rootfs_partitions; do
@@ -100,7 +127,6 @@ get_selection() {
 
     if [ "$selection" = "$i" ]; then
       echo "selected $part_path"
-      sleep 2
       boot_target $part_path
       return 0
     fi
@@ -109,14 +135,12 @@ get_selection() {
   done
   
   echo "invalid selection"
+  sleep 1
   return 1
 }
 
 boot_target() {
   local target="$1"
-  #scuffed way to get init to output to the right tty
-  #x11 doesn't use tty1 anyways so this shouldn't cause issues
-  mount -o bind /dev/pts/0 /dev/tty1
 
   echo "moving mounts to newroot"
   mkdir /newroot
@@ -131,8 +155,7 @@ boot_target() {
 }
 
 main() {
-  echo "...:::||| Bootstrapping ChromeOS Factory Shim |||:::..."
-  echo "idk please work"
+  echo "starting the shimboot bootloader"
 
   enable_debug_console "/dev/pts/1"
 
@@ -144,7 +167,6 @@ main() {
     if get_selection "${rootfs_partitions}"; then
       break
     fi
-    sleep 2
   done
 }
 
