@@ -45,6 +45,28 @@ find_rootfs_partitions() {
   done
 }
 
+find_chromeos_partitions() {
+  local roota_partitions="$(cgpt find -l ROOT-A)"
+  local rootb_partitions="$(cgpt find -l ROOT-B)"
+
+  if [ "$roota_partitions" ]; then
+    for partition in $roota_partitions; do
+      echo "${partition}:ChromeOS_ROOT-A:CrOS"
+    done
+  fi
+  
+  if [ "$rootb_partitions" ]; then
+    for partition in $rootb_partitions; do
+      echo "${partition}:ChromeOS_ROOT-B:CrOS"
+    done
+  fi
+}
+
+find_all_partitions() {
+  echo "$(find_chromeos_partitions)"
+  echo "$(find_rootfs_partitions)"
+}
+
 #from original bootstrap.sh
 move_mounts() {
   local base_mounts="/sys /proc /dev"
@@ -124,10 +146,16 @@ get_selection() {
   for rootfs_partition in $rootfs_partitions; do
     local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
     local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
+    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
 
     if [ "$selection" = "$i" ]; then
       echo "selected $part_path"
-      boot_target $part_path
+      if [ "$part_flags" = "CrOS" ]; then
+        echo "booting chrome os partition"
+        boot_chromeos $part_path
+      else
+        boot_target $part_path
+      fi
       return 0
     fi
 
@@ -154,17 +182,23 @@ boot_target() {
   exec /sbin/init < "$tty" >> "$tty" 2>&1
 }
 
+boot_chromeos() {
+  echo "not implemented yet :("
+  sleep 5
+}
+
 main() {
   echo "starting the shimboot bootloader"
 
   enable_debug_console "/dev/pts/1"
 
-  local rootfs_partitions=$(find_rootfs_partitions)
+  local valid_partitions="$(find_all_partitions)"
 
   while true; do
     clear
-    print_selector "${rootfs_partitions}"
-    if get_selection "${rootfs_partitions}"; then
+    print_selector "${valid_partitions}"
+
+    if get_selection "${valid_partitions}"; then
       break
     fi
   done
