@@ -47,7 +47,7 @@
 │ Chrome OS RMA Shim Bootloader │
 └───────────────────────────────┘
 <a href="#info" style="text-decoration: none;">1) Info</a>
-<a href="#explaination" style="text-decoration: none;">2) Explanation</a>
+<a href="#explanation" style="text-decoration: none;">2) Explanation</a>
 <a href="#prebuilt" style="text-decoration: none;">3) Prebuilt Images</a>
 <a href="#build" style="text-decoration: none;">4) Build Instructions</a>
 <a href="#usage" style="text-decoration: none;">5) Usage</a>
@@ -58,7 +58,7 @@ For more detailed information, please see the project's <a href="https://github.
 <b id="info">Info:</b>
 Shimboot is a collection of scripts for patching a Chrome OS RMA shim to serve as a bootloader for a standard Linux distribution. It allows you to boot a full desktop Debian install on a Chromebook, without needing to unenroll it or modify the firmware.
 
-<b id="info">Explanation:</b>
+<b id="explanation">Explanation:</b>
 Chrome OS RMA shims are bootable disk images which are designed to run a variety of diagnostic utilities on Chromebooks, and they'll work even if the device is enterprise enrolled. Unfortunately for Google, there exists a <a href="https://sh1mmer.me/">security flaw</a> in which the root filesystem of the RMA shim is not verified. This lets us replace the rootfs with anything we want, including a full Linux distribution.
 
 Simply replacing the shim's rootfs doesn't work, however, as it boots to an environment friendly to the RMA shim, not regular Linux distros. To get around this, a separate bootloader is required to transition from the shim environment to the main rootfs. This bootloader then does a <a href="https://man7.org/linux/man-pages/man8/pivot_root.8.html">pivot_root</a> to enter the rootfs, where it runs the init system.

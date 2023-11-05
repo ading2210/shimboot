@@ -167,6 +167,37 @@ get_selection() {
   return 1
 }
 
+contains_word() {
+  local substr="$1"
+  local str="$2"
+  for word in $str; do
+    if [ "$word" = "$substr" ]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+#might be useful in case we need to disable the tpm
+#currently this causes a kernel panic when we try to boot cros
+unbind_driver() {
+  local driver_path="$1"
+  local sys_files="$(ls $driver_path)"
+  local excluded_files="bind uevent unbind"
+  for file in $sys_files; do
+    if ! contains_word "$file" "$excluded_files"; then
+      echo "$file" > "${driver_path}/unbind"
+    fi
+  done
+}
+
+unbind_tpm() {
+  unbind_driver "/sys/bus/spi/drivers/tpm_tis_spi"
+  unbind_driver "/sys/bus/pnp/drivers/tpm_tis"
+  unbind_driver "/sys/bus/platform/drivers/tpm_tis"
+}
+
 boot_target() {
   local target="$1"
 
@@ -183,8 +214,30 @@ boot_target() {
 }
 
 boot_chromeos() {
-  echo "not implemented yet :("
+  local target="$1"
+
+  echo "WARNING: this functionality is unfinished and you will only get a bash shell"
+  echo "starting the init system currently does not work and will cause it to hang"
   sleep 5
+
+  echo "mounting target"
+  mkdir /newroot
+  mount -o ro $target /newroot
+
+  echo "mounting tmpfs"
+  mount -t tmpfs -o mode=1777 none /newroot/tmp
+  mount -t tmpfs -o mode=0555 run /newroot/run
+  mkdir -p -m 0755 /newroot/run/lock
+
+  echo "moving mounts"
+  move_mounts /newroot
+
+  echo "switching root"
+  sleep 5
+  mkdir -p /newroot/tmp/bootloader
+  pivot_root /newroot /newroot/tmp/bootloader
+  local tty="/dev/pts/0"
+  exec /bin/bash < "$tty" >> "$tty" 2>&1
 }
 
 main() {
