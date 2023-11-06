@@ -152,11 +152,12 @@ get_selection() {
       echo "selected $part_path"
       if [ "$part_flags" = "CrOS" ]; then
         echo "booting chrome os partition"
-        boot_chromeos $part_path
+        print_donor_selector "$rootfs_partitions"
+        get_donor_selection "$rootfs_partitions" "$part_path"
       else
         boot_target $part_path
       fi
-      return 0
+      return 1
     fi
 
     i=$((i+1))
@@ -198,6 +199,55 @@ unbind_tpm() {
   unbind_driver "/sys/bus/platform/drivers/tpm_tis"
 }
 
+print_donor_selector() {
+  local rootfs_partitions="$1"
+  local i=1;
+
+  echo "Choose a partition to copy firmware and modules from:";
+
+  for rootfs_partition in $rootfs_partitions; do
+    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
+    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
+    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
+
+    if [ "$part_flags" = "CrOS" ]; then
+      continue;
+    fi
+
+    echo "${i}) ${part_name} on ${part_path}"
+    i=$((i+1))
+  done
+}
+
+get_donor_selection() {
+  local rootfs_partitions="$1"
+  local target="$2"
+  local i=1;
+  read -p "Your selection: " selection
+
+  for rootfs_partition in $rootfs_partitions; do
+    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
+    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
+    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
+
+    if [ "$part_flags" = "CrOS" ]; then
+      continue;
+    fi
+
+    if [ "$selection" = "$i" ]; then
+      echo "selected $part_path as the donor partition"
+      boot_chromeos $target $part_path
+      return 0
+    fi
+
+    i=$((i+1))
+  done
+
+  echo "invalid selection"
+  sleep 1
+  return 1
+}
+
 boot_target() {
   local target="$1"
 
@@ -215,10 +265,7 @@ boot_target() {
 
 boot_chromeos() {
   local target="$1"
-
-  echo "WARNING: this functionality is unfinished and you will only get a bash shell"
-  echo "starting the init system currently does not work and will cause it to hang"
-  sleep 5
+  local donor="$2"
 
   echo "mounting target"
   mkdir /newroot
@@ -229,11 +276,19 @@ boot_chromeos() {
   mount -t tmpfs -o mode=0555 run /newroot/run
   mkdir -p -m 0755 /newroot/run/lock
 
+  echo "mounting donor partition"
+  local donor_path="/newroot/tmp/donor"
+  mkdir -p $donor_path
+  mount -o ro $donor $donor_path
+  mount -o bind $donor_path/lib/modules /newroot/lib/modules
+  mount -o bind $donor_path/lib/firmware /newroot/lib/firmware
+
   echo "moving mounts"
   move_mounts /newroot
 
   echo "switching root"
-  sleep 5
+  echo "you will have to run 'pkill frecon-lite; exec /sbin/init' to start chrome os normally"
+  echo "currently guest mode will work fine, but regular profiles may run into some issues"
   mkdir -p /newroot/tmp/bootloader
   pivot_root /newroot /newroot/tmp/bootloader
   local tty="/dev/pts/0"
