@@ -303,12 +303,19 @@ boot_chromeos() {
     mount -o bind /newroot/tmp/empty /sys/class/tpm
   fi
 
+  echo "patching chrome os rootfs"
+  cat /newroot/etc/ui_use_flags.txt | sed "/reven_branding/d" | sed "/os_install_service/d" > /newroot/tmp/ui_use_flags.txt
+  mount -o bind /newroot/tmp/ui_use_flags.txt /newroot/etc/ui_use_flags.txt
+
   echo "moving mounts"
   move_mounts /newroot
 
   echo "switching root"
   mkdir -p /newroot/tmp/bootloader
   pivot_root /newroot /newroot/tmp/bootloader
+
+  echo "starting init"
+  /sbin/modprobe zram
   pkill frecon-lite
   local tty="/dev/pts/0"
   exec /sbin/init < "$tty" >> "$tty" 2>&1

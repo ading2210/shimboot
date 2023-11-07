@@ -23,6 +23,7 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 Driver support depends on the device you are using shimboot on. This list is for the [`dedede`](https://chrome100.dev/board/dedede/) board, which is the only device I was able to do extensive testing on. The `patch_rootfs.sh` script attempts to copy all the firmware from the shim and recovery image into the rootfs, so expect most things to work on other boards.
 
 ### What Works:
+- Booting Chrome OS
 - Systemd
 - X11
 - XFCE
@@ -30,12 +31,12 @@ Driver support depends on the device you are using shimboot on. This list is for
 - Touchscreen
 - 3D acceleration
 - Bluetooth
+- Zram
 - Wifi (partially)
 - Suspend (partially)
 
 ### What Doesn't Work:
 - Audio
-- Zram
 
 ### Development Roadmap:
 - ~~build the image automatically~~
