@@ -29,7 +29,13 @@ apt-get upgrade -y
 systemctl enable kill-frecon.service
 
 #install desktop
-apt-get install -y task-xfce-desktop cloud-utils
+apt-get install -y task-xfce-desktop cloud-utils zram-tools
+
+#set up zram
+tee -a /etc/default/zramswap << END
+ALGO=lzo
+PERCENT=50
+END
 
 #set up hostname and username
 read -p "Enter the hostname for the system: " hostname
