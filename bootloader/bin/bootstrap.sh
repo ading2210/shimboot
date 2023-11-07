@@ -199,6 +199,13 @@ unbind_tpm() {
   unbind_driver "/sys/bus/platform/drivers/tpm_tis"
 }
 
+copy_progress() {
+  local source="$1"
+  local destination="$2"
+  mkdir -p "$destination"
+  tar -cf - -C "${source}" . | pv -f | tar -xf - -C "${destination}"
+}
+
 print_donor_selector() {
   local rootfs_partitions="$1"
   local i=1;
@@ -277,22 +284,34 @@ boot_chromeos() {
   mkdir -p -m 0755 /newroot/run/lock
 
   echo "mounting donor partition"
-  local donor_path="/newroot/tmp/donor"
-  mkdir -p $donor_path
-  mount -o ro $donor $donor_path
-  mount -o bind $donor_path/lib/modules /newroot/lib/modules
-  mount -o bind $donor_path/lib/firmware /newroot/lib/firmware
+  local donor_mount="/newroot/tmp/donor_mnt"
+  local donor_files="/newroot/tmp/donor"
+  mkdir -p $donor_mount
+  mount -o ro $donor $donor_mount
+
+  echo "copying modules and firmware to tmpfs (this may take a while)"
+  copy_progress $donor_mount/lib/modules $donor_files/lib/modules
+  copy_progress $donor_mount/lib/firmware $donor_files/lib/firmware
+  mount -o bind $donor_files/lib/modules /newroot/lib/modules
+  mount -o bind $donor_files/lib/firmware /newroot/lib/firmware
+  umount $donor_mount
+  rm -rf $donor_mount
+
+  if [ -e "/newroot/etc/init/tpm-probe.conf" ]; then
+    echo "hiding the tpm from upstart"
+    mkdir -p /newroot/tmp/empty
+    mount -o bind /newroot/tmp/empty /sys/class/tpm
+  fi
 
   echo "moving mounts"
   move_mounts /newroot
 
   echo "switching root"
-  echo "you will have to run 'pkill frecon-lite; exec /sbin/init' to start chrome os normally"
-  echo "currently guest mode will work fine, but regular profiles may run into some issues"
   mkdir -p /newroot/tmp/bootloader
   pivot_root /newroot /newroot/tmp/bootloader
+  pkill frecon-lite
   local tty="/dev/pts/0"
-  exec /bin/bash < "$tty" >> "$tty" 2>&1
+  exec /sbin/init < "$tty" >> "$tty" 2>&1
 }
 
 main() {
