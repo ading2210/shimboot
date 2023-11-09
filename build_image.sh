@@ -100,6 +100,7 @@ populate_partitions() {
   local stateful_mount=/tmp/shim_stateful
   safe_mount "${image_loop}p1" $stateful_mount
   mkdir -p $stateful_mount/dev_image/etc/
+  mkdir -p $stateful_mount/dev_image/factory/sh
   touch $stateful_mount/dev_image/etc/lsb-factory
   umount $stateful_mount
 

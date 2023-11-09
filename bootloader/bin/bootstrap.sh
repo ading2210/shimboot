@@ -133,7 +133,7 @@ get_selection() {
     reboot -f
   elif [ "$selection" = "s" ]; then
     reset
-    enable_debug_console "/dev/pts/0"
+    enable_debug_console "$TTY1"
     return 0
   elif [ "$selection" = "l" ]; then
     clear
@@ -266,8 +266,7 @@ boot_target() {
   echo "switching root"
   mkdir -p /newroot/bootloader
   pivot_root /newroot /newroot/bootloader
-  local tty="/dev/pts/0"
-  exec /sbin/init < "$tty" >> "$tty" 2>&1
+  exec /sbin/init < "$TTY1" >> "$TTY1" 2>&1
 }
 
 boot_chromeos() {
@@ -317,14 +316,13 @@ boot_chromeos() {
   echo "starting init"
   /sbin/modprobe zram
   pkill frecon-lite
-  local tty="/dev/pts/0"
-  exec /sbin/init < "$tty" >> "$tty" 2>&1
+  exec /sbin/init < "$TTY1" >> "$TTY1" 2>&1
 }
 
 main() {
   echo "starting the shimboot bootloader"
 
-  enable_debug_console "/dev/pts/1"
+  enable_debug_console "$TTY2"
 
   local valid_partitions="$(find_all_partitions)"
 
