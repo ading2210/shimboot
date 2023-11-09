@@ -55,7 +55,6 @@ Driver support depends on the device you are using shimboot on. This list is for
 - ~~write detailed documentation~~
 
 ### Long Term Goals:
-- get zram to work
 - eliminate binwalk dependency
 - get audio to work
 
