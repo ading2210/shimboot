@@ -243,7 +243,7 @@ get_donor_selection() {
 
     if [ "$selection" = "$i" ]; then
       echo "selected $part_path as the donor partition"
-      read -p "would you like to spoof verfied mode? this is useful if you're planning on using chrome os while enrolled. (y/n): " use_crossystem
+      read -p "would you like to spoof verified mode? this is useful if you're planning on using chrome os while enrolled. (y/n): " use_crossystem
 
       if [ "$use_crossystem" = "y" ] || [ "$use_crossystem" = "n" ]; then
         boot_chromeos $target $part_path $use_crossystem
@@ -306,9 +306,12 @@ boot_chromeos() {
   rm -rf $donor_mount
 
   if [ -e "/newroot/etc/init/tpm-probe.conf" ]; then
-    echo "hiding the tpm from upstart"
+    echo "applying chrome os flex patches"
     mkdir -p /newroot/tmp/empty
     mount -o bind /newroot/tmp/empty /sys/class/tpm
+
+    cat /newroot/etc/lsb-release | sed "s/DEVICETYPE=OTHER/DEVICETYPE=CHROMEBOOK/" > /newroot/tmp/lsb-release
+    mount -o bind /newroot/tmp/lsb-release /newroot/etc/lsb-release
   fi
 
   echo "patching chrome os rootfs"

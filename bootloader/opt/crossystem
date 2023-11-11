@@ -3,27 +3,23 @@
 #a much cleaner implemenation of fakemurk's crossystem.sh 
 
 crossystem_old=/tmp/crossystem_old
-crossystem_dict="cros_debug 0
-dev_boot_legacy 0
-dev_boot_signed_only 1
-dev_boot_usb 0
-devsw_boot 0
-devsw_cur 0
-block_devmode 1
-mainfw_act A
-mainfw_type normal
-recovery_reason 0
-recovery_request 0
-recoverysw_boot 0
-recoverysw_cur 0"
-
-dict_set() {
-  local newline=$'\n'
-  crossystem_dict="$crossystem_dict$newline$1 $2"
-}
+declare -A crossystem_dict=(
+  ["cros_debug"]="1"
+  ["dev_boot_legacy"]="0"
+  ["dev_boot_signed_only"]="1"
+  ["devsw_boot"]="0"
+  ["devsw_cur"]="0"
+  ["block_devmode"]="1"
+  ["mainfw_act"]="A"
+  ["mainfw_type"]="normal"
+  ["recovery_reason"]="0"
+  ["recovery_request"]="0"
+  ["recoverysw_boot"]="0"
+  ["recoverysw_cur"]="0"
+)
 
 dict_get() {
-  echo "$crossystem_dict" | grep "^$1 " | cut -d " " -f 2-
+  echo "${crossystem_dict[$1]}"
 }
 
 parse_arg() {
@@ -37,13 +33,13 @@ parse_arg() {
   elif [[ "$arg" =~ "?" ]]; then
     key=$(echo $arg | cut -d "?" -f 1)
     query=$(echo $arg | cut -d "?" -f 2)
-    if ! [ "$(dict_get $key)" = "$query" ]; then
+    if ! [ "${crossystem_dict[$key]}" = "$query" ]; then
       exit 1
     fi
   
   #get value mode
-  elif [ "$(dict_get $arg)" ]; then
-    printf "$(dict_get $arg)"
+  elif [ "${crossystem_dict[$arg]}" ]; then
+    printf "${crossystem_dict[$arg]}"
   
   #value not found - print help and exit
   else
@@ -60,18 +56,19 @@ while IFS= read -r line; do
   line=$(echo $line | cut -d "#" -f 1)
   key=$(echo $line | cut -d "=" -f 1 | xargs)
   value=$(echo $line | cut -d "=" -f 2 | xargs)
-  if [ -z "$(dict_get $key)" ]; then
-    dict_set "$key" "$value"
+  if [ -z "${crossystem_dict[$key]}" ]; then
+    crossystem_dict["$key"]="$value"
   fi
 done <<< "$crossystem_out"
 
 #crossystem called with no arguments, print out all properties
 if [ -z "$1" ] || [ "$1" = "--all" ]; then
-  while IFS= read -r line; do
-    key=$(echo $line | cut -d " " -f 1)
-    value=$(echo $line | cut -d " " -f 2-)
+  keys="${!crossystem_dict[@]}"
+  keys="$(echo "$keys" | tr " " "\n" | sort)"
+  for key in $keys; do
+    value="${crossystem_dict[$key]}"
     echo "$key = $value"
-  done <<< "$crossystem_dict"
+  done
   
   exit 0
 fi
