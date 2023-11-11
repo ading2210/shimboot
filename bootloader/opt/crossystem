@@ -1,0 +1,81 @@
+#!/bin/bash
+
+#a much cleaner implemenation of fakemurk's crossystem.sh 
+
+crossystem_old=/tmp/crossystem_old
+crossystem_dict="cros_debug 0
+dev_boot_legacy 0
+dev_boot_signed_only 1
+dev_boot_usb 0
+devsw_boot 0
+devsw_cur 0
+block_devmode 1
+mainfw_act A
+mainfw_type normal
+recovery_reason 0
+recovery_request 0
+recoverysw_boot 0
+recoverysw_cur 0"
+
+dict_set() {
+  local newline=$'\n'
+  crossystem_dict="$crossystem_dict$newline$1 $2"
+}
+
+dict_get() {
+  echo "$crossystem_dict" | grep "^$1 " | cut -d " " -f 2-
+}
+
+parse_arg() {
+  local arg="$1"
+
+  #set values mode - pass this through without changes
+  if [[ "$arg" =~ "=" ]]; then
+    $crossystem_old "$@"
+
+  #search value mode
+  elif [[ "$arg" =~ "?" ]]; then
+    key=$(echo $arg | cut -d "?" -f 1)
+    query=$(echo $arg | cut -d "?" -f 2)
+    if ! [ "$(dict_get $key)" = "$query" ]; then
+      exit 1
+    fi
+  
+  #get value mode
+  elif [ "$(dict_get $arg)" ]; then
+    printf "$(dict_get $arg)"
+  
+  #value not found - print help and exit
+  else
+    $crossystem_old --help
+    exit 1
+  fi
+}
+
+crossystem_out="$($crossystem_old)"
+#crossystem_out=$(cat data/crossystem.txt)
+  
+#add crossystem output to the dict
+while IFS= read -r line; do
+  line=$(echo $line | cut -d "#" -f 1)
+  key=$(echo $line | cut -d "=" -f 1 | xargs)
+  value=$(echo $line | cut -d "=" -f 2 | xargs)
+  if [ -z "$(dict_get $key)" ]; then
+    dict_set "$key" "$value"
+  fi
+done <<< "$crossystem_out"
+
+#crossystem called with no arguments, print out all properties
+if [ -z "$1" ] || [ "$1" = "--all" ]; then
+  while IFS= read -r line; do
+    key=$(echo $line | cut -d " " -f 1)
+    value=$(echo $line | cut -d " " -f 2-)
+    echo "$key = $value"
+  done <<< "$crossystem_dict"
+  
+  exit 0
+fi
+
+for arg in "$@"; do
+  parse_arg $arg
+done

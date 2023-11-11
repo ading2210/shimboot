@@ -243,8 +243,16 @@ get_donor_selection() {
 
     if [ "$selection" = "$i" ]; then
       echo "selected $part_path as the donor partition"
-      boot_chromeos $target $part_path
-      return 0
+      read -p "would you like to spoof verfied mode? this is useful if you're planning on using chrome os while enrolled. (y/n): " use_crossystem
+
+      if [ "$use_crossystem" = "y" ] || [ "$use_crossystem" = "n" ]; then
+        boot_chromeos $target $part_path $use_crossystem
+        return 0
+      else
+        echo "invalid selection"
+        sleep 1
+        return 1
+      fi
     fi
 
     i=$((i+1))
@@ -272,6 +280,7 @@ boot_target() {
 boot_chromeos() {
   local target="$1"
   local donor="$2"
+  local use_crossystem="$3"
 
   echo "mounting target"
   mkdir /newroot
@@ -305,6 +314,13 @@ boot_chromeos() {
   echo "patching chrome os rootfs"
   cat /newroot/etc/ui_use_flags.txt | sed "/reven_branding/d" | sed "/os_install_service/d" > /newroot/tmp/ui_use_flags.txt
   mount -o bind /newroot/tmp/ui_use_flags.txt /newroot/etc/ui_use_flags.txt
+  
+  if [ "$use_crossystem" = "y" ]; then
+    echo "patching crossystem"
+    cp /opt/crossystem /newroot/tmp/crossystem
+    cp /newroot/usr/bin/crossystem /newroot/tmp/crossystem_old
+    mount -o bind /newroot/tmp/crossystem /newroot/usr/bin/crossystem
+  fi
 
   echo "moving mounts"
   move_mounts /newroot
