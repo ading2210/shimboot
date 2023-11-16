@@ -1,0 +1,64 @@
+Drive details:
+    Total Size (bytes): 31406948352
+    LBA Size (bytes): 512
+    Drive Size (blocks): 61341696
+
+       start        size    part  contents
+           0           1          PMBR (Boot GUID: 6FEF1C9C-06E5-A241-8434-4DAEDB111E25)
+           1           1          Pri GPT header
+                                  Sig: [EFI PART]
+                                  Rev: 0x00010000
+                                  Size: 92 (blocks)
+                                  Header CRC: 0x5360d2d1 
+                                  My LBA: 1
+                                  Alternate LBA: 61341695
+                                  First LBA: 34
+                                  Last LBA: 61341662
+                                  Disk UUID: 86B10BA8-9034-EF4B-8317-FCE5DAF31217
+                                  Entries LBA: 2
+                                  Number of entries: 128
+                                  Size of entry: 128
+                                  Entries CRC: 0xcb14dbb4 
+           2          32          Pri GPT table
+    17076224    44265424       1  Label: "STATE"
+                                  Type: Linux data
+                                  UUID: E8F13031-3E0A-644F-BD7F-47CCEB1CB66D
+          69       65536       2  Label: "KERN-A"
+                                  Type: ChromeOS kernel
+                                  UUID: C4CEA206-F7D2-644E-8E79-D1493CC6CB26
+                                  Attr: priority=1 tries=6 successful=1 
+     8687616     8388608       3  Label: "ROOT-A"
+                                  Type: ChromeOS rootfs
+                                  UUID: 3C7B177E-80B1-EE49-961E-51D6BA3FC44F
+       65605       65536       4  Label: "KERN-B"
+                                  Type: ChromeOS kernel
+                                  UUID: 8E062EC0-3E93-5E49-ABF1-CAD263B0EC25
+                                  Attr: priority=0 tries=0 successful=0 
+      299008     8388608       5  Label: "ROOT-B"
+                                  Type: ChromeOS rootfs
+                                  UUID: E459E35F-EA02-BB4E-9B38-189558C57E6B
+          65           1       6  Label: "KERN-C"
+                                  Type: ChromeOS kernel
+                                  UUID: 0519DD7F-1304-6B46-9350-8DF655D6F5DC
+                                  Attr: priority=0 tries=15 successful=0 
+          66           1       7  Label: "ROOT-C"
+                                  Type: ChromeOS rootfs
+                                  UUID: 4B5B2C2F-FFDB-8048-9E84-73CFF2A12D41
+      135168       32768       8  Label: "OEM"
+                                  Type: Linux data
+                                  UUID: 08627ADE-BA25-4E45-829D-1C3BB9E3868A
+          67           1       9  Label: "reserved"
+                                  Type: ChromeOS reserved
+                                  UUID: 0A72804D-4917-7D49-826E-047677BEB1C2
+          68           1      10  Label: "reserved"
+                                  Type: ChromeOS reserved
+                                  UUID: C4B8F240-F25E-0443-900A-7925C639D221
+          64           1      11  Label: "RWFW"
+                                  Type: ChromeOS firmware
+                                  UUID: 6CD4EA7A-12BB-B241-9A18-CC6192577CA2
+      167936      131072      12  Label: "EFI-SYSTEM"
+                                  Type: EFI System Partition
+                                  UUID: 6FEF1C9C-06E5-A241-8434-4DAEDB111E25
+                                  Attr: legacy_boot=1 
+    61341663          32          Sec GPT table
+    61341695           1          Sec GPT header

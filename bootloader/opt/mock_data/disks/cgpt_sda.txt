@@ -1,0 +1,37 @@
+Drive details:
+    Total Size (bytes): 32080200192
+    LBA Size (bytes): 512
+    Drive Size (blocks): 62656641
+
+       start        size    part  contents
+           0           1          PMBR
+           1           1          Pri GPT header
+                                  Sig: [EFI PART]
+                                  Rev: 0x00010000
+                                  Size: 92 (blocks)
+                                  Header CRC: 0xf5ad3a99 
+                                  My LBA: 1
+                                  Alternate LBA: 62656640
+                                  First LBA: 2048
+                                  Last LBA: 62656607
+                                  Disk UUID: 21C01189-38C4-1542-B86F-6C9AB4797787
+                                  Entries LBA: 2
+                                  Number of entries: 128
+                                  Size of entry: 128
+                                  Entries CRC: 0xd0ed456d 
+           2          32          Pri GPT table
+        2048        2048       1  Label: ""
+                                  Type: Linux data
+                                  UUID: 59AB757A-A57C-8449-AF49-88009CF42C05
+        4096       65536       2  Label: "kernel"
+                                  Type: ChromeOS kernel
+                                  UUID: 9D66D325-3D80-7C47-BC77-19C30A0B3A65
+                                  Attr: priority=10 tries=5 successful=1 
+       69632       40960       3  Label: ""
+                                  Type: ChromeOS rootfs
+                                  UUID: D6E9F877-C453-7245-989C-1C9A449A9EC1
+      110592    62546016       4  Label: "shimboot_rootfs:default"
+                                  Type: Linux data
+                                  UUID: BB6A4733-312B-FF41-9329-4CC2CC237E69
+    62656608          32          Sec GPT table
+    62656640           1          Sec GPT header
