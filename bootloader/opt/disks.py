@@ -27,7 +27,7 @@ def get_disks():
 def get_partitions(disk):
   try:
     if utils.on_shim:
-      output_bytes = subprocess.check_output([cgpt_path, "show", disk, "-v"])
+      output_bytes = subprocess.check_output([cgpt_path, "show", disk, "-v"], stderr=subprocess.DEVNULL)
       output = output_bytes.decode()
     else:
       output = pathlib.Path(mock_disks_path / mock_disks[disk]).read_text()
@@ -55,4 +55,5 @@ def get_partitions(disk):
   return partitions
 
 if __name__ == "__main__":
+  print(get_disks())
   print(json.dumps(get_partitions("/dev/sda"), indent=2))
