@@ -20,7 +20,7 @@ def get_disks():
   for path in pathlib.Path("/sys/block").iterdir():
     if path.name.startswith(("loop", "zram")):
       continue
-    disks.append(str(path.name))
+    disks.append("/dev/" + str(path.name))
   return disks
 
 #get all partitions on a particular disk
@@ -32,7 +32,7 @@ def get_partitions(disk):
     else:
       output = pathlib.Path(mock_disks_path / mock_disks[disk]).read_text()
   except subprocess.CalledProcessError:
-    return None
+    return []
   
   partitions_output = re.findall(r'Pri GPT table\n(.+)\n.+Sec GPT table', output, flags=re.S)[0]
   partition_data = re.findall(r'\s+\d+\s+\d+\s+(\d+)\s+Label: "(.*?)"', partitions_output)
@@ -54,6 +54,33 @@ def get_partitions(disk):
 
   return partitions
 
+def get_valid_partitions(disk):
+  partitions = get_partitions(disk)
+  valid_partitions = []
+
+  for partition in partitions:
+    if partition["type"] == "ChromeOS rootfs" and partition["label"] in ["ROOT-A", "ROOT-B"]:
+      partition["name"] = partition["label"]
+      valid_partitions.append(partition)
+      
+    elif partition["label"].startswith("shimboot_rootfs:"):
+      partition["name"] = partition["label"].replace("shimboot_rootfs:", "", 1)
+      valid_partitions.append(partition)
+
+  return valid_partitions
+
+def get_all_partitions():
+  disks = get_disks()
+  all_partitions = {}
+
+  for disk in disks:
+    partitions = get_valid_partitions(disk)
+    if not partitions:
+      continue
+    all_partitions[disk] = partitions
+  
+  return all_partitions
+      
+
 if __name__ == "__main__":
-  print(get_disks())
-  print(json.dumps(get_partitions("/dev/sda"), indent=2))
+  print(json.dumps(get_all_partitions(), indent=2))
