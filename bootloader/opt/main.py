@@ -8,9 +8,20 @@ class Bootloader:
   def init(self):
     self.setup_curses()
     self.setup_windows()
-    self.show_disks()
-    time.sleep(10)
+    self.all_partitions = disks.get_all_partitions()
+    self.main()
     self.destroy_curses()
+  
+  def main(self):
+    selected = 0
+    while True:
+      self.show_disks(selected)
+      char = self.entries_window.getch()
+      
+      if char == curses.KEY_DOWN and selected < len(self.all_partitions)-1:
+        selected += 1
+      elif char == curses.KEY_UP and selected > 0:
+        selected -= 1
   
   def setup_windows(self):
     self.title_window = curses.newwin(3, self.cols, 0, 0)
@@ -18,6 +29,7 @@ class Bootloader:
     self.title_window.refresh()
 
     self.entries_window = curses.newwin(self.rows-7, self.cols-8, 3, 4)
+    self.entries_window.keypad(True)
     self.entries_window.border()
     self.entries_window.refresh()
 
@@ -29,7 +41,7 @@ class Bootloader:
   def setup_curses(self):
     self.screen = curses.initscr()
     self.rows, self.cols = self.screen.getmaxyx()
-    self.screen.keypad(True)
+    self.screen.nodelay(1)
     curses.curs_set(0)
     curses.noecho()
     curses.cbreak()
@@ -46,13 +58,14 @@ class Bootloader:
     x = int(cols/2 - len(text)/2)
     window.addstr(y, x, text)
   
-  def show_disks(self):
-    all_partitions = disks.get_all_partitions()
-    y = 1
-    for disk, partitions in all_partitions.items():
+  def show_disks(self, selected=0):
+    for i, (disk, partitions) in enumerate(self.all_partitions.items()):
       for partition in partitions:
-        self.entries_window.addstr(y, 2, f"{partition['name']} on {disk}")
-        y += 1
+        partition_text = f"{partition['name']} on {disk}"
+        if i == selected:
+          self.entries_window.addstr(i+1, 2, f"{partition['name']} on {disk}", curses.A_REVERSE)
+        else:
+          self.entries_window.addstr(i+1, 2, f"{partition['name']} on {disk}", curses.A_NORMAL)
     self.entries_window.refresh()
 
 if __name__ == "__main__":
