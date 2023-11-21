@@ -44,12 +44,19 @@ def get_partitions(disk):
     part_details_str = partition_details[int(part_num)-1]
     part_type = re.findall(r'Type: (.+)', part_details_str)[0]
     part_uuid = re.findall(r'UUID: (.+)', part_details_str)[0]
+    
+    if disk[-1].isdigit():
+      part_device = f"{disk}p{part_num}"
+    else:
+      part_device = f"{disk}{part_num}"
 
     partitions.append({
+      "disk": disk,
+      "device": part_device,
       "num": int(part_num),
       "label": part_label,
       "type": part_type,
-      "uuid": part_uuid
+      "uuid": part_uuid,
     })
 
   return partitions
@@ -71,13 +78,11 @@ def get_valid_partitions(disk):
 
 def get_all_partitions():
   disks = get_disks()
-  all_partitions = {}
+  all_partitions = []
 
   for disk in disks:
     partitions = get_valid_partitions(disk)
-    if not partitions:
-      continue
-    all_partitions[disk] = partitions
+    all_partitions += partitions
   
   return all_partitions
       

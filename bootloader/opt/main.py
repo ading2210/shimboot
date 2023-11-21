@@ -1,8 +1,11 @@
 import curses
 import curses.panel
-import disks
 import time
 import traceback
+import os
+
+import disks
+import utils
 
 class Bootloader:
   def init(self):
@@ -13,15 +16,39 @@ class Bootloader:
     self.destroy_curses()
   
   def main(self):
-    selected = 0
+    selected_item = 0
+
     while True:
-      self.show_disks(selected)
-      char = self.entries_window.getch()
+      self.show_disks(selected_item)
+      key = self.entries_window.getch()
       
-      if char == curses.KEY_DOWN and selected < len(self.all_partitions)-1:
-        selected += 1
-      elif char == curses.KEY_UP and selected > 0:
-        selected -= 1
+      if key == curses.KEY_DOWN and selected_item < len(self.all_partitions)-1:
+        selected_item += 1
+      elif key == curses.KEY_UP and selected_item > 0:
+        selected_item -= 1
+      elif key == curses.KEY_ENTER or key == 10 or key == 13:
+        self.boot_entry(selected_item)
+  
+  def boot_entry(self, selected_item):
+    self.destroy_curses()
+    partition = self.all_partitions[selected_item]
+    
+    if partition["type"] == "ChromeOS rootfs":
+      self.boot_chrome_os(partition)
+    else:
+      self.boot_regular(partition)
+
+    os._exit(0)
+  
+  def boot_regular(self, partition):
+    print(f"Booting {partition['name']} on {partition['device']}")
+    output_cmd = f"boot_target {partition['device']}"
+    utils.output_file.write_text(output_cmd)
+  
+  def boot_chrome_os(self, partition):
+    print(f"Booting Chrome OS {partition['name']} on {partition['device']}")
+    output_cmd = f"boot_chromeos {partition['device']}"
+    utils.output_file.write_text(output_cmd)
   
   def setup_windows(self):
     self.title_window = curses.newwin(3, self.cols, 0, 0)
@@ -47,25 +74,27 @@ class Bootloader:
     curses.cbreak()
   
   def destroy_curses(self):
-    self.screen.keypad(False)
     curses.curs_set(1)
     curses.nocbreak()
     curses.echo()
     curses.endwin()
+    print("\x1b[2J\x1b[H", end="")
   
   def centered_text(self, window, y, text):
     cols = self.screen.getmaxyx()[1]
     x = int(cols/2 - len(text)/2)
     window.addstr(y, x, text)
   
-  def show_disks(self, selected=0):
-    for i, (disk, partitions) in enumerate(self.all_partitions.items()):
-      for partition in partitions:
-        partition_text = f"{partition['name']} on {disk}"
-        if i == selected:
-          self.entries_window.addstr(i+1, 2, f"{partition['name']} on {disk}", curses.A_REVERSE)
-        else:
-          self.entries_window.addstr(i+1, 2, f"{partition['name']} on {disk}", curses.A_NORMAL)
+  def show_disks(self, selected_item):
+    width = self.entries_window.getmaxyx()[1]
+    for i, partition in enumerate(self.all_partitions):
+      partition_text = f"{partition['name']} on {partition['device']}"
+      self.entries_window.addstr(i+1, 2, partition_text)
+      if i == selected_item:
+        self.entries_window.chgat(i+1, 2, width-4, curses.A_REVERSE)
+      else:
+        self.entries_window.chgat(i+1, 2, width-4, curses.A_NORMAL)
+      i += 1
     self.entries_window.refresh()
 
 if __name__ == "__main__":
