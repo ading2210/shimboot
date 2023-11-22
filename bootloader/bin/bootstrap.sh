@@ -28,45 +28,6 @@ enable_debug_console() {
   invoke_terminal "${tty}" "[Bootstrap Debug Console]" "/bin/busybox sh"
 }
 
-find_rootfs_partitions() {
-  local disks=$(fdisk -l | sed -n "s/Disk \(\/dev\/.*\):.*/\1/p")
-  if [ ! "${disks}" ]; then
-    return 1
-  fi
-
-  for disk in $disks; do
-    local partitions=$(fdisk -l $disk | sed -n "s/^[ ]\+\([0-9]\+\).*shimboot_rootfs:\(.*\)$/\1:\2/p")
-    if [ ! "${partitions}" ]; then
-      continue
-    fi
-    for partition in $partitions; do
-      echo "${disk}${partition}"
-    done
-  done
-}
-
-find_chromeos_partitions() {
-  local roota_partitions="$(cgpt find -l ROOT-A)"
-  local rootb_partitions="$(cgpt find -l ROOT-B)"
-
-  if [ "$roota_partitions" ]; then
-    for partition in $roota_partitions; do
-      echo "${partition}:ChromeOS_ROOT-A:CrOS"
-    done
-  fi
-  
-  if [ "$rootb_partitions" ]; then
-    for partition in $rootb_partitions; do
-      echo "${partition}:ChromeOS_ROOT-B:CrOS"
-    done
-  fi
-}
-
-find_all_partitions() {
-  echo "$(find_chromeos_partitions)"
-  echo "$(find_rootfs_partitions)"
-}
-
 #from original bootstrap.sh
 move_mounts() {
   local base_mounts="/sys /proc /dev"
@@ -98,169 +59,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 EOF
 }
 
-print_selector() {
-  local rootfs_partitions="$1"
-  local i=1
-
-  echo "┌──────────────────────┐"
-  echo "│ Shimboot OS Selector │"
-  echo "└──────────────────────┘"
-
-  if [ "${rootfs_partitions}" ]; then
-    for rootfs_partition in $rootfs_partitions; do
-      #i don't know of a better way to split a string in the busybox shell
-      local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-      local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-      echo "${i}) ${part_name} on ${part_path}"
-      i=$((i+1))
-    done
-  else
-    echo "no bootable partitions found. please see the shimboot documentation to mark a partition as bootable."
-  fi
-
-  echo "q) reboot"
-  echo "s) enter a shell"
-  echo "l) view license"
-}
-
-get_selection() {
-  local rootfs_partitions="$1"
-  local i=1
-
-  read -p "Your selection: " selection
-  if [ "$selection" = "q" ]; then
-    echo "rebooting now."
-    reboot -f
-  elif [ "$selection" = "s" ]; then
-    reset
-    enable_debug_console "$TTY1"
-    return 0
-  elif [ "$selection" = "l" ]; then
-    clear
-    print_license
-    echo
-    read -p "press [enter] to return to the bootloader menu"
-    return 1
-  fi
-
-  for rootfs_partition in $rootfs_partitions; do
-    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
-
-    if [ "$selection" = "$i" ]; then
-      echo "selected $part_path"
-      if [ "$part_flags" = "CrOS" ]; then
-        echo "booting chrome os partition"
-        print_donor_selector "$rootfs_partitions"
-        get_donor_selection "$rootfs_partitions" "$part_path"
-      else
-        boot_target $part_path
-      fi
-      return 1
-    fi
-
-    i=$((i+1))
-  done
-  
-  echo "invalid selection"
-  sleep 1
-  return 1
-}
-
-contains_word() {
-  local substr="$1"
-  local str="$2"
-  for word in $str; do
-    if [ "$word" = "$substr" ]; then
-      return 0
-    fi
-  done
-
-  return 1
-}
-
-#might be useful in case we need to disable the tpm
-#currently this causes a kernel panic when we try to boot cros
-unbind_driver() {
-  local driver_path="$1"
-  local sys_files="$(ls $driver_path)"
-  local excluded_files="bind uevent unbind"
-  for file in $sys_files; do
-    if ! contains_word "$file" "$excluded_files"; then
-      echo "$file" > "${driver_path}/unbind"
-    fi
-  done
-}
-
-unbind_tpm() {
-  unbind_driver "/sys/bus/spi/drivers/tpm_tis_spi"
-  unbind_driver "/sys/bus/pnp/drivers/tpm_tis"
-  unbind_driver "/sys/bus/platform/drivers/tpm_tis"
-}
-
 copy_progress() {
   local source="$1"
   local destination="$2"
   mkdir -p "$destination"
   tar -cf - -C "${source}" . | pv -f | tar -xf - -C "${destination}"
-}
-
-print_donor_selector() {
-  local rootfs_partitions="$1"
-  local i=1;
-
-  echo "Choose a partition to copy firmware and modules from:";
-
-  for rootfs_partition in $rootfs_partitions; do
-    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
-
-    if [ "$part_flags" = "CrOS" ]; then
-      continue;
-    fi
-
-    echo "${i}) ${part_name} on ${part_path}"
-    i=$((i+1))
-  done
-}
-
-get_donor_selection() {
-  local rootfs_partitions="$1"
-  local target="$2"
-  local i=1;
-  read -p "Your selection: " selection
-
-  for rootfs_partition in $rootfs_partitions; do
-    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
-
-    if [ "$part_flags" = "CrOS" ]; then
-      continue;
-    fi
-
-    if [ "$selection" = "$i" ]; then
-      echo "selected $part_path as the donor partition"
-      read -p "would you like to spoof verified mode? this is useful if you're planning on using chrome os while enrolled. (y/n): " use_crossystem
-
-      if [ "$use_crossystem" = "y" ] || [ "$use_crossystem" = "n" ]; then
-        boot_chromeos $target $part_path $use_crossystem
-        return 0
-      else
-        echo "invalid selection"
-        sleep 1
-        return 1
-      fi
-    fi
-
-    i=$((i+1))
-  done
-
-  echo "invalid selection"
-  sleep 1
-  return 1
 }
 
 boot_target() {
@@ -340,17 +143,24 @@ boot_chromeos() {
 
 main() {
   echo "starting the shimboot bootloader"
-
   enable_debug_console "$TTY2"
 
-  local valid_partitions="$(find_all_partitions)"
+  echo "extracting terminfo"
+  cd /etc
+  unzip -q terminfo.zip
+  cd /
 
+  echo "launching python bootloader"
   while true; do
-    clear
-    print_selector "${valid_partitions}"
-
-    if get_selection "${valid_partitions}"; then
-      break
+    python3 /opt/main.py
+    local exit_code="$?"
+    
+    #boot an option
+    if [ "$exit_code" = "0" ]; then
+      chmod +x /tmp/bootloader_result
+      . /tmp/bootloader_result
+    elif [ "$exit_code" = "1" ]; then
+      read -s -p "An unexpected error occured. Press [enter] to run the bootloader again."
     fi
   done
 }

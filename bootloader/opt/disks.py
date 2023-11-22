@@ -13,14 +13,17 @@ if not utils.on_shim:
 
 #get all physical disks on the system
 def get_disks():
-  if not utils.on_shim:
-    return list(mock_disks.keys())
+  #if not utils.on_shim:
+  #  return list(mock_disks.keys())
 
   disks = []
   for path in pathlib.Path("/sys/block").iterdir():
+    disk_device = pathlib.Path("/dev") / path.name
     if path.name.startswith(("loop", "zram")):
       continue
-    disks.append("/dev/" + str(path.name))
+    if not disk_device.exists():
+      continue
+    disks.append(str(disk_device))
   return disks
 
 #get all partitions on a particular disk
