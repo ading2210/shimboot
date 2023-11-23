@@ -12,10 +12,10 @@ class Bootloader:
     self.setup_curses()
     self.setup_windows()
     self.all_partitions = disks.get_all_partitions()
-    self.main()
+    self.pick_os()
     self.destroy_curses()
   
-  def main(self):
+  def pick_os(self):
     selected_item = 0
 
     while True:
@@ -28,6 +28,14 @@ class Bootloader:
         selected_item -= 1
       elif key == curses.KEY_ENTER or key == 10 or key == 13:
         self.boot_entry(selected_item)
+      elif key == 115: #s
+        self.enter_shell()
+  
+  def enter_shell(self):
+    self.destroy_curses()
+    print("Entering a shell")
+    utils.output_file.write_text('enable_debug_console "$TTY1"')
+    os._exit(0)
   
   def boot_entry(self, selected_item):
     self.destroy_curses()
@@ -37,7 +45,7 @@ class Bootloader:
       self.boot_chrome_os(partition)
     else:
       self.boot_regular(partition)
-
+    
     os._exit(0)
   
   def boot_regular(self, partition):

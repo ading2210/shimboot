@@ -145,20 +145,16 @@ main() {
   echo "starting the shimboot bootloader"
   enable_debug_console "$TTY2"
 
-  echo "extracting terminfo"
-  cd /etc
-  unzip -q terminfo.zip
-  cd /
-
-  echo "launching python bootloader"
+  echo "launching python tui"
   while true; do
     python3 /opt/main.py
     local exit_code="$?"
     
-    #boot an option
+    #execute the choice specified by the tui
     if [ "$exit_code" = "0" ]; then
       chmod +x /tmp/bootloader_result
       . /tmp/bootloader_result
+      break
     elif [ "$exit_code" = "1" ]; then
       read -s -p "An unexpected error occured. Press [enter] to run the bootloader again."
     fi

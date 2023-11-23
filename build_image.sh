@@ -108,6 +108,8 @@ populate_partitions() {
   local bootloader_mount=/tmp/shim_bootloader
   safe_mount "${image_loop}p3" $bootloader_mount
   cp -r $bootloader_dir/* $bootloader_mount
+  mkdir -p $bootloader_mount/etc/terminfo/l
+  cp /lib/terminfo/l/linux $bootloader_mount/etc/terminfo/l/linux
   umount $bootloader_mount
 
   #write rootfs to image

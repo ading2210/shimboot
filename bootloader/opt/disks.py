@@ -13,8 +13,8 @@ if not utils.on_shim:
 
 #get all physical disks on the system
 def get_disks():
-  #if not utils.on_shim:
-  #  return list(mock_disks.keys())
+  if not utils.on_shim:
+    return list(mock_disks.keys())
 
   disks = []
   for path in pathlib.Path("/sys/block").iterdir():
