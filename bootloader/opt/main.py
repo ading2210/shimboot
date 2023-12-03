@@ -1,11 +1,11 @@
 import curses
-import curses.panel
 import time
 import traceback
 import os
 
 import disks
 import utils
+import options
 
 class Bootloader:
   def init(self):
@@ -114,3 +114,4 @@ if __name__ == "__main__":
   except:
     bootloader.destroy_curses()
     print(traceback.format_exc())
+    sys.exit(1)
