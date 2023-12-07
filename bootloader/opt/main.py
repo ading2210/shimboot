@@ -1,7 +1,9 @@
 import curses
+import curses.panel
 import time
 import traceback
 import os
+import sys
 
 import disks
 import utils
@@ -30,7 +32,18 @@ class Bootloader:
         self.boot_entry(selected_item)
       elif key == 115: #s
         self.enter_shell()
+      elif key == 101: #e
+        self.edit_entry(selected_item)
   
+  def edit_entry(self, selected_item):
+    schema = options.schemas["entry"]
+
+    self.options_panel.show()
+    options_menu = options.OptionsMenu(self.options_window, schema, {})
+    new_options = options_menu.edit_options()
+    self.options_panel.hide()
+    curses.panel.update_panels()
+    
   def enter_shell(self):
     self.destroy_curses()
     print("Entering a shell")
@@ -72,6 +85,25 @@ class Bootloader:
     self.footer_window.addstr(0, 0, "Use the arrow keys to select an entry. Press [enter] to boot the selected item.")
     self.footer_window.addstr(1, 0, "Use [e] to edit an entry, [s] to enter a shell, and [esc] to shut down the system.")
     self.footer_window.refresh()
+
+    rows, cols = self.entries_window.getmaxyx()
+    options_width = cols / 2
+    x1 = int(cols / 2 - options_width / 2)
+    x2 = int(cols / 2 + options_width / 2)
+    win_cols = x2 - x1
+    win_rows = int(rows / 1.5)
+    self.options_window = curses.newwin(win_rows, win_cols, 7, x1)
+    self.options_window.keypad(True)
+    self.options_window.border()
+
+    self.setup_panels()
+  
+  def setup_panels(self):
+    self.title_panel = curses.panel.new_panel(self.title_window)
+    self.entries_panel = curses.panel.new_panel(self.entries_window)
+    self.footer_panel = curses.panel.new_panel(self.footer_window)
+    self.options_panel = curses.panel.new_panel(self.options_window)
+    self.options_panel.hide()
   
   def setup_curses(self):
     self.screen = curses.initscr()
@@ -99,9 +131,9 @@ class Bootloader:
       partition_text = f"{partition['name']} on {partition['device']}"
       self.entries_window.addstr(i+1, 2, partition_text)
       if i == selected_item:
-        self.entries_window.chgat(i+1, 2, width-4, curses.A_REVERSE)
+        self.entries_window.chgat(i+1, 1, width-2, curses.A_REVERSE)
       else:
-        self.entries_window.chgat(i+1, 2, width-4, curses.A_NORMAL)
+        self.entries_window.chgat(i+1, 1, width-2, curses.A_NORMAL)
       i += 1
     self.entries_window.refresh()
 
