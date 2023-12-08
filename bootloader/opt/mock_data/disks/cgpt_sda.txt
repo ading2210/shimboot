@@ -20,7 +20,7 @@ Drive details:
                                   Size of entry: 128
                                   Entries CRC: 0xd0ed456d 
            2          32          Pri GPT table
-        2048        2048       1  Label: ""
+        2048        2048       1  Label: "shimboot_stateful"
                                   Type: Linux data
                                   UUID: 59AB757A-A57C-8449-AF49-88009CF42C05
         4096       65536       2  Label: "kernel"

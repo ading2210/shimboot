@@ -3,6 +3,7 @@ import pathlib
 import re
 import json
 import utils
+import os
 
 cgpt_path = "/sbin/cgpt"
 
@@ -10,6 +11,34 @@ if not utils.on_shim:
   mock_disks_path = utils.mock_data_path / "disks"
   mock_disks_text = (mock_disks_path / "disks.json").read_text()
   mock_disks = json.loads(mock_disks_text) 
+
+#find the root of the bootloader by parsing dmesg
+def find_root():
+  if utils.on_shim:
+    dmesg = utils.run_command("dmesg")
+  else:
+    dmesg = (utils.mock_data_path / "dmesg" / "dmesg.txt").read_text()
+  
+  root_regex = r'EXT4-fs \((.+?)\): mounting ext2'
+  ext2_partitions = re.findall(root_regex, dmesg)
+  return "/dev/" + ext2_partitions[0]
+
+#find the bootloader stateful for persisting settings
+def find_state():
+  if not utils.on_shim:
+    return "/dev/sda1" #for testing
+
+  root_part = find_root()
+  disk = disk_from_part(root_part)
+  return get_part_dev(disk, 1)
+
+#get disk disk from partition device
+def disk_from_part(part_device):
+  dev_name = pathlib.Path(part_device).name
+  part_link = pathlib.Path("/sys/class/block/") / dev_name
+  link_dest = part_link.readlink()
+  disk_name = link_dest.parent.name
+  return "/dev/" + disk_name
 
 #get all physical disks on the system
 def get_disks():
@@ -26,12 +55,18 @@ def get_disks():
     disks.append(str(disk_device))
   return disks
 
+#partition device from disk and part number
+def get_part_dev(disk, part_num):
+  if disk[-1].isdigit():
+    return f"{disk}p{part_num}"
+  else:
+    return f"{disk}{part_num}"
+
 #get all partitions on a particular disk
 def get_partitions(disk):
   try:
     if utils.on_shim:
-      output_bytes = subprocess.check_output([cgpt_path, "show", disk, "-v"], stderr=subprocess.DEVNULL)
-      output = output_bytes.decode()
+      output = utils.run_command([cgpt_path, "show", disk, "-v"])
     else:
       output = pathlib.Path(mock_disks_path / mock_disks[disk]).read_text()
   except subprocess.CalledProcessError:
@@ -47,11 +82,7 @@ def get_partitions(disk):
     part_details_str = partition_details[int(part_num)-1]
     part_type = re.findall(r'Type: (.+)', part_details_str)[0]
     part_uuid = re.findall(r'UUID: (.+)', part_details_str)[0]
-    
-    if disk[-1].isdigit():
-      part_device = f"{disk}p{part_num}"
-    else:
-      part_device = f"{disk}{part_num}"
+    part_device = get_part_dev(disk, part_num)
 
     partitions.append({
       "disk": disk,
@@ -88,7 +119,8 @@ def get_all_partitions():
     all_partitions += partitions
   
   return all_partitions
-      
 
+#some test code, this file will never be called as main normally 
 if __name__ == "__main__":
-  print(json.dumps(get_all_partitions(), indent=2))
+  state = find_state()
+  print(state)

@@ -1,4 +1,5 @@
 import pathlib
+import subprocess
 
 #define a few useful paths
 on_shim = pathlib.Path("/bin/bootstrap.sh").exists()
@@ -16,3 +17,10 @@ def is_int(string):
     return True
   except ValueError:
     return False
+
+def run_command(cmd):
+  if type(cmd) is str:
+    cmd = cmd.split()
+  output_bytes = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+  return output_bytes.decode()
+  
