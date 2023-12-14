@@ -32,11 +32,12 @@ Driver support depends on the device you are using shimboot on. This list is for
 - 3D acceleration
 - Bluetooth
 - Zram
-- Wifi (partially)
-- Suspend (partially)
+- Wifi
 
 ### What Doesn't Work:
 - Audio
+- Suspend (disabled by the kernel)
+- Swap (disabled by the kernel)
 
 ### Development Roadmap:
 - ~~build the image automatically~~
@@ -50,9 +51,10 @@ Driver support depends on the device you are using shimboot on. This list is for
 - ~~use debootstrap to install debian~~
 - ~~prompt user for hostname and account when creating the rootfs~~
 - ~~auto load iwlmvm~~
-- get wifi fully working
+- ~~get wifi fully working~~
 - ~~host prebuilt images~~
 - ~~write detailed documentation~~
+- Finish Python TUI rewrite
 
 ### Long Term Goals:
 - eliminate binwalk dependency
