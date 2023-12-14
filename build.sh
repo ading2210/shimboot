@@ -89,7 +89,7 @@ patch_initramfs $initramfs_dir
 
 echo "creating disk image"
 rootfs_size=$(du -sm $rootfs_dir | cut -f 1)
-rootfs_part_size=$(($rootfs_size * 11 / 10))
+rootfs_part_size=$(($rootfs_size * 12 / 10))
 #create a 20mb bootloader partition
 #rootfs partition is 20% larger than its contents
 create_image $output_path 20 $rootfs_part_size
