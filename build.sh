@@ -7,8 +7,7 @@ if [ "$DEBUG" ]; then
   set -x
 fi
 
-. ./patch_initramfs.sh
-. ./build_image.sh
+. ./image_utils.sh
 . ./shim_utils.sh
 
 print_help() {
