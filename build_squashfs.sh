@@ -46,34 +46,44 @@ compile_unionfs() {
 }
 
 rootfs_dir=$(realpath $1)
-target_dir=$(realpath $2)
+old_dir=$(realpath $2)
 shim_path=$(realpath $3)
 
 shim_rootfs="/tmp/shim_rootfs"
-modules_squashfs="/tmp/modules.squashfs"
+root_squashfs="$rootfs_dir/root.squashfs"
+modules_squashfs="$rootfs_dir/modules.squashfs"
 kernel_dir=/tmp/shim_kernel
-initramfs_dir=/tmp/shim_initramfs
+unionfs_dir="/tmp/unionfs-fuse"
 
 echo "compiling unionfs-fuse"
-compile_unionfs /tmp/unionfs /tmp/unionfs-fuse 
+compile_unionfs $unionfs_dir/unionfs $unionfs_dir
 
-echo "mounting shim"
+echo "creating loop device for shim"
 shim_loop=$(create_loop "${shim_path}")
-make_mountable "${shim_loop}p3"
-safe_mount "${shim_loop}p3" $shim_rootfs
-
-echo "extracting modules from shim"
-extract_modules $modules_squashfs $shim_rootfs
+kernel_loop="${shim_loop}p2" #KERN-A should always be p2
 
 echo "copying shim kernel"
+rm -rf $kernel_dir
 mkdir $kernel_dir -p
-kernel_loop="${shim_loop}p2"
-dd if=$kernel_loop of=$kernel_dir/kernel.bin bs=1M status=none
+dd if=$kernel_loop of=$kernel_dir/kernel.bin bs=1M status=progress
 
 echo "extracting initramfs from kernel"
 extract_initramfs $kernel_dir/kernel.bin $kernel_dir $rootfs_dir
+rm -rf $rootfs_dir/init
 
-#todo...
+echo "mounting shim"
+make_mountable "${shim_loop}p3"
+safe_mount "${shim_loop}p3" $shim_rootfs
+
+echo "extracting and compressing modules from shim"
+extract_modules $modules_squashfs $shim_rootfs
+
+echo "compressing old rootfs"
+mksquashfs $old_dir $root_squashfs -noappend -comp gzip
+
+echo "patching new rootfs"
+mv $unionfs_dir/unionfs $rootfs_dir/bin/unionfs
+#cp -ar ./squashfs/* $rootfs_dir/
 
 echo "cleaning up"
 umount $shim_rootfs

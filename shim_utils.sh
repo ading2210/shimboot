@@ -15,7 +15,7 @@ extract_initramfs() {
   local stage1_path="$stage1_dir/$stage1_file"
   
   #second stage
-  binwalk --extract $stage1_path --directory=$stage1_dir --run-as=root
+  binwalk --extract $stage1_path --directory=$stage1_dir --run-as=root > /dev/null
   local stage2_dir="$stage1_dir/_$stage1_file.extracted/"
   local cpio_file=$(file $stage2_dir/* | pcregrep -o1 "([0-9A-F]+):\s+ASCII cpio archive")
   local cpio_path="$stage2_dir/$cpio_file"
