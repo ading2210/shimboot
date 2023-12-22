@@ -50,7 +50,7 @@ for mountpoint in $chroot_mounts; do
   mount --make-rslave --rbind "/${mountpoint}" "${rootfs_dir}/$mountpoint"
 done
 
-chroot_command="DEBUG=${DEBUG} release_name=${release_name} packages=${packages} /opt/setup_rootfs.sh"
+chroot_command="/opt/setup_rootfs.sh '$DEBUG' '$release_name' '$packages'"
 chroot $rootfs_dir /bin/bash -c "${chroot_command}"
 
 for mountpoint in $chroot_mounts; do

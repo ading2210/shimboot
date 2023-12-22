@@ -23,10 +23,3 @@ extract_initramfs() {
   rm -rf $output_dir
   cat $cpio_path | cpio -D $output_dir -imd --quiet
 }
-
-extract_modules() {
-  local output_path="$1"
-  local shim_rootfs="$2"
-  local modules_dir="$shim_rootfs/lib/modules"
-  mksquashfs $modules_dir $output_path -noappend -comp gzip
-}

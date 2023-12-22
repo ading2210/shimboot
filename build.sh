@@ -84,6 +84,7 @@ echo "copying data into the image"
 populate_partitions $image_loop $initramfs_dir $rootfs_dir
 
 echo "cleaning up loop devices"
+umount $rootfs_dir
 losetup -d $shim_loop
 losetup -d $image_loop
 echo "done"

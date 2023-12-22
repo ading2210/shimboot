@@ -35,14 +35,16 @@ compile_unionfs() {
 
   local repo_url="https://github.com/rpodgorny/unionfs-fuse"
   local original_dir="$(pwd)"
+  local core_count="$(nproc --all)"
   
   rm -rf $working_path
   git clone $repo_url -b master --depth=1 $working_path
   cd $working_path
 
-  env LDFLAGS="-static" make
+  env LDFLAGS="-static" make -j$core_count
   local binary_path="$working_path/src/unionfs"
   cp $binary_path $out_path
+  cd $original_dir
 }
 
 rootfs_dir=$(realpath $1)
@@ -67,7 +69,7 @@ rm -rf $kernel_dir
 mkdir $kernel_dir -p
 dd if=$kernel_loop of=$kernel_dir/kernel.bin bs=1M status=progress
 
-echo "extracting initramfs from kernel"
+echo "extracting initramfs from kernel (this may take a while)"
 extract_initramfs $kernel_dir/kernel.bin $kernel_dir $rootfs_dir
 rm -rf $rootfs_dir/init
 
@@ -75,16 +77,12 @@ echo "mounting shim"
 make_mountable "${shim_loop}p3"
 safe_mount "${shim_loop}p3" $shim_rootfs
 
-echo "extracting and compressing modules from shim"
-extract_modules $modules_squashfs $shim_rootfs
-
 echo "compressing old rootfs"
 mksquashfs $old_dir $root_squashfs -noappend -comp gzip
 
 echo "patching new rootfs"
 mv $unionfs_dir/unionfs $rootfs_dir/bin/unionfs
-#cp -ar ./squashfs/* $rootfs_dir/
+cp -ar squashfs/* $rootfs_dir/
+chmod +x $rootfs_dir/bin/*
 
-echo "cleaning up"
-umount $shim_rootfs
-losetup -d $shim_loop
+echo "done"

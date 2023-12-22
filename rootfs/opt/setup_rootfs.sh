@@ -3,6 +3,10 @@
 #setup the debian rootfs
 #this is meant to be run within the chroot created by debootstrap
 
+DEBUG="$1"
+release_name="$2"
+packages="$3"
+
 set -e
 if [ "$DEBUG" ]; then
   set -x
@@ -23,13 +27,14 @@ END
 #install the patched systemd
 apt-get install -y ca-certificates
 apt-get update
-apt-get upgrade -y 
+installed_systemd="$(dpkg-query -W -f='${binary:Package}\n' | grep "systemd")"
+apt-get install --reinstall $installed_systemd
 
 #enable shimboot services
 systemctl enable kill-frecon.service
 
 #install desktop
-apt-get install -y task-xfce-desktop cloud-utils zram-tools
+apt-get install -y $packages cloud-utils zram-tools
 
 #set up zram
 tee -a /etc/default/zramswap << END
