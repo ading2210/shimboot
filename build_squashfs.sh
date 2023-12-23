@@ -73,9 +73,8 @@ echo "extracting initramfs from kernel (this may take a while)"
 extract_initramfs $kernel_dir/kernel.bin $kernel_dir $rootfs_dir
 rm -rf $rootfs_dir/init
 
-echo "mounting shim"
-make_mountable "${shim_loop}p3"
-safe_mount "${shim_loop}p3" $shim_rootfs
+echo "removeing shim loop device"
+losetup -d $shim_loop
 
 echo "compressing old rootfs"
 mksquashfs $old_dir $root_squashfs -noappend -comp gzip

@@ -58,6 +58,8 @@ echo "extracting data from kernel"
 initramfs_dir=/tmp/shim_initramfs
 rm -rf $initramfs_dir
 extract_initramfs $kernel_dir/kernel.bin $kernel_dir $initramfs_dir
+umount $shim_rootfs
+losetup -d $shim_loop
 
 echo "patching initramfs"
 patch_initramfs $initramfs_dir
@@ -75,16 +77,9 @@ image_loop=$(create_loop ${output_path})
 echo "creating partitions on the disk image"
 create_partitions $image_loop "${kernel_dir}/kernel.bin"
 
-echo "mounting the original shim rootfs"
-shim_rootfs="/tmp/shim_rootfs"
-make_mountable "${shim_loop}p3"
-safe_mount "${shim_loop}p3" $shim_rootfs
-
 echo "copying data into the image"
 populate_partitions $image_loop $initramfs_dir $rootfs_dir
 
 echo "cleaning up loop devices"
-umount $rootfs_dir
-losetup -d $shim_loop
 losetup -d $image_loop
 echo "done"

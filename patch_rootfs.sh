@@ -7,7 +7,7 @@ if [ "$DEBUG" ]; then
   set -x
 fi
 
-. ./build_image.sh
+. ./image_utils.sh
 
 print_help() {
   echo "Usage: ./patch_rootfs.sh shim_path reco_path rootfs_dir"

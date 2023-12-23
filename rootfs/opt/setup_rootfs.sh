@@ -24,6 +24,9 @@ Pin: origin ${custom_repo_domain}
 Pin-Priority: 1001
 END
 
+#fix name servers
+echo "nameserver 1.1.1.1" > /etc/resolv.conf
+
 #install the patched systemd
 apt-get install -y ca-certificates
 apt-get update
