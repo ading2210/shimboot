@@ -44,6 +44,7 @@ packages="${3-'task-xfce-desktop'}"
 
 debootstrap --arch amd64 $release_name $rootfs_dir http://deb.debian.org/debian/
 cp -ar rootfs/* $rootfs_dir
+cp /etc/resolv.conf $rootfs_dir/etc/resolv.conf
 
 chroot_mounts="proc sys dev run"
 for mountpoint in $chroot_mounts; do

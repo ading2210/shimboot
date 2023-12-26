@@ -33,9 +33,10 @@ Driver support depends on the device you are using shimboot on. This list is for
 - Bluetooth
 - Zram
 - Wifi
+- Booting a squashfs
 
 ### What Doesn't Work:
-- Audio
+- Audio (due to a firmware bug)
 - Suspend (disabled by the kernel)
 - Swap (disabled by the kernel)
 
@@ -91,10 +92,13 @@ Driver support depends on the device you are using shimboot on. This list is for
 Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs dir into `build.sh`.
 
 #### How can I install a desktop environment other than XFCE?
-Simply edit `rootfs/opt/setup_rootfs.sh`, and change the line after the `#install desktop` comment. By default, this is set to install XFCE using the `task-xfce-desktop` package, but you can change this to install whatever you want.
+You can pass another argument to the `build_rootfs.sh` script, like this: `sudo ./build_rootfs.sh data/rootfs bookworm "task-lxde-desktop"`. The third argument is a list of packages that will be installed in the place of XFCE. 
 
 #### Will this prevent me from using Chrome OS normally?
 Shimboot does not touch the internal storage at all, so you will be able to use Chrome OS as if nothing happened. However, if you are on an enterprise enrolled device, booting Chrome OS again will force a powerwash due to the attempted switch into developer mode.
+
+#### Can I unplug the USB drive while using Debian?
+By default, this is not possible. However, you can simply copy your Debian rootfs onto your internal storage by first using `fdisk` to repartition it, using `dd` to copy the partition, and `resize2fs` to have it take up the entire drive. In the future, loading the OS to RAM may be supported, but this isn't a priority at the moment.
 
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
