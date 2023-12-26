@@ -8,7 +8,7 @@ if [ "$DEBUG" ]; then
 fi
 
 print_help() {
-  echo "Usage: ./build_rootfs.sh rootfs_path release_name"
+  echo "Usage: ./build_rootfs.sh rootfs_path release_name [custom_packages]"
 }
 
 check_deps() {
@@ -40,16 +40,18 @@ fi
 
 rootfs_dir=$(realpath "${1}")
 release_name="${2}"
+packages="${3-'task-xfce-desktop'}"
 
 debootstrap --arch amd64 $release_name $rootfs_dir http://deb.debian.org/debian/
 cp -ar rootfs/* $rootfs_dir
+cp /etc/resolv.conf $rootfs_dir/etc/resolv.conf
 
 chroot_mounts="proc sys dev run"
 for mountpoint in $chroot_mounts; do
   mount --make-rslave --rbind "/${mountpoint}" "${rootfs_dir}/$mountpoint"
 done
 
-chroot_command="DEBUG=${DEBUG} release_name=${release_name} /opt/setup_rootfs.sh"
+chroot_command="/opt/setup_rootfs.sh '$DEBUG' '$release_name' '$packages'"
 chroot $rootfs_dir /bin/bash -c "${chroot_command}"
 
 for mountpoint in $chroot_mounts; do

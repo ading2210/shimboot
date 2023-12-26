@@ -1,10 +1,5 @@
 #!/bin/bash
 
-set -e
-if [ "$DEBUG" ]; then
-  set -x
-fi
-
 create_loop() {
   local loop_device=$(losetup -f)
   losetup -P $loop_device "${1}"
@@ -128,4 +123,13 @@ create_image() {
   fallocate -l "${total_size}M" "${image_path}"
 
   partition_disk $image_path $bootloader_size
+}
+
+patch_initramfs() {
+  local initramfs_path=$(realpath $1)
+
+  rm "${initramfs_path}/init" -f
+  cp -r bootloader/* "${initramfs_path}/"
+
+  find ${initramfs_path}/bin -name "*" -exec chmod +x {} \;
 }

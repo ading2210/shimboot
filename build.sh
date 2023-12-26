@@ -7,8 +7,8 @@ if [ "$DEBUG" ]; then
   set -x
 fi
 
-. ./patch_initramfs.sh
-. ./build_image.sh
+. ./image_utils.sh
+. ./shim_utils.sh
 
 print_help() {
   echo "Usage: ./build.sh output_path shim_path rootfs_dir"
@@ -55,34 +55,10 @@ mkdir $kernel_dir -p
 dd if=$kernel_loop of=$kernel_dir/kernel.bin bs=1M status=none
 
 echo "extracting data from kernel"
-previous_dir=$(pwd)
-cd $kernel_dir
-if [ -e "${kernel_dir}/binwalk.out" ]; then
-  #don't run binwalk again if we don't need to
-  binwalk_out=$(cat $kernel_dir/binwalk.out)
-else
-  binwalk_out=$(binwalk --extract kernel.bin --run-as=root)
-  echo $binwalk_out > $kernel_dir/binwalk.out
-fi
-#i can't be bothered to learn how to use sed
-extracted_file=$(echo $binwalk_out | pcregrep -o1 "\d+\s+0x([0-9A-F]+)\s+gzip compressed data")
-
-echo "extracting initramfs archive from kernel (this may take a while)"
-cd _kernel.bin.extracted/
-if [ ! -e "_${extracted_file}.extracted/" ]; then
-  binwalk --extract $extracted_file --run-as=root > /dev/null
-fi
-cd "_${extracted_file}.extracted/"
-cpio_file=$(file ./* | pcregrep -o1 "([0-9A-F]+):\s+ASCII cpio archive")
-
-echo "extracting initramfs cpio archive"
 initramfs_dir=/tmp/shim_initramfs
 rm -rf $initramfs_dir
-cat $cpio_file | cpio -D $initramfs_dir -imd --quiet
-echo "shim initramfs extracted to ${initramfs_dir}"
-
-#leave /tmp
-cd $previous_dir
+extract_initramfs $kernel_dir/kernel.bin $kernel_dir $initramfs_dir
+losetup -d $shim_loop
 
 echo "patching initramfs"
 patch_initramfs $initramfs_dir
@@ -100,15 +76,9 @@ image_loop=$(create_loop ${output_path})
 echo "creating partitions on the disk image"
 create_partitions $image_loop "${kernel_dir}/kernel.bin"
 
-echo "mounting the original shim rootfs"
-shim_rootfs="/tmp/shim_rootfs"
-make_mountable "${shim_loop}p3"
-safe_mount "${shim_loop}p3" $shim_rootfs
-
 echo "copying data into the image"
 populate_partitions $image_loop $initramfs_dir $rootfs_dir
 
 echo "cleaning up loop devices"
-losetup -d $shim_loop
 losetup -d $image_loop
 echo "done"
