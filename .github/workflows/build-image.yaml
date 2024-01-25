@@ -10,30 +10,11 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - name: wait for rootfs build to finish
-        uses: lewagon/wait-on-check-action@v1.3.3
-        with:
-          ref: ${{ github.ref }}
-          running-workflow-name: build-rootfs
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
-
       - name: download repo
         uses: actions/checkout@v4
-
-      - name: download rootfs
-        uses: actions/download-artifact@v4
-        with:
-          name: rootfs_tar
-          path: data/rootfs.tar.gz
-      
-      - name: extract rootfs
-        run: |
-          sudo mkdir -p data/rootfs
-          sudo tar -xvf data/rootfs.tar.gz -C data/rootfs
       
       - name: run build
-        run: sudo DEBUG=1 ./build_complete.sh ${{ matrix.board }} compress_img=1 rootfs_dir=./data/rootfs
+        run: sudo DEBUG=1 ./build_complete.sh ${{ matrix.board }} compress_img=1
 
       - name: upload img
         uses: actions/upload-artifact@v4
