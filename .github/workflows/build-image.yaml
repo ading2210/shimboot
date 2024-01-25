@@ -3,7 +3,7 @@ run-name: Build the shimboot disk image for all boards
 on: [push]
 
 jobs:
-  main:
+  build:
     strategy: 
       matrix:
         board: [dedede, octopus]
@@ -22,3 +22,10 @@ jobs:
           name: shimboot_${{ matrix.board }}
           path: data/shimboot_${{ matrix.board }}.zip
           compression-level: 0
+  
+      - name: create release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          files: data/shimboot_${{ matrix.board }}.zip
