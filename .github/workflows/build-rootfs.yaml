@@ -19,7 +19,6 @@ jobs:
           sudo apt-get install debootstrap coreutils -y
 
       - name: run build
-        id: run_build
         run: sudo DEBUG=1 ./build_rootfs.sh data/rootfs bookworm hostname=shimboot root_passwd=root username=user user_passwd=user
       
       - name: archive rootfs
@@ -30,3 +29,4 @@ jobs:
         with:
           name: rootfs_tar
           path: data/rootfs.tar.gz
+          compression-level: 0
