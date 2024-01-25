@@ -16,18 +16,19 @@ fi
 if [ -z "$1" ]; then
   echo "Usage: ./build_complete.sh board_name"
   echo "Valid named arguments (specify with 'key=value'):"
-  echo "  compress_img - Compress the final disk image into a zip file. Set this to any value to enable this option."
-  echo "  rootfs_dir   - Use a different rootfs for the build. The directory you select will be copied before any patches are applied."
+  echo "  compress_img   - Compress the final disk image into a zip file. Set this to any value to enable this option."
+  echo "  rootfs_dir     - Use a different rootfs for the build. The directory you select will be copied before any patches are applied."
+  echo "  quiet_download - Don't use progress bars on downloads."
   exit 1
 fi
 
 parse_args "$@"
 needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
-if ! check_deps "$needed_deps"; then
+if [ "$(check_deps "$needed_deps")" ]; then
   #install deps automatically on debian and ubuntu
   if [ -f "/etc/debian_version" ]; then
     echo "attempting to install build deps"
-    apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt rsync -y
+    apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt rsync pv -y
   fi
   assert_deps "$needed_deps"
 fi
@@ -71,13 +72,22 @@ download_and_unzip() {
   local zip_path="$2"
   local bin_path="$3"
   if [ ! -f "$bin_path" ]; then
-    wget -q --show-progress $url -O $zip_path -c
+    if [ ! "${args['quiet_download']}" ]; then
+      wget -q --show-progress $url -O $zip_path -c
+    else
+      wget -q $url -O $zip_path -c
+    fi
   fi
+
   if [ ! -f "$bin_path" ]; then
     cleanup_path="$bin_path"
     echo "extracting $zip_path"
     local total_bytes="$(unzip -lq $zip_path | tail -1 | xargs | cut -d' ' -f1)"
-    unzip -p $zip_path | pv -s $total_bytes > $bin_path
+    if [ ! "${args['quiet_download']}" ]; then
+      unzip -p $zip_path | pv -s $total_bytes > $bin_path
+    else
+      unzip -p $zip_path > $bin_path
+    fi
     rm -rf $zip_path
     cleanup_path=""
   fi
@@ -110,7 +120,7 @@ echo "patching debian rootfs"
 echo "building final disk image"
 final_image="$base_dir/data/shimboot_$board.bin"
 rm -rf $final_image
-./build.sh $final_image $shim_bin data/rootfs
+./build.sh $final_image $shim_bin $rootfs_dir
 echo "build complete! the final disk image is located at $final_image"
 
 if [ "${args['compress_img']}" ]; then

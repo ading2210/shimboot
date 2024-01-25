@@ -68,7 +68,7 @@ safe_mount() {
   umount $2 2> /dev/null || /bin/true
   rm -rf $2
   mkdir -p $2
-  mount $1 $2
+  mount $1 $2 || mount $1 $2 || mount $1 $2 || mount $1 $2 #try to mount multiple times
 }
 
 create_partitions() {
