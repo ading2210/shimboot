@@ -17,7 +17,19 @@ if [ -z "$1" ]; then
   echo "Usage: ./build_complete.sh board_name"
   echo "Valid named arguments (specify with 'key=value'):"
   echo "  compress_img - Compress the final disk image into a zip file. Set this to any value to enable this option."
+  echo "  rootfs_dir   - Use a different rootfs for the build. The directory you select will be copied before any patches are applied."
   exit 1
+fi
+
+parse_args "$@"
+needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
+if ! check_deps "$needed_deps"; then
+  #install deps automatically on debian and ubuntu
+  if [ -f "/etc/debian_version" ]; then
+    echo "attempting to install build deps"
+    apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt rsync -y
+  fi
+  assert_deps "$needed_deps"
 fi
 
 cleanup_path=""
@@ -77,22 +89,27 @@ download_and_unzip $reco_url $reco_zip $reco_bin
 echo "downloading shim image"
 download_and_unzip $shim_url $shim_zip $shim_bin
 
-rootfs_dir="$(realpath data/rootfs_$board)"
-rm -rf $rootfs_dir
-mkdir -p $rootfs_dir
+if [ ! "${args['rootfs_dir']}" ]; then
+  rootfs_dir="$(realpath data/rootfs_$board)"
+  rm -rf $rootfs_dir
+  mkdir -p $rootfs_dir
 
-echo "building debian rootfs"
-./build_rootfs.sh $rootfs_dir bookworm \
-  hostname=shimboot-$board \
-  root_passwd=root \
-  username=user \
-  user_passwd=user
+  echo "building debian rootfs"
+  ./build_rootfs.sh $rootfs_dir bookworm \
+    hostname=shimboot-$board \
+    root_passwd=root \
+    username=user \
+    user_passwd=user  
+else
+  rootfs_dir="$(realpath "${args['rootfs_dir']}")"
+fi
 
 echo "patching debian rootfs"
 ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir
 
 echo "building final disk image"
 final_image="$base_dir/data/shimboot_$board.bin"
+rm -rf $final_image
 ./build.sh $final_image $shim_bin data/rootfs
 echo "build complete! the final disk image is located at $final_image"
 
