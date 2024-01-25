@@ -14,15 +14,6 @@ print_help() {
   echo "Usage: ./build.sh output_path shim_path rootfs_dir"
 }
 
-check_deps() {
-  local needed_commands="cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
-  for command in $needed_commands; do
-    if ! command -v $command &> /dev/null; then
-      echo $command
-    fi
-  done
-}
-
 if [ "$EUID" -ne 0 ]; then
   echo "this needs to be run as root."
   exit 1
@@ -33,17 +24,12 @@ if [ -z "$3" ]; then
   exit 1
 fi
 
-missing_commands=$(check_deps)
-if [ "${missing_commands}" ]; then
-  echo "You are missing dependencies needed for this script."
-  echo "Commands needed:"
-  echo "${missing_commands}"
-  exit 1
-fi
+. ./common.sh
+assert_deps "cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
 
-output_path=$(realpath "${1}")
-shim_path=$(realpath "${2}")
-rootfs_dir=$(realpath "${3}")
+output_path=$(realpath -m "${1}")
+shim_path=$(realpath -m "${2}")
+rootfs_dir=$(realpath -m "${3}")
 
 echo "created loop device for shim"
 shim_loop=$(create_loop "${shim_path}")

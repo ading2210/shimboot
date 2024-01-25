@@ -17,7 +17,7 @@ make_bootable() {
 }
 
 partition_disk() {
-  local image_path=$(realpath "${1}")
+  local image_path=$(realpath -m "${1}")
   local bootloader_size=${2}
 
   #create partition table with fdisk
@@ -68,12 +68,13 @@ safe_mount() {
   umount $2 2> /dev/null || /bin/true
   rm -rf $2
   mkdir -p $2
-  mount $1 $2
+  #try to mount multiple times
+  mount $1 $2 || mount $1 $2 || mount $1 $2 || mount $1 $2 
 }
 
 create_partitions() {
-  local image_loop=$(realpath "${1}")
-  local kernel_path=$(realpath "${2}")
+  local image_loop=$(realpath -m "${1}")
+  local kernel_path=$(realpath -m "${2}")
 
   #create stateful
   mkfs.ext4 "${image_loop}p1"
@@ -87,9 +88,9 @@ create_partitions() {
 }
 
 populate_partitions() {
-  local image_loop=$(realpath "${1}")
-  local bootloader_dir=$(realpath "${2}")
-  local rootfs_dir=$(realpath "${3}")
+  local image_loop=$(realpath -m "${1}")
+  local bootloader_dir=$(realpath -m "${2}")
+  local rootfs_dir=$(realpath -m "${3}")
 
   #mount and write empty file to stateful
   local stateful_mount=/tmp/shim_stateful
@@ -113,7 +114,7 @@ populate_partitions() {
 }
 
 create_image() {
-  local image_path=$(realpath "${1}")
+  local image_path=$(realpath -m "${1}")
   local bootloader_size=${2}
   local rootfs_size=${3}
   
@@ -126,7 +127,7 @@ create_image() {
 }
 
 patch_initramfs() {
-  local initramfs_path=$(realpath $1)
+  local initramfs_path=$(realpath -m $1)
 
   rm "${initramfs_path}/init" -f
   cp -r bootloader/* "${initramfs_path}/"

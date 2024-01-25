@@ -7,55 +7,58 @@ if [ "$DEBUG" ]; then
   set -x
 fi
 
-print_help() {
-  echo "Usage: ./build_rootfs.sh rootfs_path release_name [custom_packages]"
-}
-
-check_deps() {
-  local needed_commands="realpath debootstrap"
-  for command in $needed_commands; do
-    if ! command -v $command &> /dev/null; then
-      echo $command
-    fi
-  done
-}
+. ./common.sh
 
 if [ "$EUID" -ne 0 ]; then
-  echo "this needs to be run as root."
+  echo "This script must be run as root."
   exit 1
 fi
 
 if [ -z "$2" ]; then
-  print_help
+  echo "Usage: ./build_rootfs.sh rootfs_path release_name"
+  echo "Valid named arguments (specify with 'key=value'):"
+  echo "  custom_packages - The packages that will be installed in place of task-xfce-desktop."
+  echo "  hostname        - The hostname for the new rootfs."
+  echo "  root_passwd     - The root password."
+  echo "  username        - The unprivileged user name for the new rootfs."
+  echo "  user_passwd     - The password for the unprivileged user."
+  echo "If you do not specify the hostname and credentials, you will be prompted for them later."
   exit 1
 fi
 
-missing_commands=$(check_deps)
-if [ "${missing_commands}" ]; then
-  echo "You are missing dependencies needed for this script."
-  echo "Commands needed:"
-  echo "${missing_commands}"
-  exit 1
-fi
+assert_deps "realpath debootstrap"
+parse_args "$@"
 
-rootfs_dir=$(realpath "${1}")
+rootfs_dir=$(realpath -m "${1}")
 release_name="${2}"
-packages="${3-'task-xfce-desktop'}"
+packages="${args['custom_packages']-'task-xfce-desktop'}"
+chroot_mounts="proc sys dev run"
+
+mkdir -p $rootfs_dir
+
+unmount_all() {
+  for mountpoint in $chroot_mounts; do
+    umount -l "$rootfs_dir/$mountpoint"
+  done
+}
 
 debootstrap --arch amd64 $release_name $rootfs_dir http://deb.debian.org/debian/
 cp -ar rootfs/* $rootfs_dir
 cp /etc/resolv.conf $rootfs_dir/etc/resolv.conf
 
-chroot_mounts="proc sys dev run"
+trap unmount_all EXIT
 for mountpoint in $chroot_mounts; do
   mount --make-rslave --rbind "/${mountpoint}" "${rootfs_dir}/$mountpoint"
 done
 
-chroot_command="/opt/setup_rootfs.sh '$DEBUG' '$release_name' '$packages'"
-chroot $rootfs_dir /bin/bash -c "${chroot_command}"
+hostname="${args['hostname']}"
+root_passwd="${args['root_passwd']}"
+username="${args['username']}"
+user_passwd="${args['user_passwd']}"
 
-for mountpoint in $chroot_mounts; do
-  umount -l "${rootfs_dir}/$mountpoint"
-done
+chroot_command="/opt/setup_rootfs.sh '$DEBUG' '$release_name' '$packages' '$hostname' '$root_passwd' '$username' '$user_passwd'"
+chroot $rootfs_dir /bin/bash -c "${chroot_command}"
+trap - EXIT
+unmount_all
 
 echo "rootfs has been created"

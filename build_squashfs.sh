@@ -47,9 +47,9 @@ compile_unionfs() {
   cd $original_dir
 }
 
-rootfs_dir=$(realpath $1)
-old_dir=$(realpath $2)
-shim_path=$(realpath $3)
+rootfs_dir=$(realpath -m $1)
+old_dir=$(realpath -m $2)
+shim_path=$(realpath -m $3)
 
 shim_rootfs="/tmp/shim_rootfs"
 root_squashfs="$rootfs_dir/root.squashfs"
