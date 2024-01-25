@@ -1,6 +1,12 @@
 name: build-rootfs
 run-name: Build the base Debian rootfs
 on: [push]
+
+defaults:
+  run:
+    shell: bash
+    working-directory: ./
+
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -17,7 +23,7 @@ jobs:
         run: sudo DEBUG=1 ./build_rootfs.sh data/rootfs bookworm hostname=shimboot root_passwd=root username=user user_passwd=user
       
       - name: archive rootfs
-        run: tar -vcf data/rootfs.tar.gz -C data/rootfs ./
+        run: sudo tar -vcf data/rootfs.tar.gz -C data/rootfs ./
 
       - name: upload rootfs
         uses: actions/upload-artifact@v4

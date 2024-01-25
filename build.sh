@@ -27,9 +27,9 @@ fi
 . ./common.sh
 assert_deps "cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
 
-output_path=$(realpath "${1}")
-shim_path=$(realpath "${2}")
-rootfs_dir=$(realpath "${3}")
+output_path=$(realpath -m "${1}")
+shim_path=$(realpath -m "${2}")
+rootfs_dir=$(realpath -m "${3}")
 
 echo "created loop device for shim"
 shim_loop=$(create_loop "${shim_path}")

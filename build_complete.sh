@@ -41,7 +41,7 @@ sigint_handler() {
 }
 trap sigint_handler SIGINT
 
-base_dir="$(realpath $(dirname "$0"))"
+base_dir="$(realpath -m  $(dirname "$0"))"
 board="$1"
 shim_url="https://dl.osu.bio/api/raw/?path=/SH1mmer/$board.zip"
 boards_url="https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=ChromeOS"
@@ -90,7 +90,7 @@ echo "downloading shim image"
 download_and_unzip $shim_url $shim_zip $shim_bin
 
 if [ ! "${args['rootfs_dir']}" ]; then
-  rootfs_dir="$(realpath data/rootfs_$board)"
+  rootfs_dir="$(realpath -m data/rootfs_$board)"
   rm -rf $rootfs_dir
   mkdir -p $rootfs_dir
 
@@ -101,7 +101,7 @@ if [ ! "${args['rootfs_dir']}" ]; then
     username=user \
     user_passwd=user  
 else
-  rootfs_dir="$(realpath "${args['rootfs_dir']}")"
+  rootfs_dir="$(realpath -m "${args['rootfs_dir']}")"
 fi
 
 echo "patching debian rootfs"

@@ -24,9 +24,9 @@ if [ -z "$3" ]; then
 fi
 
 copy_modules() {
-  local shim_rootfs=$(realpath $1)
-  local reco_rootfs=$(realpath $2)
-  local target_rootfs=$(realpath $3)
+  local shim_rootfs=$(realpath -m $1)
+  local reco_rootfs=$(realpath -m $2)
+  local target_rootfs=$(realpath -m $3)
 
   rm -rf "${target_rootfs}/lib/modules"
   cp -r "${shim_rootfs}/lib/modules" "${target_rootfs}/lib/modules"
@@ -43,7 +43,7 @@ copy_modules() {
 
 copy_firmware() {
   local firmware_path="/tmp/chromium-firmware"
-  local target_rootfs=$(realpath $1)
+  local target_rootfs=$(realpath -m $1)
 
   if [ ! -e "$firmware_path" ]; then
     download_firmware $firmware_path
@@ -54,14 +54,14 @@ copy_firmware() {
 
 download_firmware() {
   local firmware_url="https://chromium.googlesource.com/chromiumos/third_party/linux-firmware"
-  local firmware_path=$(realpath $1)
+  local firmware_path=$(realpath -m $1)
 
   git clone --branch master --depth=1 "${firmware_url}" $firmware_path
 }
 
-shim_path=$(realpath $1)
-reco_path=$(realpath $2)
-target_rootfs=$(realpath $3)
+shim_path=$(realpath -m $1)
+reco_path=$(realpath -m $2)
+target_rootfs=$(realpath -m $3)
 shim_rootfs="/tmp/shim_rootfs"
 reco_rootfs="/tmp/reco_rootfs"
 
