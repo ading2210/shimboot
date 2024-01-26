@@ -20,8 +20,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: shimboot_${{ matrix.board }}
-          path: data/shimboot_${{ matrix.board }}.zip
-          compression-level: 0
+          path: data/shimboot_${{ matrix.board }}.bin
+          compression-level: 9
   
       - name: create release
         uses: softprops/action-gh-release@v1
