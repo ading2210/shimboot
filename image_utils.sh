@@ -69,7 +69,7 @@ safe_mount() {
   rm -rf $2
   mkdir -p $2
   #try to mount multiple times
-  mount $1 $2 || mount $1 $2 || mount $1 $2 || mount $1 $2 
+  mount $1 $2
 }
 
 create_partitions() {

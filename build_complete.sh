@@ -93,6 +93,13 @@ download_and_unzip() {
   fi
 }
 
+retry_cmd() {
+  local cmd="$@"
+  for i in 1 2 3 4 5; do
+    $cmd && break
+  done
+}
+
 echo "downloading recovery image"
 download_and_unzip $reco_url $reco_zip $reco_bin
 
@@ -115,12 +122,12 @@ else
 fi
 
 echo "patching debian rootfs"
-./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=${args['quiet']}"
+retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=${args['quiet']}"
 
 echo "building final disk image"
 final_image="$base_dir/data/shimboot_$board.bin"
 rm -rf $final_image
-./build.sh $final_image $shim_bin $rootfs_dir 
+retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=${args['quiet']}"
 echo "build complete! the final disk image is located at $final_image"
 
 if [ "${args['compress_img']}" ]; then
