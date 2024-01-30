@@ -26,6 +26,7 @@ fi
 
 . ./common.sh
 assert_deps "cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
+parse_args "$@"
 
 output_path=$(realpath -m "${1}")
 shim_path=$(realpath -m "${2}")
@@ -63,7 +64,7 @@ echo "creating partitions on the disk image"
 create_partitions $image_loop "${kernel_dir}/kernel.bin"
 
 echo "copying data into the image"
-populate_partitions $image_loop $initramfs_dir $rootfs_dir
+populate_partitions $image_loop $initramfs_dir $rootfs_dir "${args['quiet']}"
 
 echo "cleaning up loop devices"
 losetup -d $image_loop

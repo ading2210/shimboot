@@ -91,6 +91,7 @@ populate_partitions() {
   local image_loop=$(realpath -m "${1}")
   local bootloader_dir=$(realpath -m "${2}")
   local rootfs_dir=$(realpath -m "${3}")
+  local quiet="$4"
 
   #mount and write empty file to stateful
   local stateful_mount=/tmp/shim_stateful
@@ -109,7 +110,11 @@ populate_partitions() {
   #write rootfs to image
   local rootfs_mount=/tmp/new_rootfs
   safe_mount "${image_loop}p4" $rootfs_mount
-  rsync --archive --human-readable --hard-links --info=progress2 --sparse $rootfs_dir/ $rootfs_mount/
+  if [ "$quiet" ]; then
+    rsync --archive --human-readable --hard-links --quiet --sparse $rootfs_dir/ $rootfs_mount/
+  else
+    rsync --archive --human-readable --hard-links --info=progress2 --sparse $rootfs_dir/ $rootfs_mount/
+  fi
   umount $rootfs_mount
 }
 

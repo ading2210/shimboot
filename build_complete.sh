@@ -16,9 +16,9 @@ fi
 if [ -z "$1" ]; then
   echo "Usage: ./build_complete.sh board_name"
   echo "Valid named arguments (specify with 'key=value'):"
-  echo "  compress_img   - Compress the final disk image into a zip file. Set this to any value to enable this option."
-  echo "  rootfs_dir     - Use a different rootfs for the build. The directory you select will be copied before any patches are applied."
-  echo "  quiet_download - Don't use progress bars on downloads."
+  echo "  compress_img - Compress the final disk image into a zip file. Set this to any value to enable this option."
+  echo "  rootfs_dir   - Use a different rootfs for the build. The directory you select will be copied before any patches are applied."
+  echo "  quiet        - Don't use progress indicators which may clog up log files."
   exit 1
 fi
 
@@ -72,7 +72,7 @@ download_and_unzip() {
   local zip_path="$2"
   local bin_path="$3"
   if [ ! -f "$bin_path" ]; then
-    if [ ! "${args['quiet_download']}" ]; then
+    if [ ! "${args['quiet']}" ]; then
       wget -q --show-progress $url -O $zip_path -c
     else
       wget -q $url -O $zip_path -c
@@ -83,7 +83,7 @@ download_and_unzip() {
     cleanup_path="$bin_path"
     echo "extracting $zip_path"
     local total_bytes="$(unzip -lq $zip_path | tail -1 | xargs | cut -d' ' -f1)"
-    if [ ! "${args['quiet_download']}" ]; then
+    if [ ! "${args['quiet']}" ]; then
       unzip -p $zip_path | pv -s $total_bytes > $bin_path
     else
       unzip -p $zip_path > $bin_path
@@ -115,12 +115,12 @@ else
 fi
 
 echo "patching debian rootfs"
-./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir
+./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=${args['quiet']}"
 
 echo "building final disk image"
 final_image="$base_dir/data/shimboot_$board.bin"
 rm -rf $final_image
-./build.sh $final_image $shim_bin $rootfs_dir
+./build.sh $final_image $shim_bin $rootfs_dir 
 echo "build complete! the final disk image is located at $final_image"
 
 if [ "${args['compress_img']}" ]; then
