@@ -34,6 +34,7 @@ Driver support depends on the device you are using shimboot on. This list is for
 - Zram
 - Wifi
 - Booting a squashfs
+- Webcam
 
 ### What Doesn't Work:
 - Audio (due to a firmware bug)
