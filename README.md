@@ -73,11 +73,12 @@ Driver support depends on the device you are using shimboot on. This list is for
 ### Build Instructions:
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
 2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
-3. Clone this repository and cd into it.
-4. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
-5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
-6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
-7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
+3. Unzip the recovery image and shim if you haven't done so already.
+4. Clone this repository and cd into it.
+5. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
+6. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
+7. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
+8. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
 
 ### Booting the Image:
 1. Obtain a shimboot image by downloading a [prebuilt one](https://dl.ading.dev/shimboot/) or building it yourself. 
