@@ -88,7 +88,7 @@ Alternatively, you can run each of the steps manually:
 7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
 
 ### Booting the Image:
-1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/actions) or building it yourself. 
+1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/actions?query=branch%3Amain) or building it yourself. 
 2. Flash the shimboot image to a USB drive or SD card. Use the [Chromebook Recovery Utility](https://chrome.google.com/webstore/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm) or [dd](https://linux.die.net/man/1/dd) if you're on Linux.
 3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section).
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
