@@ -37,7 +37,7 @@ Driver support depends on the device you are using shimboot on. This list is for
 - Webcam
 
 ### What Doesn't Work:
-- Audio (due to a firmware bug)
+- Audio (due to a firmware bug on `dedede`, this works just fine on `octopus`)
 - Suspend (disabled by the kernel)
 - Swap (disabled by the kernel)
 
@@ -59,8 +59,11 @@ Driver support depends on the device you are using shimboot on. This list is for
 - Finish Python TUI rewrite
 
 ### Long Term Goals:
+- Transparent disk compression
+- Full disk encryption
 - eliminate binwalk dependency
 - get audio to work
+- get kexec working
 
 ## Usage:
 
@@ -71,22 +74,27 @@ Driver support depends on the device you are using shimboot on. This list is for
 - An x86-based Chromebook
 
 ### Build Instructions:
+1. Find the board name of your Chromebook. You can search for the model name on [chrome100.dev](https://chrome100.dev/).
+1. Clone this repository and cd into it.
+2. Run `sudo ./build_complete.sh <board_name>` to download the required data and build the disk image.
+
+Alternatively, you can run each of the steps manually:
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
 2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
-3. Unzip the recovery image and shim if you haven't done so already.
-4. Clone this repository and cd into it.
-5. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
-6. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
-7. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
-8. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
+3. Unzip the shim and the recovery image if you have not done so already.
+4. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
+5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
+6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
+7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
 
 ### Booting the Image:
-1. Obtain a shimboot image by downloading a [prebuilt one](https://dl.ading.dev/shimboot/) or building it yourself. 
+1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/actions) or building it yourself. 
 2. Flash the shimboot image to a USB drive or SD card. Use the [Chromebook Recovery Utility](https://chrome.google.com/webstore/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm) or [dd](https://linux.die.net/man/1/dd) if you're on Linux.
 3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section).
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
 5. Boot into Debian and log in with the username and password that you configured earlier. The default username/password for the prebuilt images is `user/user`.
 6. Expand the rootfs partition so that it fills up the entire disk by running `sudo growpart /dev/sdX 4` (replacing `sdX` with the block device corresponding to your disk) to expand the partition, then running `sudo resize2fs /dev/sdX4` to expand the filesystem.
+7. Change the root password and regular user password by running `sudo passwd root` and `passwd user`.
 
 ## FAQ:
 
@@ -94,13 +102,16 @@ Driver support depends on the device you are using shimboot on. This list is for
 Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs dir into `build.sh`.
 
 #### How can I install a desktop environment other than XFCE?
-You can pass another argument to the `build_rootfs.sh` script, like this: `sudo ./build_rootfs.sh data/rootfs bookworm "task-lxde-desktop"`. The third argument is a list of packages that will be installed in the place of XFCE. 
+You can pass another argument to the `build_rootfs.sh` script, like this: `sudo ./build_rootfs.sh data/rootfs bookworm custom_packages=task-lxde-desktop`. The `custom_packages` argument is a list of packages that will be installed in the place of XFCE. 
 
 #### Will this prevent me from using Chrome OS normally?
 Shimboot does not touch the internal storage at all, so you will be able to use Chrome OS as if nothing happened. However, if you are on an enterprise enrolled device, booting Chrome OS again will force a powerwash due to the attempted switch into developer mode.
 
 #### Can I unplug the USB drive while using Debian?
 By default, this is not possible. However, you can simply copy your Debian rootfs onto your internal storage by first using `fdisk` to repartition it, using `dd` to copy the partition, and `resize2fs` to have it take up the entire drive. In the future, loading the OS to RAM may be supported, but this isn't a priority at the moment.
+
+#### GPU acceleration isn't working, how can I fix this?
+If your kernel version is too old, the standard Mesa drivers will fail to load. Instead, you must download and install the `mesa-amber` drivers. Download this zip file (https://shimboot.ading.dev/mesa-amber.zip), extract it, and install all of the `.deb` files.
 
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).

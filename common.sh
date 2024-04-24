@@ -1,10 +1,16 @@
 #!/bin/bash
 
+set -e
+if [ "$DEBUG" ]; then
+  set -x
+  export DEBUG=1
+fi
+
 check_deps() {
   local needed_commands="$1"
   for command in $needed_commands; do
     if ! command -v $command &> /dev/null; then
-      echo $command
+      echo " - $command"
     fi
   done
 }
@@ -28,4 +34,18 @@ parse_args() {
     local value="${argument:$key_length+1}"
     args["$key"]="$value"
   done
+}
+
+assert_root() {
+  if [ "$EUID" -ne 0 ]; then
+    echo "this needs to be run as root."
+    exit 1
+  fi
+}
+
+assert_args() {
+  if [ -z "$1" ]; then
+    print_help
+    exit 1
+  fi
 }

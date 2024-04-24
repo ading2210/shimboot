@@ -9,12 +9,7 @@ fi
 
 . ./common.sh
 
-if [ "$EUID" -ne 0 ]; then
-  echo "This script must be run as root."
-  exit 1
-fi
-
-if [ -z "$2" ]; then
+print_help() {
   echo "Usage: ./build_rootfs.sh rootfs_path release_name"
   echo "Valid named arguments (specify with 'key=value'):"
   echo "  custom_packages - The packages that will be installed in place of task-xfce-desktop."
@@ -23,10 +18,11 @@ if [ -z "$2" ]; then
   echo "  username        - The unprivileged user name for the new rootfs."
   echo "  user_passwd     - The password for the unprivileged user."
   echo "If you do not specify the hostname and credentials, you will be prompted for them later."
-  exit 1
-fi
+}
 
+assert_root
 assert_deps "realpath debootstrap"
+assert_args "$2"
 parse_args "$@"
 
 rootfs_dir=$(realpath -m "${1}")

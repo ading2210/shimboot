@@ -68,21 +68,25 @@ Another problem is encountered at this stage: the Chrome OS kernel will complain
 After copying all the firmware from the recovery image and shim to the rootfs, we're able to boot to a mostly working XFCE desktop.
 
 <b id="prebuilt">Prebuilt Images:</b>
-Prebuilt images are available <a href="https://dl.ading.dev/shimboot/">here</a>. If there is not a prebuilt image for your board, you must manually build the shimboot image. 
+Prebuilt images are available <a href="https://github.com/ading2210/shimboot/actions">here</a>. If there is not a prebuilt image for your board, you must manually build the shimboot image. 
 
 For these images, the root password is "root". The name of the default user is "user" and its password is "user" as well. You should change these credentials as soon as possible.
 
 <b id="build">Build Instructions:</b>
+1. Find the board name of your Chromebook. You can search for the model name on <a href="https://chrome100.dev/">chrome100.dev</a>.
+1. Clone this repository and cd into it.
+2. Run `sudo ./build_complete.sh [board_name]` to download the required data and build the disk image.
+
+Alternatively, you can run each of the steps manually:
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
 2. Download a Chrome OS <a href="https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS">recovery image</a> for your board.
-3. Clone this repository and cd into it.
-4. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
-5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
-6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
-7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
+3. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
+4. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
+5. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
+6. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
 
-<b id="usage">Usage:</b>
-1. Obtain a shimboot image by downloading a <a href="https://dl.ading.dev/shimboot/">prebuilt one</a> or building it yourself. 
+<b id="usage">Booting the Image:</b>
+1. Obtain a shimboot image by downloading a <a href="https://github.com/ading2210/shimboot/actions/">prebuilt one</a> or building it yourself. 
 2. Flash the shimboot image to a USB drive or SD card. Use the <a href="https://chrome.google.com/webstore/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm">Chromebook Recovery Utility</a> or <a href="https://linux.die.net/man/1/dd">dd</a> if you're on Linux.
 3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the <a href="https://sh1mmer.me">sh1mmer website</a> (see the "Executing on Chromebook" section).
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.

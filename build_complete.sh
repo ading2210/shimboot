@@ -1,28 +1,19 @@
 #!/bin/bash
 
-set -e
-if [ "$DEBUG" ]; then
-  set -x
-  export DEBUG=1
-fi
-
 . ./common.sh
 
-if [ "$EUID" -ne 0 ]; then
-  echo "This script must be run as root."
-  exit 1
-fi
-
-if [ -z "$1" ]; then
+print_help() {
   echo "Usage: ./build_complete.sh board_name"
   echo "Valid named arguments (specify with 'key=value'):"
   echo "  compress_img - Compress the final disk image into a zip file. Set this to any value to enable this option."
   echo "  rootfs_dir   - Use a different rootfs for the build. The directory you select will be copied before any patches are applied."
   echo "  quiet        - Don't use progress indicators which may clog up log files."
-  exit 1
-fi
+}
 
+assert_root
+assert_args "$1"
 parse_args "$@"
+
 needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
 if [ "$(check_deps "$needed_deps")" ]; then
   #install deps automatically on debian and ubuntu

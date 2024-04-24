@@ -2,6 +2,7 @@
 
 #utilties for reading shim disk images
 
+#extract the initramfs from a kernel image
 extract_initramfs() {
   local kernel_bin="$1"
   local working_dir="$2"
@@ -22,4 +23,31 @@ extract_initramfs() {
 
   rm -rf $output_dir
   cat $cpio_path | cpio -D $output_dir -imd --quiet
+}
+
+copy_kernel() {
+  local shim_path="$1"
+  local kernel_dir="$2"
+
+  local shim_loop=$(create_loop "${shim_path}")
+  local kernel_loop="${shim_loop}p2" #KERN-A should always be p2
+
+  dd if=$kernel_loop of=$kernel_dir/kernel.bin bs=1M status=progress
+  losetup -d $shim_loop
+}
+
+#copy the kernel image then extract the initramfs
+extract_initramfs_full() {
+  local shim_path="$1"
+  local rootfs_dir="$2"
+  local kernel_dir=/tmp/shim_kernel
+
+  echo "copying the shim kernel"
+  rm -rf $kernel_dir
+  mkdir $kernel_dir -p
+  copy_kernel $shim_path $kernel_dir
+
+  echo "extracting initramfs from kernel (this may take a while)"
+  extract_initramfs $kernel_dir/kernel.bin $kernel_dir $rootfs_dir
+  rm -rf $kernel_dir
 }

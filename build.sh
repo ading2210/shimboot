@@ -2,11 +2,7 @@
 
 #build the bootloader image
 
-set -e
-if [ "$DEBUG" ]; then
-  set -x
-fi
-
+. ./common.sh
 . ./image_utils.sh
 . ./shim_utils.sh
 
@@ -14,18 +10,9 @@ print_help() {
   echo "Usage: ./build.sh output_path shim_path rootfs_dir"
 }
 
-if [ "$EUID" -ne 0 ]; then
-  echo "this needs to be run as root."
-  exit 1
-fi
-
-if [ -z "$3" ]; then
-  print_help
-  exit 1
-fi
-
-. ./common.sh
+assert_root
 assert_deps "cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
+assert_args "$3"
 parse_args "$@"
 
 output_path=$(realpath -m "${1}")
