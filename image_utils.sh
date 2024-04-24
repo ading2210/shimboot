@@ -137,6 +137,7 @@ patch_initramfs() {
 
   rm "${initramfs_path}/init" -f
   cp -r bootloader/* "${initramfs_path}/"
+  wget "https://github.com/ading2210/python-static/releases/download/v1.0.0/python3" -O "${initramfs_path}/bin/python3"
 
   find ${initramfs_path}/bin -name "*" -exec chmod +x {} \;
 }
