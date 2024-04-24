@@ -17,7 +17,7 @@ make_bootable() {
 }
 
 partition_disk() {
-  local image_path=$(realpath "${1}")
+  local image_path=$(realpath -m "${1}")
   local bootloader_size=${2}
 
   #create partition table with fdisk
@@ -72,8 +72,8 @@ safe_mount() {
 }
 
 create_partitions() {
-  local image_loop=$(realpath "${1}")
-  local kernel_path=$(realpath "${2}")
+  local image_loop=$(realpath -m "${1}")
+  local kernel_path=$(realpath -m "${2}")
 
   #create stateful
   mkfs.ext4 "${image_loop}p1"
@@ -87,9 +87,10 @@ create_partitions() {
 }
 
 populate_partitions() {
-  local image_loop=$(realpath "${1}")
-  local bootloader_dir=$(realpath "${2}")
-  local rootfs_dir=$(realpath "${3}")
+  local image_loop=$(realpath -m "${1}")
+  local bootloader_dir=$(realpath -m "${2}")
+  local rootfs_dir=$(realpath -m "${3}")
+  local quiet="$4"
 
   #mount and write empty file to stateful
   local stateful_mount=/tmp/shim_stateful
@@ -110,12 +111,16 @@ populate_partitions() {
   #write rootfs to image
   local rootfs_mount=/tmp/new_rootfs
   safe_mount "${image_loop}p4" $rootfs_mount
-  rsync --archive --human-readable --hard-links --info=progress2 --sparse $rootfs_dir/ $rootfs_mount/
+  if [ "$quiet" ]; then
+    rsync --archive --human-readable --hard-links --quiet --sparse $rootfs_dir/ $rootfs_mount/
+  else
+    rsync --archive --human-readable --hard-links --info=progress2 --sparse $rootfs_dir/ $rootfs_mount/
+  fi
   umount $rootfs_mount
 }
 
 create_image() {
-  local image_path=$(realpath "${1}")
+  local image_path=$(realpath -m "${1}")
   local bootloader_size=${2}
   local rootfs_size=${3}
   
@@ -128,7 +133,7 @@ create_image() {
 }
 
 patch_initramfs() {
-  local initramfs_path=$(realpath $1)
+  local initramfs_path=$(realpath -m $1)
 
   rm "${initramfs_path}/init" -f
   cp -r bootloader/* "${initramfs_path}/"
