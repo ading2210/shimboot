@@ -7,7 +7,7 @@ Chrome OS RMA shims are bootable disk images which are designed to run a variety
 
 Simply replacing the shim's rootfs doesn't work, as it boots in an environment friendly to the RMA shim, not regular Linux distros. To get around this, a separate bootloader is required to transition from the shim environment to the main rootfs. This bootloader then does `pivot_root` to enter the rootfs, where it then starts the init system.
 
-Another problem is encountered at this stage: the Chrome OS kernel will complain about systemd's mounts, and the boot process will hang. A simple workaround is to [apply a patch](https://github.com/ading2210/chromeos-systemd) to systemd, and then it can be recompiled and hosted at a [repo somewhere](https://shimboot.ading.dev/debian/).
+Another problem is encountered at this stage: the Chrome OS kernel will complain about systemd's mounts, and the boot process will hang. A simple workaround is to [apply a patch](https://github.com/ading2210/chromeos-systemd) to systemd, and then it can be recompiled and hosted at a [repo somewhere](https://github.com/ading2210/shimboot-repo).
 
 After copying all the firmware from the recovery image and shim to the rootfs, we're able to boot to a mostly working XFCE desktop.
 
@@ -101,17 +101,43 @@ Alternatively, you can run each of the steps manually:
 #### I want to use a different Linux distribution. How can I do that?
 Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs dir into `build.sh`.
 
+Debian Sid (the unstable rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_rootfs.sh`: 
+```bash
+sudo ./build_rootfs.sh data/rootfs unstable
+```
 #### How can I install a desktop environment other than XFCE?
-You can pass another argument to the `build_rootfs.sh` script, like this: `sudo ./build_rootfs.sh data/rootfs bookworm custom_packages=task-lxde-desktop`. The `custom_packages` argument is a list of packages that will be installed in the place of XFCE. 
+You can pass another argument to the `build_rootfs.sh` script, like this: `sudo ./build_rootfs.sh data/rootfs bookworm custom_packages=task-lxde-desktop`. The `custom_packages` argument is a list of packages (separated by spaces) that will be installed in the place of XFCE. 
 
 #### Will this prevent me from using Chrome OS normally?
 Shimboot does not touch the internal storage at all, so you will be able to use Chrome OS as if nothing happened. However, if you are on an enterprise enrolled device, booting Chrome OS again will force a powerwash due to the attempted switch into developer mode.
 
 #### Can I unplug the USB drive while using Debian?
-By default, this is not possible. However, you can simply copy your Debian rootfs onto your internal storage by first using `fdisk` to repartition it, using `dd` to copy the partition, and `resize2fs` to have it take up the entire drive. In the future, loading the OS to RAM may be supported, but this isn't a priority at the moment.
+By default, this is not possible. However, you can simply copy your Debian rootfs onto your internal storage by first using `fdisk` to repartition it, using `dd` to copy the partition, and `resize2fs` to have it take up the entire drive. In the future, loading the OS to RAM may be supported, but this isn't a priority at the moment. You can also just blindly copy the contents of your Shimboot USB to the internal storage without bothering to repartition:
+```bash
+#assuming the usb drive is on sda and internal storage is on mmcblk1
+sudo dd if=/dev/sda of=/dev/mmcblk1 bs=1M oflag=direct status=progress
+sudo growpart /dev/mmcblk1 4
+sudo resize2fs /dev/mmcblk1p4
+```
 
 #### GPU acceleration isn't working, how can I fix this?
-If your kernel version is too old, the standard Mesa drivers will fail to load. Instead, you must download and install the `mesa-amber` drivers. Download this zip file (https://shimboot.ading.dev/mesa-amber.zip), extract it, and install all of the `.deb` files.
+If your kernel version is too old, the standard Mesa drivers will fail to load. Instead, you must download and install the `mesa-amber` drivers. Run the following commands:
+```
+sudo apt install libglx-amber0 libegl-amber0
+echo "MESA_LOADER_DRIVER_OVERRIDE=i965" >> /etc/environment
+```
+You may need to change `i965` to `i915` (or `r100`/`r200` for AMD hardware), depending on what GPU you have.
+
+#### Can the rootfs be compressed to save space?
+Compressing the Debian rootfs with a squashfs is supported, and you can do this by running the regular Debian rootfs through `./build_squashfs.sh`. For example:
+```bash
+sudo ./build_rootfs.sh data/rootfs bookworm
+sudo ./build_squashfs.sh data/rootfs_compressed data/rootfs path_to_shim
+sudo ./build.sh image.bin path_to_shim data/rootfs_compressed
+```
+Any writes to the squashfs will persist, but they will not be compressed when saved. For the compression to be the most effective, consider pre-installing most of the software you use with `custom_packages=` before building the squashfs.
+
+On the regular XFCE4 image, this brings the rootfs size down to 1.2GB from 3.5GB.
 
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
