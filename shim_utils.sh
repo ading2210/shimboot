@@ -8,18 +8,41 @@ extract_initramfs() {
   local working_dir="$2"
   local output_dir="$3"
 
-  #first stage
+  #extract the compressed kernel image from the partition data
   local kernel_file="$(basename $kernel_bin)"
   local binwalk_out=$(binwalk --extract $kernel_bin --directory=$working_dir --run-as=root)
   local stage1_file=$(echo $binwalk_out | pcregrep -o1 "\d+\s+0x([0-9A-F]+)\s+gzip compressed data")
   local stage1_dir="$working_dir/_$kernel_file.extracted"
   local stage1_path="$stage1_dir/$stage1_file"
   
-  #second stage
+  #extract the initramfs cpio archive from the kernel image
   binwalk --extract $stage1_path --directory=$stage1_dir --run-as=root > /dev/null
   local stage2_dir="$stage1_dir/_$stage1_file.extracted/"
   local cpio_file=$(file $stage2_dir/* | pcregrep -o1 "([0-9A-F]+):\s+ASCII cpio archive")
   local cpio_path="$stage2_dir/$cpio_file"
+
+  rm -rf $output_dir
+  cat $cpio_path | cpio -D $output_dir -imd --quiet
+}
+
+extract_initramfs_arm() {
+  local kernel_bin="$1"
+  local working_dir="$2"
+  local output_dir="$3"
+
+  #extract the kernel lz4 archive from the partition
+  local binwalk_out="$(binwalk $kernel_bin --run-as=root)"
+  local lz4_offset="$(echo "$binwalk_out" | pcregrep -o1 "(\d+).+?LZ4 compressed data")"
+  local lz4_file="$working_dir/kernel.lz4"
+  local kernel_img="$working_dir/kernel_decompressed.bin"
+  dd if=$kernel_bin of=$lz4_file iflag=skip_bytes,count_bytes skip=$lz4_offset
+  lz4 -d $lz4_file $kernel_img -q || true
+
+  #extract the initramfs cpio archive from the kernel image
+  local extracted_dir="$working_dir/_kernel_decompressed.bin.extracted"
+  binwalk --extract $kernel_img --directory=$working_dir --run-as=root > /dev/null
+  local cpio_file=$(file $extracted_dir/* | pcregrep -o1 "([0-9A-F]+):\s+ASCII cpio archive")
+  local cpio_path="$extracted_dir/$cpio_file"
 
   rm -rf $output_dir
   cat $cpio_path | cpio -D $output_dir -imd --quiet
@@ -40,6 +63,8 @@ copy_kernel() {
 extract_initramfs_full() {
   local shim_path="$1"
   local rootfs_dir="$2"
+  local kernel_bin="$3"
+  local arch="$4"
   local kernel_dir=/tmp/shim_kernel
 
   echo "copying the shim kernel"
@@ -48,6 +73,14 @@ extract_initramfs_full() {
   copy_kernel $shim_path $kernel_dir
 
   echo "extracting initramfs from kernel (this may take a while)"
-  extract_initramfs $kernel_dir/kernel.bin $kernel_dir $rootfs_dir
+  if [ "$arch" = "arm64" ]; then
+    extract_initramfs_arm $kernel_dir/kernel.bin $kernel_dir $rootfs_dir
+  else
+    extract_initramfs $kernel_dir/kernel.bin $kernel_dir $rootfs_dir
+  fi
+
+  if [ "$kernel_bin" ]; then 
+    cp $kernel_dir/kernel.bin $kernel_bin
+  fi
   rm -rf $kernel_dir
 }
