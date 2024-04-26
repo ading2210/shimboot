@@ -4,6 +4,9 @@ on: [push]
 
 jobs:
   build:
+    permissions:
+      contents: write
+
     strategy: 
       matrix:
         board: [dedede, octopus, coral, grunt]

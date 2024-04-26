@@ -124,7 +124,7 @@ sudo resize2fs /dev/mmcblk1p4
 If your kernel version is too old, the standard Mesa drivers will fail to load. Instead, you must download and install the `mesa-amber` drivers. Run the following commands:
 ```
 sudo apt install libglx-amber0 libegl-amber0
-echo "MESA_LOADER_DRIVER_OVERRIDE=i965" >> /etc/environment
+echo "MESA_LOADER_DRIVER_OVERRIDE=i965" | sudo tee -a /etc/environment
 ```
 You may need to change `i965` to `i915` (or `r100`/`r200` for AMD hardware), depending on what GPU you have.
 
