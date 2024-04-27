@@ -13,11 +13,18 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 1024
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+
       - name: download repo
         uses: actions/checkout@v4
       
       - name: run build
-        run: sudo DEBUG=1 ./build_complete.sh ${{ matrix.board }} compress_img=1 quiet=1
+        run: sudo DEBUG=1 ./build_complete.sh ${{ matrix.board }} quiet=1
 
       - name: upload img
         uses: actions/upload-artifact@v4
