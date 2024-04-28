@@ -87,5 +87,18 @@ else
   yes "$user_passwd" | passwd $username
 fi
 
+#configure desktop
+echo "Set up desktop - stage 2"
+if ! dpkg-query -W -f='${Status}' task-xfce-desktop | grep "ok installed"; then
+	xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor1/workspace0/last-image -s /home/$username/Pictures/xfce.png
+fi
+if ! dpkg-query -W -f='${Status}' task-gnome-desktop | grep "ok installed"; then
+	gsettings set org.gnome.desktop.background picture-uri file:///home/$username/Pictures/gnome.jpg
+fi
+if ! dpkg-query -W -f='${Status}' task-kde-desktop | grep "ok installed"; then
+	kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group 'Containments' --group '1' --group 'Wallpaper' --group 'org.kde.image' --group 'General' --key 'Image' "/home/$username/Pictures/kde.jpg"
+fi
+echo "Configuring desktop environment complete."
+
 #clean apt caches
 apt-get clean

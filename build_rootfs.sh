@@ -42,6 +42,18 @@ debootstrap --arch amd64 $release_name $rootfs_dir http://deb.debian.org/debian/
 cp -ar rootfs/* $rootfs_dir
 cp /etc/resolv.conf $rootfs_dir/etc/resolv.conf
 
+echo "Set up desktop - stage 1"
+mkdir data/rootfs/home/$username/Pictures
+if [ "$custom_packages" = "task-xfce-desktop" ]; then
+    cp assets/xfce.png data/rootfs/home/$username/Pictures
+fi
+if [ "$custom_packages" = "task-kde-desktop" ]; then
+    cp assets/kde.jpg data/rootfs/home/$username/Pictures
+fi
+if [ "$custom_packages" = "task-gnome-desktop" ]; then
+    cp assets/gnome.jpg data/rootfs/home/$username/Pictures
+fi
+
 trap unmount_all EXIT
 for mountpoint in $chroot_mounts; do
   mount --make-rslave --rbind "/${mountpoint}" "${rootfs_dir}/$mountpoint"
