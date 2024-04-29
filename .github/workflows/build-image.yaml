@@ -16,9 +16,11 @@ jobs:
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 1024
+          root-reserve-mb: 4096
           swap-size-mb: 1024
           remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
 
       - name: download repo
         uses: actions/checkout@v4
@@ -31,7 +33,7 @@ jobs:
         with:
           name: shimboot_${{ matrix.board }}
           path: data/shimboot_${{ matrix.board }}.bin
-          compression-level: 9
+          compression-level: 7
   
       - name: create release
         uses: softprops/action-gh-release@v1

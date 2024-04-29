@@ -10,7 +10,7 @@ print_help() {
 }
 
 assert_root
-assert_deps "git gunzip"
+assert_deps "git gunzip depmod"
 assert_args "$3"
 
 copy_modules() {
@@ -33,7 +33,11 @@ copy_modules() {
   #decompress kernel modules if necessary - debian won't recognize these otherwise
   local compressed_files="$(find "${target_rootfs}/lib/modules" -name '*.gz')"
   if [ "$compressed_files" ]; then
-    find "${target_rootfs}/lib/modules" -name "*.gz" | xargs gunzip -k
+    echo "$compressed_files" | xargs gunzip
+    for kernel_dir in "$target_rootfs/lib/modules/"*; do
+      local version="$(basename "$kernel_dir")"
+      depmod -b "$target_rootfs" "$version"
+    done
   fi
 }
 
