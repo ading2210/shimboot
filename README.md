@@ -22,48 +22,33 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 ## Status:
 Driver support depends on the device you are using shimboot on. This list is for the [`dedede`](https://chrome100.dev/board/dedede/) board, which is the only device I was able to do extensive testing on. The `patch_rootfs.sh` script attempts to copy all the firmware from the shim and recovery image into the rootfs, so expect most things to work on other boards.
 
-### What Works:
-- Booting Chrome OS
-- Systemd
-- X11
-- XFCE
-- Backlight
-- Touchscreen
-- 3D acceleration
-- Bluetooth
-- Zram
-- Wifi
-- Booting a squashfs
-- Webcam
+### Device Compatibility Table:
+| Feature \ Board Name | [`dedede`](https://chrome100.dev/board/dedede/) | [`octopus`](https://chrome100.dev/board/octopus/) | [`reks`](https://chrome100.dev/board/reks/) | [`nissa`](https://chrome100.dev/board/nissa/) |
+|----------------------|-------------------------------------------------|---------------------------------------------------|---------------------------------------------|-----------------------------------------------|
+| X11                  | yes                                             | yes                                               | no (kernel too old)                         | yes                                           |
+| Wifi                 | yes                                             | yes                                               | yes                                         | yes                                           |
+| Internal Audio       | no                                              | yes                                               | untested                                    | no                                            |
+| Backlight            | yes                                             | yes                                               | untested                                    | yes                                           |
+| Touchscreen          | yes                                             | yes                                               | untested                                    | yes                                           |
+| 3D Acceleration      | yes                                             | yes                                               | no                                          | yes                                           |
+| Bluetooth            | yes                                             | yes                                               | untested                                    | yes                                           |
+| Webcam               | yes                                             | yes                                               | untested                                    | yes                                           |
 
-### What Doesn't Work:
-- Audio (due to a firmware bug on `dedede`, this works just fine on `octopus`)
+This table is incomplete. If you want to contribute a device compatibility report please create a new issue on the Github repository.
+
+On all devices, the following features will not work:
 - Suspend (disabled by the kernel)
 - Swap (disabled by the kernel)
 
-### Development Roadmap:
-- ~~build the image automatically~~
-- ~~boot to a shell~~
-- ~~switch_root into an actual rootfs~~
-- ~~start X11 in the actual rootfs~~
-- ~~ui improvements in the bootloader~~
-- ~~load all needed drivers~~
-- ~~autostart X11~~
-- ~~host repo for patched systemd packages~~
-- ~~use debootstrap to install debian~~
-- ~~prompt user for hostname and account when creating the rootfs~~
-- ~~auto load iwlmvm~~
-- ~~get wifi fully working~~
-- ~~host prebuilt images~~
-- ~~write detailed documentation~~
+### TODO:
 - Finish Python TUI rewrite
-
-### Long Term Goals:
 - Transparent disk compression
 - Full disk encryption
 - eliminate binwalk dependency
 - get audio to work
 - get kexec working
+
+PRs and contributions are welcome to help implement these features.
 
 ## Usage:
 
@@ -88,7 +73,7 @@ Alternatively, you can run each of the steps manually:
 7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
 
 ### Booting the Image:
-1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/actions?query=branch%3Amain) or building it yourself. 
+1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/releases) or building it yourself. 
 2. Flash the shimboot image to a USB drive or SD card. Use the [Chromebook Recovery Utility](https://chrome.google.com/webstore/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm) or [dd](https://linux.die.net/man/1/dd) if you're on Linux.
 3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section).
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.

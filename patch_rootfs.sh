@@ -7,16 +7,16 @@ if [ "$DEBUG" ]; then
   set -x
 fi
 
+. ./common.sh
 . ./image_utils.sh
 
 print_help() {
   echo "Usage: ./patch_rootfs.sh shim_path reco_path rootfs_dir"
 }
 
-if [ "$EUID" -ne 0 ]; then
-  echo "this needs to be run as root."
-  exit 1
-fi
+assert_root
+assert_deps "git gunzip"
+assert_args "$3"
 
 if [ -z "$3" ]; then
   print_help
@@ -39,6 +39,9 @@ copy_modules() {
   mkdir -p "${target_rootfs}/etc/modprobe.d/"
   cp -r "${reco_rootfs}/lib/modprobe.d/"* "${target_rootfs}/lib/modprobe.d/"
   cp -r "${reco_rootfs}/etc/modprobe.d/"* "${target_rootfs}/etc/modprobe.d/"
+
+  #decompress kernel modules if necessary - debian won't recognize these otherwise
+  find "${target_rootfs}/lib/modules" -name "*.gz" | xargs gunzip
 }
 
 copy_firmware() {
