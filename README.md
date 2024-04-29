@@ -47,6 +47,10 @@ Driver support depends on the device you are using shimboot on. The `patch_rootf
 
 This table is incomplete. If you want to contribute a device compatibility report please create a new issue on the Github repository.
 
+On all devices, expect the following features to work:
+- Zram (compressed memory)
+- Disk compression with squashfs
+
 On all devices, the following features will not work:
 - Suspend (disabled by the kernel)
 - Swap (disabled by the kernel)
@@ -67,7 +71,8 @@ PRs and contributions are welcome to help implement these features.
 
 ### Prerequisites:
 - A separate Linux PC for the build process (preferably something Debian-based)
-- A USB that is at least 8GB in size
+  - WSL2 is supported if you are on Windows
+- A USB drive that is at least 8GB in size
 - At least 20GB of free disk space
 - An x86-based Chromebook
 

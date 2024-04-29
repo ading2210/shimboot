@@ -2,11 +2,6 @@
 
 #patch the target rootfs to add any needed drivers
 
-set -e
-if [ "$DEBUG" ]; then
-  set -x
-fi
-
 . ./common.sh
 . ./image_utils.sh
 
@@ -17,11 +12,6 @@ print_help() {
 assert_root
 assert_deps "git gunzip"
 assert_args "$3"
-
-if [ -z "$3" ]; then
-  print_help
-  exit 1
-fi
 
 copy_modules() {
   local shim_rootfs=$(realpath -m $1)
@@ -41,7 +31,10 @@ copy_modules() {
   cp -r "${reco_rootfs}/etc/modprobe.d/"* "${target_rootfs}/etc/modprobe.d/"
 
   #decompress kernel modules if necessary - debian won't recognize these otherwise
-  find "${target_rootfs}/lib/modules" -name "*.gz" | xargs gunzip
+  local compressed_files="$(find "${target_rootfs}/lib/modules" -name '*.gz')"
+  if [ "$compressed_files" ]; then
+    find "${target_rootfs}/lib/modules" -name "*.gz" | xargs gunzip -k
+  fi
 }
 
 copy_firmware() {
