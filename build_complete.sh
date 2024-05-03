@@ -8,11 +8,18 @@ print_help() {
   echo "  compress_img - Compress the final disk image into a zip file. Set this to any value to enable this option."
   echo "  rootfs_dir   - Use a different rootfs for the build. The directory you select will be copied before any patches are applied."
   echo "  quiet        - Don't use progress indicators which may clog up log files."
+  echo "  desktop      - The desktop environment to install. This defaults to 'xfce'. Valid options include:"
+  echo "                   gnome, xfce, kde, lxde, gnome-flashback, cinnamon, mate, lxqt"
 }
 
 assert_root
 assert_args "$1"
 parse_args "$@"
+
+compress_img="${args['compress_img']}"
+rootfs_dir="${args['rootfs_dir']}"
+quiet="${args['quiet']}"
+desktop="${args['desktop']-'xfce'}"
 
 needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
 if [ "$(check_deps "$needed_deps")" ]; then
@@ -63,7 +70,7 @@ download_and_unzip() {
   local zip_path="$2"
   local bin_path="$3"
   if [ ! -f "$bin_path" ]; then
-    if [ ! "${args['quiet']}" ]; then
+    if [ ! "$quiet" ]; then
       wget -q --show-progress $url -O $zip_path -c
     else
       wget -q $url -O $zip_path -c
@@ -74,7 +81,7 @@ download_and_unzip() {
     cleanup_path="$bin_path"
     echo "extracting $zip_path"
     local total_bytes="$(unzip -lq $zip_path | tail -1 | xargs | cut -d' ' -f1)"
-    if [ ! "${args['quiet']}" ]; then
+    if [ ! "$quiet" ]; then
       unzip -p $zip_path | pv -s $total_bytes > $bin_path
     else
       unzip -p $zip_path > $bin_path
@@ -97,31 +104,30 @@ download_and_unzip $reco_url $reco_zip $reco_bin
 echo "downloading shim image"
 download_and_unzip $shim_url $shim_zip $shim_bin
 
-if [ ! "${args['rootfs_dir']}" ]; then
+if [ ! "$rootfs_dir" ]; then
   rootfs_dir="$(realpath -m data/rootfs_$board)"
+  desktop_package="task-$desktop-desktop"
   rm -rf $rootfs_dir
   mkdir -p $rootfs_dir
 
   echo "building debian rootfs"
   ./build_rootfs.sh $rootfs_dir bookworm \
+    custom_packages=$desktop_package \
     hostname=shimboot-$board \
-    root_passwd=root \
     username=user \
-    user_passwd=user  
-else
-  rootfs_dir="$(realpath -m "${args['rootfs_dir']}")"
+    user_passwd=user
 fi
 
 echo "patching debian rootfs"
-retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=${args['quiet']}"
+retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet"
 
 echo "building final disk image"
 final_image="$base_dir/data/shimboot_$board.bin"
 rm -rf $final_image
-retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=${args['quiet']}"
+retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet"
 echo "build complete! the final disk image is located at $final_image"
 
-if [ "${args['compress_img']}" ]; then
+if [ "$compress_img" ]; then
   image_zip="$base_dir/data/shimboot_$board.zip"
   echo "compressing disk image into a zip file"
   zip -j $image_zip $final_image

@@ -14,9 +14,11 @@ print_help() {
   echo "Valid named arguments (specify with 'key=value'):"
   echo "  custom_packages - The packages that will be installed in place of task-xfce-desktop."
   echo "  hostname        - The hostname for the new rootfs."
-  echo "  root_passwd     - The root password."
+  echo "  enable_root     - Enable the root user."
+  echo "  root_passwd     - The root password. This only has an effect if enable_root is set."
   echo "  username        - The unprivileged user name for the new rootfs."
   echo "  user_passwd     - The password for the unprivileged user."
+  echo "  disable_base    - Disable the base packages such as zram, cloud-utils, and command-not-found."
   echo "If you do not specify the hostname and credentials, you will be prompted for them later."
 }
 
@@ -49,11 +51,18 @@ done
 
 hostname="${args['hostname']}"
 root_passwd="${args['root_passwd']}"
+enable_root="${args['enable_root']}"
 username="${args['username']}"
 user_passwd="${args['user_passwd']}"
+disable_base="${args['disable_base']}"
 
-chroot_command="/opt/setup_rootfs.sh '$DEBUG' '$release_name' '$packages' '$hostname' '$root_passwd' '$username' '$user_passwd'"
-chroot $rootfs_dir /bin/bash -c "${chroot_command}"
+chroot_command="/opt/setup_rootfs.sh \
+  '$DEBUG' '$release_name' '$packages' \
+  '$hostname' '$root_passwd' '$username' \
+  '$user_passwd' '$enable_root' '$disable_base'"
+
+LC_ALL=C chroot $rootfs_dir /bin/bash -c "${chroot_command}"
+
 trap - EXIT
 unmount_all
 

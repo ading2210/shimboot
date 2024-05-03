@@ -99,7 +99,7 @@ Alternatively, you can run each of the steps manually:
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
 5. Boot into Debian and log in with the username and password that you configured earlier. The default username/password for the prebuilt images is `user/user`.
 6. Expand the rootfs partition so that it fills up the entire disk by running `sudo growpart /dev/sdX 4` (replacing `sdX` with the block device corresponding to your disk) to expand the partition, then running `sudo resize2fs /dev/sdX4` to expand the filesystem.
-7. Change the root password and regular user password by running `sudo passwd root` and `passwd user`.
+7. Change the user password by running `passwd user`. The root user is disabled by default.
 
 ## FAQ:
 
@@ -111,7 +111,11 @@ Debian Sid (the rolling release version of Debian) is also supported if you just
 sudo ./build_rootfs.sh data/rootfs unstable
 ```
 #### How can I install a desktop environment other than XFCE?
-You can pass another argument to the `build_rootfs.sh` script, like this: `sudo ./build_rootfs.sh data/rootfs bookworm custom_packages=task-lxde-desktop`. The `custom_packages` argument is a list of packages (separated by spaces) that will be installed in the place of XFCE. 
+You can pass the `desktop` argument to the `build_complete.sh` script, like this:
+```bash
+sudo ./build_complete.sh grunt desktop=lxde
+```
+The valid values for this argument are: `gnome`, `xfce`, `kde`, `lxde`, `gnome-flashback`, `cinnamon`, `mate`, and `lxqt`.
 
 #### Will this prevent me from using Chrome OS normally?
 Shimboot does not touch the internal storage at all, so you will be able to use Chrome OS as if nothing happened. However, if you are on an enterprise enrolled device, booting Chrome OS again will force a powerwash due to the attempted switch into developer mode.
