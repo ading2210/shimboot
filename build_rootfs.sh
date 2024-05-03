@@ -40,6 +40,22 @@ unmount_all() {
   done
 }
 
+need_remount() {
+  local target="$1"
+  local mnt_options="$(findmnt -T "$target" | tail -n1 | rev | cut -f1 -d' '| rev)"
+  echo "$mnt_options" | grep -e "noexec" -e "nodev"
+}
+
+do_remount() {
+  local target="$1"
+  local mountpoint="$(findmnt -T "$target" | tail -n1 | cut -f1 -d' ')"
+  mount -o remount,dev,exec "$mountpoint"
+}
+
+if [ "$(need_remount "$rootfs_dir")" ]; then
+  do_remount "$rootfs_dir"
+fi
+
 debootstrap --arch amd64 $release_name $rootfs_dir http://deb.debian.org/debian/
 cp -ar rootfs/* $rootfs_dir
 cp /etc/resolv.conf $rootfs_dir/etc/resolv.conf
