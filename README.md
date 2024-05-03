@@ -86,7 +86,7 @@ Alternatively, you can run each of the steps manually:
 2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
 3. Unzip the shim and the recovery image if you have not done so already.
 4. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
-5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
+5. Run `sudo ./build_rootfs.sh /data/rootfs bookworm` to build the base rootfs.
 6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
 7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
 
