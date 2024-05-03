@@ -72,6 +72,7 @@ PRs and contributions are welcome to help implement these features.
 ### Prerequisites:
 - A separate Linux PC for the build process (preferably something Debian-based)
   - WSL2 is supported if you are on Windows
+  - Github Codespaces is not supported at the moment
 - A USB drive that is at least 8GB in size
 - At least 20GB of free disk space
 - An x86-based Chromebook

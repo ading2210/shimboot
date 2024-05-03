@@ -10,6 +10,7 @@ print_help() {
   echo "  quiet        - Don't use progress indicators which may clog up log files."
   echo "  desktop      - The desktop environment to install. This defaults to 'xfce'. Valid options include:"
   echo "                   gnome, xfce, kde, lxde, gnome-flashback, cinnamon, mate, lxqt"
+  echo "  data_dir     - The working directory for the scripts. This defaults to ./data"
 }
 
 assert_root
@@ -20,13 +21,14 @@ compress_img="${args['compress_img']}"
 rootfs_dir="${args['rootfs_dir']}"
 quiet="${args['quiet']}"
 desktop="${args['desktop']-'xfce'}"
+data_dir="${args['data_dir']}"
 
-needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync"
+needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync depmod findmnt"
 if [ "$(check_deps "$needed_deps")" ]; then
   #install deps automatically on debian and ubuntu
   if [ -f "/etc/debian_version" ]; then
     echo "attempting to install build deps"
-    apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt rsync pv -y
+    apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt rsync kmod pv -y
   fi
   assert_deps "$needed_deps"
 fi
@@ -45,6 +47,12 @@ board="$1"
 shim_url="https://dl.darkn.bio/api/raw/?path=/SH1mmer/$board.zip"
 boards_url="https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=ChromeOS"
 
+if [ -z "$data_dir" ]; then
+  data_dir="$base_dir/data"
+else
+  data_dir="$(realpath -m "$data_dir")"
+fi
+
 echo "downloading list of recovery images"
 reco_url="$(wget -qO- --show-progress $boards_url | python3 -c '
 import json, sys
@@ -59,11 +67,11 @@ print(reco_url)
 ' $board)"
 echo "found url: $reco_url"
 
-shim_bin="$base_dir/data/shim_$board.bin"
-shim_zip="$base_dir/data/shim_$board.zip"
-reco_bin="$base_dir/data/reco_$board.bin"
-reco_zip="$base_dir/data/reco_$board.zip"
-mkdir -p "$base_dir/data"
+shim_bin="$data_dir/shim_$board.bin"
+shim_zip="$data_dir/shim_$board.zip"
+reco_bin="$data_dir/reco_$board.bin"
+reco_zip="$data_dir/reco_$board.zip"
+mkdir -p "$data_dir"
 
 download_and_unzip() {
   local url="$1"
@@ -107,6 +115,9 @@ download_and_unzip $shim_url $shim_zip $shim_bin
 if [ ! "$rootfs_dir" ]; then
   rootfs_dir="$(realpath -m data/rootfs_$board)"
   desktop_package="task-$desktop-desktop"
+  if [ "$(findmnt -T "$rootfs_dir/dev")" ]; then
+    sudo umount -l $rootfs_dir/* 2>/dev/null || true
+  fi
   rm -rf $rootfs_dir
   mkdir -p $rootfs_dir
 
@@ -122,13 +133,13 @@ echo "patching debian rootfs"
 retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet"
 
 echo "building final disk image"
-final_image="$base_dir/data/shimboot_$board.bin"
+final_image="$data_dir/shimboot_$board.bin"
 rm -rf $final_image
 retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet"
 echo "build complete! the final disk image is located at $final_image"
 
 if [ "$compress_img" ]; then
-  image_zip="$base_dir/data/shimboot_$board.zip"
+  image_zip="$data_dir/shimboot_$board.zip"
   echo "compressing disk image into a zip file"
   zip -j $image_zip $final_image
   echo "finished compressing the disk file"

@@ -23,6 +23,8 @@ A clear and concise description of what you expected to happen.
 **Screenshots / Photos**
 If applicable, add screenshots or photos to help explain your problem.
 
+If you are reporting an issue with the build process, please run the scripts in debug mode by putting `DEBUG=1` before the build commmand, like `sudo DEBUG=1 ./build_complete.sh`.
+
 **Target Chrome OS Device (please complete the following information):**
  - Board Name (e.g. dedede)
  - Device Name (e.g. drawcia)

@@ -2,6 +2,12 @@
 
 create_loop() {
   local loop_device=$(losetup -f)
+  if [ ! -b "$loop_device" ]; then
+    #we might run out of loop devices, see https://stackoverflow.com/a/66020349
+    local major=$(grep loop /proc/devices | cut -c3)
+    local number="$(echo "$loop_device" | grep -Eo '[0-9]+' | tail -n1)"
+    mknod $loop_device b $major $number
+  fi
   losetup -P $loop_device "${1}"
   echo $loop_device
 }
@@ -65,10 +71,18 @@ partition_disk() {
 }
 
 safe_mount() {
-  umount $2 2> /dev/null || /bin/true
-  rm -rf $2
-  mkdir -p $2
-  mount $1 $2
+  local source="$1"
+  local dest="$2"
+  local opts="$3"
+  
+  umount $dest 2> /dev/null || /bin/true
+  rm -rf $dest
+  mkdir -p $dest
+  if [ "$opts" ]; then
+    mount $source $dest -o $dest
+  else
+    mount $source $dest
+  fi
 }
 
 create_partitions() {

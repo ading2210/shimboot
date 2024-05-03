@@ -23,7 +23,7 @@ print_help() {
 }
 
 assert_root
-assert_deps "realpath debootstrap"
+assert_deps "realpath debootstrap findmnt"
 assert_args "$2"
 parse_args "$@"
 

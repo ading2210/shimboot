@@ -44,7 +44,7 @@ systemctl enable kill-frecon.service
 
 #install base packages
 if [ -z "$disable_base_pkgs" ]; then
-  apt-get install -y cloud-utils zram-tools sudo command-not-found
+  apt-get install -y cloud-utils zram-tools sudo command-not-found bash-completion
 
   #set up zram
   echo "ALGO=lzo" >> /etc/default/zramswap
