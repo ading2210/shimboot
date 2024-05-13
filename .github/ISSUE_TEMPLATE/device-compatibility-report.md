@@ -19,3 +19,6 @@ This template is not meant to be used if Shimboot fails completely. Submit a bug
 - 3D acceleration: yes/no/untested
 - Bluetooth: yes/no/untested
 - Webcam: yes/no/untested
+
+
+**Other Notes:**:
