@@ -12,11 +12,6 @@ create_loop() {
   echo $loop_device
 }
 
-#original shim rootfses have a non standard ext2 filesystem
-make_mountable() {
-  printf '\000' | dd of=$1 seek=$((0x464 + 3)) conv=notrunc count=1 bs=1 status=none
-}
-
 #set required flags on the kernel partition
 make_bootable() {
   cgpt add -i 2 -S 1 -T 5 -P 10 -l kernel $1
@@ -79,7 +74,7 @@ safe_mount() {
   rm -rf $dest
   mkdir -p $dest
   if [ "$opts" ]; then
-    mount $source $dest -o $dest
+    mount $source $dest -o $opts
   else
     mount $source $dest
   fi
@@ -151,4 +146,17 @@ patch_initramfs() {
   cp -r bootloader/* "${initramfs_path}/"
 
   find ${initramfs_path}/bin -name "*" -exec chmod +x {} \;
+}
+
+#clean up unused loop devices
+clean_loops() {
+  local loop_devices="$(losetup -a | awk -F':' {'print $1'})"
+  for loop_device in $loop_devices; do
+    local mountpoints="$(cat /proc/mounts | grep "$loop_device")"
+    if [ ! "$mountpoints" ]; then
+      losetup -d $loop_device
+    else
+      echo "warning: not removing $loop_device because it is still mounted"
+    fi
+  done
 }

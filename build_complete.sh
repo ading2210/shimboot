@@ -1,6 +1,7 @@
 #!/bin/bash
 
 . ./common.sh
+. ./image_utils.sh
 
 print_help() {
   echo "Usage: ./build_complete.sh board_name"
@@ -137,6 +138,9 @@ final_image="$data_dir/shimboot_$board.bin"
 rm -rf $final_image
 retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet"
 echo "build complete! the final disk image is located at $final_image"
+
+echo "cleaning up"
+clean_loops
 
 if [ "$compress_img" ]; then
   image_zip="$data_dir/shimboot_$board.zip"

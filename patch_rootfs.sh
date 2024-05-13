@@ -67,13 +67,11 @@ reco_rootfs="/tmp/reco_rootfs"
 
 echo "mounting shim"
 shim_loop=$(create_loop "${shim_path}")
-make_mountable "${shim_loop}p3"
-safe_mount "${shim_loop}p3" $shim_rootfs
+safe_mount "${shim_loop}p3" $shim_rootfs ro
 
 echo "mounting recovery image"
 reco_loop=$(create_loop "${reco_path}")
-make_mountable "${reco_loop}p3"
-safe_mount "${reco_loop}p3" $reco_rootfs
+safe_mount "${reco_loop}p3" $reco_rootfs ro
 
 echo "copying modules to rootfs"
 copy_modules $shim_rootfs $reco_rootfs $target_rootfs
