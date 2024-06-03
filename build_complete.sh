@@ -61,7 +61,10 @@ import json, sys
 all_builds = json.load(sys.stdin)
 board = all_builds["builds"][sys.argv[1]]
 if "models" in board:
-  board = next(iter(board["models"].values()))
+  for device in board["models"].values():
+    if device["pushRecoveries"]:
+      board = device
+      break
 
 reco_url = list(board["pushRecoveries"].values())[-1]
 print(reco_url)
