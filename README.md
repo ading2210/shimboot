@@ -36,7 +36,7 @@ Driver support depends on the device you are using shimboot on. The `patch_rootf
 ### Device Compatibility Table:
 | Feature \ Board Name | [`dedede`](https://chrome100.dev/board/dedede/) | [`octopus`](https://chrome100.dev/board/octopus/) | [`nissa`](https://chrome100.dev/board/nissa/) | [`reks`](https://chrome100.dev/board/reks/) | [`kefka`](https://chrome100.dev/board/kefka) | [`zork`](https://chrome100.dev/board/zork) |
 |----------------------|-------------------------------------------------|---------------------------------------------------|-----------------------------------------------|---------------------------------------------|----------------------------------------------|--------------------------------------------|
-| X11                  | yes                                             | yes                                               | yes                                           | no (kernel too old)                         | no (kernel too old)                          | yes                                        |
+| X11                  | yes                                             | yes                                               | yes                                           | no <sup>[1]</sup>                           | no <sup>[1]</sup>                            | yes                                        |
 | Wifi                 | yes                                             | yes                                               | yes                                           | yes                                         | yes                                          | yes                                        |
 | Internal Audio       | no                                              | yes                                               | no                                            | untested                                    | yes                                          | no                                         |
 | Backlight            | yes                                             | yes                                               | yes                                           | untested                                    | yes                                          | untested                                   |
@@ -44,6 +44,8 @@ Driver support depends on the device you are using shimboot on. The `patch_rootf
 | 3D Acceleration      | yes                                             | yes                                               | yes                                           | no                                          | no                                           | yes                                        |
 | Bluetooth            | yes                                             | yes                                               | yes                                           | untested                                    | untested                                     | yes                                        |
 | Webcam               | yes                                             | yes                                               | yes                                           | untested                                    | untested                                     | yes                                        |
+
+<sup>1. The kernel is too old.</sup>
 
 This table is incomplete. If you want to contribute a device compatibility report please create a new issue on the Github repository.
 
