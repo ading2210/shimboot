@@ -2,26 +2,16 @@
 
 #patch the target rootfs to add any needed drivers
 
-set -e
-if [ "$DEBUG" ]; then
-  set -x
-fi
-
+. ./common.sh
 . ./image_utils.sh
 
 print_help() {
   echo "Usage: ./patch_rootfs.sh shim_path reco_path rootfs_dir"
 }
 
-if [ "$EUID" -ne 0 ]; then
-  echo "this needs to be run as root."
-  exit 1
-fi
-
-if [ -z "$3" ]; then
-  print_help
-  exit 1
-fi
+assert_root
+assert_deps "git gunzip depmod"
+assert_args "$3"
 
 copy_modules() {
   local shim_rootfs=$(realpath -m $1)
@@ -39,6 +29,16 @@ copy_modules() {
   mkdir -p "${target_rootfs}/etc/modprobe.d/"
   cp -r "${reco_rootfs}/lib/modprobe.d/"* "${target_rootfs}/lib/modprobe.d/"
   cp -r "${reco_rootfs}/etc/modprobe.d/"* "${target_rootfs}/etc/modprobe.d/"
+
+  #decompress kernel modules if necessary - debian won't recognize these otherwise
+  local compressed_files="$(find "${target_rootfs}/lib/modules" -name '*.gz')"
+  if [ "$compressed_files" ]; then
+    echo "$compressed_files" | xargs gunzip
+    for kernel_dir in "$target_rootfs/lib/modules/"*; do
+      local version="$(basename "$kernel_dir")"
+      depmod -b "$target_rootfs" "$version"
+    done
+  fi
 }
 
 copy_firmware() {
@@ -67,13 +67,11 @@ reco_rootfs="/tmp/reco_rootfs"
 
 echo "mounting shim"
 shim_loop=$(create_loop "${shim_path}")
-make_mountable "${shim_loop}p3"
-safe_mount "${shim_loop}p3" $shim_rootfs
+safe_mount "${shim_loop}p3" $shim_rootfs ro
 
 echo "mounting recovery image"
 reco_loop=$(create_loop "${reco_path}")
-make_mountable "${reco_loop}p3"
-safe_mount "${reco_loop}p3" $reco_rootfs
+safe_mount "${reco_loop}p3" $reco_rootfs ro
 
 echo "copying modules to rootfs"
 copy_modules $shim_rootfs $reco_rootfs $target_rootfs

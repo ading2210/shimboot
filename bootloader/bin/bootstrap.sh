@@ -41,6 +41,8 @@ move_mounts() {
 
 print_license() {
   cat << EOF 
+Shimboot v1.0.2
+
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
 Copyright (C) 2023 ading2210
 

@@ -29,6 +29,11 @@ assert_deps() {
 parse_args() {
   declare -g -A args
   for argument in "$@"; do
+    if [ "$argument" = "-h" ] || [ "$argument" = "--help" ]; then
+      print_help
+      exit 0
+    fi
+
     local key=$(echo $argument | cut -f1 -d=)
     local key_length=${#key}
     local value="${argument:$key_length+1}"
