@@ -39,28 +39,6 @@ move_mounts() {
   done
 }
 
-print_license() {
-  cat << EOF 
-Shimboot v1.0.2
-
-ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
-Copyright (C) 2023 ading2210
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-EOF
-}
-
 copy_progress() {
   local source="$1"
   local destination="$2"
@@ -86,6 +64,7 @@ boot_chromeos() {
   local target="$1"
   local donor="$2"
   local use_crossystem="$3"
+  local invalid_hwid="$4"
 
   echo "mounting target"
   mkdir /newroot
@@ -126,6 +105,9 @@ boot_chromeos() {
   if [ "$use_crossystem" = "y" ]; then
     echo "patching crossystem"
     cp /opt/crossystem /newroot/tmp/crossystem
+    if [ "$invalid_hwid" = "y" ]; then
+      sed -i 's/block_devmode/hwid/' /newroot/tmp/crossystem
+    fi
     cp /newroot/usr/bin/crossystem /newroot/tmp/crossystem_old
     mount -o bind /newroot/tmp/crossystem /newroot/usr/bin/crossystem
   fi
