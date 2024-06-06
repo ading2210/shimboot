@@ -7,6 +7,7 @@ base_path = pathlib.Path(__file__).resolve().parent
 mock_data_path = base_path / "mock_data"
 output_file = pathlib.Path("/tmp/bootloader_result")
 config_path = base_path / "config"
+stateful_mount = pathlib.Path("/mnt/state")
 
 def horizontal_line(width):
   return "├" + "─" * (width - 2) + "┤"

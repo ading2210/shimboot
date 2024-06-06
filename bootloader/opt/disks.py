@@ -125,4 +125,5 @@ def get_all_partitions():
 #some test code, this file will never be called as main normally 
 if __name__ == "__main__":
   state = find_state()
-  print(state)
+  utils.stateful_mount.mkdir(parents=True)
+  utils.run_command(["/bin/busybox", "mount", state, str(stateful_mount)])

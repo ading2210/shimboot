@@ -12,7 +12,7 @@ fi
 part_dev="$(findmnt -T / -no SOURCE)"
 disk_dev="$(lsblk --list --noheadings --paths --output PKNAME "$part_dev")"
 part_name="$(echo "$part_dev" | rev | cut -d'/' -f1 | rev)"
-part_num="$(cat /proc/partitions | grep "sda1" | awk '{print $2}')"
+part_num="$(cat /proc/partitions | grep "$part_name" | awk '{print $2}')"
 
 echo "Automatically detected root filesystem:"
 echo "Disk: $disk_dev"
