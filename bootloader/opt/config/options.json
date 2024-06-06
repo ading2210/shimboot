@@ -1,3 +1,9 @@
 {
-  
+  "schema": {
+    "boot_timeout": {
+      "name": "Boot Timeout",
+      "type": "int",
+      "default": 10
+    }
+  }
 }

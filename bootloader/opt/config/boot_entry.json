@@ -1,0 +1,19 @@
+{
+  "schema": {
+    "name_override": {
+      "name": "Name override",
+      "type": "str",
+      "default": null
+    },
+    "init": {
+      "name": "Init command",
+      "type": "str",
+      "default": "/sbin/init"
+    },
+    "kill_frecon": {
+      "name": "Kill frecon",
+      "type": "bool",
+      "default": true
+    }
+  }
+}

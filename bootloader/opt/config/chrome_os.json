@@ -1,0 +1,15 @@
+{
+  "extends": "boot_entry",
+  "schema": {
+    "spoof_verified": {
+      "name": "Spoof Verified Mode",
+      "type": "bool",
+      "default": true
+    },
+    "spoof_hwid": {
+      "name": "Spoof Invalid HWID",
+      "type": "bool",
+      "default": false
+    }
+  }
+}

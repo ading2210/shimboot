@@ -4,8 +4,6 @@ import json
 
 import utils
 
-schemas = {}
-
 class OptionsMenu:
   def __init__(self, window, schema, options):
     self.window = window
@@ -98,12 +96,3 @@ class OptionsMenu:
 
     curses.curs_set(0)
     return text
-
-def load_schemas():
-  for path in utils.config_path.iterdir():
-    if not path.suffix == ".json":
-      continue
-    schema = json.loads(path.read_text())
-    schemas[path.stem] = schema
-
-load_schemas()

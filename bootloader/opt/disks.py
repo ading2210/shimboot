@@ -102,10 +102,12 @@ def get_valid_partitions(disk):
   for partition in partitions:
     if partition["type"] == "ChromeOS rootfs" and partition["label"] in ["ROOT-A", "ROOT-B"]:
       partition["name"] = partition["label"]
+      partition["schema_name"] = "chrome_os"
       valid_partitions.append(partition)
       
     elif partition["label"].startswith("shimboot_rootfs:"):
       partition["name"] = partition["label"].replace("shimboot_rootfs:", "", 1)
+      partition["schema_name"] = "boot_entry"
       valid_partitions.append(partition)
 
   return valid_partitions
