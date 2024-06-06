@@ -112,8 +112,8 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section).
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
 5. Boot into Debian and log in with the username and password that you configured earlier. The default username/password for the prebuilt images is `user/user`.
-6. Expand the rootfs partition so that it fills up the entire disk by running `sudo growpart /dev/sdX 4` (replacing `sdX` with the block device corresponding to your disk) to expand the partition, then running `sudo resize2fs /dev/sdX4` to expand the filesystem.
-7. Change the user password by running `passwd user`. The root user is disabled by default.
+6. Expand the rootfs partition so that it fills up the entire disk by running `sudo expand_rootfs`.
+7. Change your own password by running `passwd user`. The root user is disabled by default.
 
 ## FAQ:
 
@@ -150,10 +150,12 @@ Shimboot does not touch the internal storage at all, so you will be able to use 
 #### Can I unplug the USB drive while using Debian?
 By default, this is not possible. However, you can simply copy your Debian rootfs onto your internal storage by first using `fdisk` to repartition it, using `dd` to copy the partition, and `resize2fs` to have it take up the entire drive. In the future, loading the OS to RAM may be supported, but this isn't a priority at the moment. You can also just blindly copy the contents of your Shimboot USB to the internal storage without bothering to repartition:
 ```bash
-#assuming the usb drive is on sda and internal storage is on mmcblk1
-sudo dd if=/dev/sda of=/dev/mmcblk1 bs=1M oflag=direct status=progress
-sudo growpart /dev/mmcblk1 4
-sudo resize2fs /dev/mmcblk1p4
+#check the output of this to know what disk you're copying to and from
+fdisk -l
+
+#run this from within the shimboot bootloader
+#this assumes the usb drive is on sda and internal storage is on mmcblk1
+dd if=/dev/sda of=/dev/mmcblk1 bs=1M oflag=direct status=progress
 ```
 
 #### GPU acceleration isn't working, how can I fix this?
