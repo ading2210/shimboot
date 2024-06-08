@@ -7,6 +7,15 @@ assignees: ''
 
 ---
 
+<!--
+Before making a bug report please check that:
+- The USB drive/SD card you are using isn't faulty
+  - Dirt cheap USB 2.0 drives or fake high capacity ones will not work
+  - Generally if your drive is unbranded it is slow and of poor quality
+- The disk image you are using is not corrupted
+- You have *some* knowledge on how to use Linux
+-->
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
@@ -27,9 +36,11 @@ If you are reporting an issue with the build process, please run the scripts in 
 
 **Target Chrome OS Device (please complete the following information):**
  - Board Name (e.g. dedede)
- - Device Name (e.g. drawcia)
+ - Device Name (e.g. drawcia) <!-- this page has a list of them: https://chromiumdash.appspot.com/serving-builds -->
  - Shimboot version (e.g. v1.0.1) 
 
+<!-- If you are using a prebuilt image please make note of that and delete this section. -->
+<!-- This section is for the device you build shimboot on, not your chromebook. -->
 **Build Device (please complete the following information):**
  - OS: [e.g. Debian 12]
  - Neofetch out [run `neofetch --stdout` and paste it here]
