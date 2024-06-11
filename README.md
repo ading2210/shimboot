@@ -153,6 +153,11 @@ Any writes to the squashfs will persist, but they will not be compressed when sa
 
 On the regular XFCE4 image, this brings the rootfs size down to 1.2GB from 3.5GB.
 
+#### Steam doesn't work.
+Steam doesn't work out of the box due to security features in the shim kernel preventing the `bwrap` library from working. See [issue #12](https://github.com/ading2210/shimboot/issues/26#issuecomment-2151893062) for more info. 
+
+To get Steam running, install and run it normally. It will fail and show a message saying that "Steam now requires user namespaces to be enabled." Run `fix_brwap` in your terminal, relaunch Steam, and it should be working again. 
+
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
 
