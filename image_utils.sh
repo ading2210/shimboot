@@ -2,13 +2,14 @@
 
 create_loop() {
   local loop_device=$(losetup -f)
+  if [ ! -b "$loop_device" ]; then
+    #we might run out of loop devices, see https://stackoverflow.com/a/66020349
+    local major=$(grep loop /proc/devices | cut -c3)
+    local number="$(echo "$loop_device" | grep -Eo '[0-9]+' | tail -n1)"
+    mknod $loop_device b $major $number
+  fi
   losetup -P $loop_device "${1}"
   echo $loop_device
-}
-
-#original shim rootfses have a non standard ext2 filesystem
-make_mountable() {
-  printf '\000' | dd of=$1 seek=$((0x464 + 3)) conv=notrunc count=1 bs=1 status=none
 }
 
 #set required flags on the kernel partition
@@ -65,10 +66,18 @@ partition_disk() {
 }
 
 safe_mount() {
-  umount $2 2> /dev/null || /bin/true
-  rm -rf $2
-  mkdir -p $2
-  mount $1 $2
+  local source="$1"
+  local dest="$2"
+  local opts="$3"
+  
+  umount $dest 2> /dev/null || /bin/true
+  rm -rf $dest
+  mkdir -p $dest
+  if [ "$opts" ]; then
+    mount $source $dest -o $opts
+  else
+    mount $source $dest
+  fi
 }
 
 create_partitions() {
@@ -137,4 +146,17 @@ patch_initramfs() {
   cp -r bootloader/* "${initramfs_path}/"
 
   find ${initramfs_path}/bin -name "*" -exec chmod +x {} \;
+}
+
+#clean up unused loop devices
+clean_loops() {
+  local loop_devices="$(losetup -a | awk -F':' {'print $1'})"
+  for loop_device in $loop_devices; do
+    local mountpoints="$(cat /proc/mounts | grep "$loop_device")"
+    if [ ! "$mountpoints" ]; then
+      losetup -d $loop_device
+    else
+      echo "warning: not removing $loop_device because it is still mounted"
+    fi
+  done
 }

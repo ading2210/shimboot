@@ -68,7 +68,7 @@ Another problem is encountered at this stage: the Chrome OS kernel will complain
 After copying all the firmware from the recovery image and shim to the rootfs, we're able to boot to a mostly working XFCE desktop.
 
 <b id="prebuilt">Prebuilt Images:</b>
-Prebuilt images are available <a href="https://github.com/ading2210/shimboot/actions">here</a>. If there is not a prebuilt image for your board, you must manually build the shimboot image. 
+Prebuilt images are available <a href="https://github.com/ading2210/shimboot/releases">here</a>. If there is not a prebuilt image for your board, you must manually build the shimboot image. 
 
 For these images, the root password is "root". The name of the default user is "user" and its password is "user" as well. You should change these credentials as soon as possible.
 
@@ -86,12 +86,13 @@ Alternatively, you can run each of the steps manually:
 6. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
 
 <b id="usage">Booting the Image:</b>
-1. Obtain a shimboot image by downloading a <a href="https://github.com/ading2210/shimboot/actions?query=branch%3Amain">prebuilt one</a> or building it yourself. 
+1. Obtain a shimboot image by downloading a <a href="https://github.com/ading2210/shimboot/releases">prebuilt one</a> or building it yourself. 
 2. Flash the shimboot image to a USB drive or SD card. Use the <a href="https://chrome.google.com/webstore/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm">Chromebook Recovery Utility</a> or <a href="https://linux.die.net/man/1/dd">dd</a> if you're on Linux.
 3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the <a href="https://sh1mmer.me">sh1mmer website</a> (see the "Executing on Chromebook" section).
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
 5. Boot into Debian and log in with the username and password that you configured earlier. The default username/password for the prebuilt images is `user/user`.
 6. Expand the rootfs partition so that it fills up the entire disk by running `sudo growpart /dev/sdX 4` (replacing `sdX` with the block device corresponding to your disk) to expand the partition, then running `sudo resize2fs /dev/sdX4` to expand the filesystem.
+7. Change the root password and regular user password by running `sudo passwd root` and `passwd user`.
 
 <b id="copyright">Copyright:</b>
 Shimboot is licensed under the <a href="https://www.gnu.org/licenses/gpl-3.0.txt">GNU GPL v3</a>. Unless otherwise indicated, all code has been written by me, <a href="https://ading.dev">ading2210</a>.

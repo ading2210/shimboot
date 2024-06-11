@@ -28,6 +28,20 @@ enable_debug_console() {
   invoke_terminal "${tty}" "[Bootstrap Debug Console]" "/bin/busybox sh"
 }
 
+#get a partition block device from a disk path and a part number
+get_part_dev() {
+  local disk="$1"
+  local partition="$2"
+
+  #disk paths ending with a number will have a "p" before the partition number
+  last_char="$(echo -n "$disk" | tail -c 1)"
+  if [ "$last_char" -eq "$last_char" ] 2>/dev/null; then
+    echo "${disk}p${partition}"
+  else
+    echo "${disk}${partition}"
+  fi
+}
+
 find_rootfs_partitions() {
   local disks=$(fdisk -l | sed -n "s/Disk \(\/dev\/.*\):.*/\1/p")
   if [ ! "${disks}" ]; then
@@ -40,7 +54,7 @@ find_rootfs_partitions() {
       continue
     fi
     for partition in $partitions; do
-      echo "${disk}${partition}"
+      get_part_dev "$disk" "$partition"
     done
   done
 }
@@ -80,7 +94,7 @@ move_mounts() {
 
 print_license() {
   cat << EOF 
-Shimboot v1.0.0
+Shimboot v1.0.2
 
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
 Copyright (C) 2023 ading2210
@@ -180,25 +194,6 @@ contains_word() {
   done
 
   return 1
-}
-
-#might be useful in case we need to disable the tpm
-#currently this causes a kernel panic when we try to boot cros
-unbind_driver() {
-  local driver_path="$1"
-  local sys_files="$(ls $driver_path)"
-  local excluded_files="bind uevent unbind"
-  for file in $sys_files; do
-    if ! contains_word "$file" "$excluded_files"; then
-      echo "$file" > "${driver_path}/unbind"
-    fi
-  done
-}
-
-unbind_tpm() {
-  unbind_driver "/sys/bus/spi/drivers/tpm_tis_spi"
-  unbind_driver "/sys/bus/pnp/drivers/tpm_tis"
-  unbind_driver "/sys/bus/platform/drivers/tpm_tis"
 }
 
 copy_progress() {

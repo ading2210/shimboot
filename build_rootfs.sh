@@ -14,14 +14,16 @@ print_help() {
   echo "Valid named arguments (specify with 'key=value'):"
   echo "  custom_packages - The packages that will be installed in place of task-xfce-desktop."
   echo "  hostname        - The hostname for the new rootfs."
-  echo "  root_passwd     - The root password."
+  echo "  enable_root     - Enable the root user."
+  echo "  root_passwd     - The root password. This only has an effect if enable_root is set."
   echo "  username        - The unprivileged user name for the new rootfs."
   echo "  user_passwd     - The password for the unprivileged user."
+  echo "  disable_base    - Disable the base packages such as zram, cloud-utils, and command-not-found."
   echo "If you do not specify the hostname and credentials, you will be prompted for them later."
 }
 
 assert_root
-assert_deps "realpath debootstrap"
+assert_deps "realpath debootstrap findmnt"
 assert_args "$2"
 parse_args "$@"
 
@@ -38,6 +40,22 @@ unmount_all() {
   done
 }
 
+need_remount() {
+  local target="$1"
+  local mnt_options="$(findmnt -T "$target" | tail -n1 | rev | cut -f1 -d' '| rev)"
+  echo "$mnt_options" | grep -e "noexec" -e "nodev"
+}
+
+do_remount() {
+  local target="$1"
+  local mountpoint="$(findmnt -T "$target" | tail -n1 | cut -f1 -d' ')"
+  mount -o remount,dev,exec "$mountpoint"
+}
+
+if [ "$(need_remount "$rootfs_dir")" ]; then
+  do_remount "$rootfs_dir"
+fi
+
 debootstrap --arch amd64 $release_name $rootfs_dir http://deb.debian.org/debian/
 cp -ar rootfs/* $rootfs_dir
 cp /etc/resolv.conf $rootfs_dir/etc/resolv.conf
@@ -49,11 +67,18 @@ done
 
 hostname="${args['hostname']}"
 root_passwd="${args['root_passwd']}"
+enable_root="${args['enable_root']}"
 username="${args['username']}"
 user_passwd="${args['user_passwd']}"
+disable_base="${args['disable_base']}"
 
-chroot_command="/opt/setup_rootfs.sh '$DEBUG' '$release_name' '$packages' '$hostname' '$root_passwd' '$username' '$user_passwd'"
-chroot $rootfs_dir /bin/bash -c "${chroot_command}"
+chroot_command="/opt/setup_rootfs.sh \
+  '$DEBUG' '$release_name' '$packages' \
+  '$hostname' '$root_passwd' '$username' \
+  '$user_passwd' '$enable_root' '$disable_base'"
+
+LC_ALL=C chroot $rootfs_dir /bin/bash -c "${chroot_command}"
+
 trap - EXIT
 unmount_all
 
