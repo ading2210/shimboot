@@ -32,7 +32,7 @@ extract_initramfs_arm() {
 
   #extract the kernel lz4 archive from the partition
   local binwalk_out="$(binwalk $kernel_bin --run-as=root)"
-  local lz4_offset="$(echo "$binwalk_out" | pcregrep -o1 "(\d+).+?LZ4 compressed data")"
+  local lz4_offset="$(echo "$binwalk_out" | pcregrep -o1 "(\d+).+?LZ4 compressed data" | head -n1)"
   local lz4_file="$working_dir/kernel.lz4"
   local kernel_img="$working_dir/kernel_decompressed.bin"
   dd if=$kernel_bin of=$lz4_file iflag=skip_bytes,count_bytes skip=$lz4_offset

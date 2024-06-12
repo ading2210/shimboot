@@ -77,12 +77,11 @@ PRs and contributions are welcome to help implement these features.
   - Github Codespaces is not supported at the moment
 - A USB drive that is at least 8GB in size
 - At least 20GB of free disk space
-- An x86-based Chromebook
 
 ### Build Instructions:
 1. Find the board name of your Chromebook. You can search for the model name on [chrome100.dev](https://chrome100.dev/).
 1. Clone this repository and cd into it.
-2. Run `sudo ./build_complete.sh <board_name>` to download the required data and build the disk image.
+2. Run `sudo ./build_complete.sh <board_name>` to download the required data and build the disk image. If you have an ARM-based Chromebook, pass `arch=arm64` in as an option.
 
 Alternatively, you can run each of the steps manually:
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.

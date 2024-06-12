@@ -26,7 +26,7 @@ desktop="${args['desktop']-'xfce'}"
 data_dir="${args['data_dir']}"
 arch="${args['arch']-'amd64'}"
 
-needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync depmod findmnt"
+needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync depmod findmnt lz4"
 if [ "$(check_deps "$needed_deps")" ]; then
   #install deps automatically on debian and ubuntu
   if [ -f "/etc/debian_version" ]; then
