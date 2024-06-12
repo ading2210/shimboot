@@ -19,6 +19,7 @@ print_help() {
   echo "  username        - The unprivileged user name for the new rootfs."
   echo "  user_passwd     - The password for the unprivileged user."
   echo "  disable_base    - Disable the base packages such as zram, cloud-utils, and command-not-found."
+  echo "  arch            - The CPU architecture to build the rootfs for."
   echo "If you do not specify the hostname and credentials, you will be prompted for them later."
 }
 
@@ -30,6 +31,7 @@ parse_args "$@"
 rootfs_dir=$(realpath -m "${1}")
 release_name="${2}"
 packages="${args['custom_packages']-'task-xfce-desktop'}"
+arch="${args['arch']-'amd64'}"
 chroot_mounts="proc sys dev run"
 
 mkdir -p $rootfs_dir
@@ -56,7 +58,7 @@ if [ "$(need_remount "$rootfs_dir")" ]; then
   do_remount "$rootfs_dir"
 fi
 
-debootstrap --arch amd64 $release_name $rootfs_dir http://deb.debian.org/debian/
+debootstrap --arch $arch $release_name $rootfs_dir http://deb.debian.org/debian/
 cp -ar rootfs/* $rootfs_dir
 cp /etc/resolv.conf $rootfs_dir/etc/resolv.conf
 
@@ -75,7 +77,8 @@ disable_base="${args['disable_base']}"
 chroot_command="/opt/setup_rootfs.sh \
   '$DEBUG' '$release_name' '$packages' \
   '$hostname' '$root_passwd' '$username' \
-  '$user_passwd' '$enable_root' '$disable_base'"
+  '$user_passwd' '$enable_root' '$disable_base' \
+  '$arch'" 
 
 LC_ALL=C chroot $rootfs_dir /bin/bash -c "${chroot_command}"
 

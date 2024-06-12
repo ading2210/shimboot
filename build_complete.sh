@@ -12,6 +12,7 @@ print_help() {
   echo "  desktop      - The desktop environment to install. This defaults to 'xfce'. Valid options include:"
   echo "                   gnome, xfce, kde, lxde, gnome-flashback, cinnamon, mate, lxqt"
   echo "  data_dir     - The working directory for the scripts. This defaults to ./data"
+  echo "  arch         - The CPU architecture to build the shimboot image for. Set this to 'arm64' if you have an ARM Chromebook."
 }
 
 assert_root
@@ -23,6 +24,7 @@ rootfs_dir="${args['rootfs_dir']}"
 quiet="${args['quiet']}"
 desktop="${args['desktop']-'xfce'}"
 data_dir="${args['data_dir']}"
+arch="${args['arch']-'amd64'}"
 
 needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync depmod findmnt"
 if [ "$(check_deps "$needed_deps")" ]; then
@@ -130,7 +132,8 @@ if [ ! "$rootfs_dir" ]; then
     custom_packages=$desktop_package \
     hostname=shimboot-$board \
     username=user \
-    user_passwd=user
+    user_passwd=user \
+    arch=$arch
 fi
 
 echo "patching debian rootfs"
@@ -139,7 +142,7 @@ retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet"
 echo "building final disk image"
 final_image="$data_dir/shimboot_$board.bin"
 rm -rf $final_image
-retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet"
+retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet" "arch=$arch"
 echo "build complete! the final disk image is located at $final_image"
 
 echo "cleaning up"
