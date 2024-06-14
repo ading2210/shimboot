@@ -38,7 +38,7 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. ARM Chromebooks are not supported at the moment.
 
 ### Device Compatibility Table:
-| Brand Name                                         | X11               | Wi-Fi | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
+| Board Name                                         | X11               | Wi-Fi | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
 |----------------------------------------------------|-------------------|-------|----------|-----------|-------------|----------|-----------|----------|
 | [**dedede**](https://chrome100.dev/board/dedede)   | yes               | yes   | no       | yes       | yes         | yes      | yes       | yes      |
 | [**octopus**](https://chrome100.dev/board/octopus) | yes               | yes   | yes      | yes       | yes         | yes      | yes       | yes      |
