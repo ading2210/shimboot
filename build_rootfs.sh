@@ -31,7 +31,7 @@ parse_args "$@"
 rootfs_dir=$(realpath -m "${1}")
 release_name="${2}"
 packages="${args['custom_packages']-'task-xfce-desktop'}"
-arch="${args['arch']-'amd64'}"
+arch="${args['arch']-amd64}"
 chroot_mounts="proc sys dev run"
 
 mkdir -p $rootfs_dir

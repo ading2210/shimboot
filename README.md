@@ -2,6 +2,10 @@
 
 Shimboot is a collection of scripts for patching a Chrome OS RMA shim to serve as a bootloader for a standard Linux distribution. It allows you to boot a full desktop Debian install on a Chromebook, without needing to unenroll it or modify the firmware.
 
+| <img src="https://raw.githubusercontent.com/ading2210/shimboot/main/website/assets/shimboot_demo_1.jpg" alt="Shimboot running on a HP Chromebook 11 G9 EE." width="400"/> | <img src="https://raw.githubusercontent.com/ading2210/shimboot/main/website/assets/shimboot_demo_2.jpg" alt="Shimboot running on an Acer Chromebook 311 C722." width="400"/> |  
+| ----- | ----- |
+| Shimboot with KDE on a HP Chromebook 11 G9 EE | Shimboot with XFCE on an Acer Chromebook 311 C722 |
+
 ## Features:
 - Run a full Debian installation on a Chromebook
 - Does not modify the firmware
@@ -62,7 +66,6 @@ On all devices, the following features will not work:
 - Transparent disk compression
 - Full disk encryption
 - Support for more distros (Ubuntu and Arch maybe)
-- Support for ARM based Chromebooks (see [issue #8](https://github.com/ading2210/shimboot/issues/8))
 - Eliminate binwalk dependency
 - Get audio to work on dedede
 - Get kexec working
@@ -76,6 +79,7 @@ PRs and contributions are welcome to help implement these features.
   - WSL2 is supported if you are on Windows
   - Github Codespaces is not supported at the moment
 - A USB drive that is at least 8GB in size
+  - Cheap USB 2.0 drives typically won't work well due to their slow speeds
 - At least 20GB of free disk space
 
 ### Build Instructions:
@@ -138,6 +142,8 @@ sudo apt install libglx-amber0 libegl-amber0
 echo "MESA_LOADER_DRIVER_OVERRIDE=i965" | sudo tee -a /etc/environment
 ```
 You may need to change `i965` to `i915` (or `r100`/`r200` for AMD hardware), depending on what GPU you have.
+
+For ARM Chromebooks, you may have to tweak the [Xorg configuration](https://xkcd.com/963/) instead.
 
 #### Can the rootfs be compressed to save space?
 Compressing the Debian rootfs with a squashfs is supported, and you can do this by running the regular Debian rootfs through `./build_squashfs.sh`. For example:

@@ -19,19 +19,35 @@ assert_root
 assert_args "$1"
 parse_args "$@"
 
+base_dir="$(realpath -m  $(dirname "$0"))"
+board="$1"
+
 compress_img="${args['compress_img']}"
 rootfs_dir="${args['rootfs_dir']}"
 quiet="${args['quiet']}"
 desktop="${args['desktop']-'xfce'}"
 data_dir="${args['data_dir']}"
-arch="${args['arch']-'amd64'}"
+arch="${args['arch']-amd64}"
+
+arm_boards="
+  corsola hana jacuzzi kukui strongbad nyan-big kevin bob
+  veyron-speedy veyron-jerry veyron-minnie scarlet elm
+  kukui peach-pi peach-pit stumpy daisy-spring
+"
+if grep -q "$board" <<< "$arm_boards"; then
+  echo "automatically detected arm64 device name"
+  arch="arm64"
+fi
 
 needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync depmod findmnt lz4"
 if [ "$(check_deps "$needed_deps")" ]; then
   #install deps automatically on debian and ubuntu
   if [ -f "/etc/debian_version" ]; then
     echo "attempting to install build deps"
-    apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt rsync kmod pv -y
+    apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt rsync kmod pv lz4 -y
+    if [ "$arch" = "arm64" ]; then
+      apt-get install qemu-user-static binfmt-support -y
+    fi
   fi
   assert_deps "$needed_deps"
 fi
@@ -45,8 +61,6 @@ sigint_handler() {
 }
 trap sigint_handler SIGINT
 
-base_dir="$(realpath -m  $(dirname "$0"))"
-board="$1"
 shim_url="https://dl.darkn.bio/api/raw/?path=/SH1mmer/$board.zip"
 boards_url="https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=ChromeOS"
 
