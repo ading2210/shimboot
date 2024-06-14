@@ -2,9 +2,9 @@
 
 Shimboot is a collection of scripts for patching a Chrome OS RMA shim to serve as a bootloader for a standard Linux distribution. It allows you to boot a full desktop Debian install on a Chromebook, without needing to unenroll it or modify the firmware.
 
-| <img src="https://raw.githubusercontent.com/ading2210/shimboot/main/website/assets/shimboot_demo_1.jpg" alt="Shimboot running on a HP Chromebook 11 G9 EE." width="400"/> | <img src="https://raw.githubusercontent.com/ading2210/shimboot/main/website/assets/shimboot_demo_2.jpg" alt="Shimboot running on an Acer Chromebook 311 C722." width="400"/> |  
+| <img src="/website/assets/shimboot_demo_1.jpg" alt="Shimboot (KDE) on an HP Chromebook 11 G9 EE." width="400"/> | <img src="/website/assets/shimboot_demo_2.jpg" alt="Shimboot (XFCE) on an Acer Chromebook 311 C722." width="400"/> |  
 | ----- | ----- |
-| Shimboot with KDE on a HP Chromebook 11 G9 EE | Shimboot with XFCE on an Acer Chromebook 311 C722 |
+| Shimboot (KDE) on an HP Chromebook 11 G9 EE | Shimboot (XFCE) on an Acer Chromebook 311 C722 |
 
 ## Features:
 - Run a full Debian installation on a Chromebook
