@@ -38,17 +38,17 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. ARM Chromebooks are not supported at the moment.
 
 ### Device Compatibility Table:
-| Board Name                                         | X11               | Wi-Fi | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
-|----------------------------------------------------|-------------------|-------|----------|-----------|-------------|----------|-----------|----------|
-| [**dedede**](https://chrome100.dev/board/dedede)   | yes               | yes   | no       | yes       | yes         | yes      | yes       | yes      |
-| [**octopus**](https://chrome100.dev/board/octopus) | yes               | yes   | yes      | yes       | yes         | yes      | yes       | yes      |
-| [**nissa**](https://chrome100.dev/board/nissa)     | yes               | yes   | no       | yes       | yes         | yes      | yes       | yes      |
-| [**reks**](https://chrome100.dev/board/reks)       | no <sup>[1]</sup> | yes   | untested | untested  | untested    | no       | untested  | untested |
-| [**kefka**](https://chrome100.dev/board/kefka)     | no <sup>[1]</sup> | yes   | yes      | yes       | untested    | no       | untested  | untested |
-| [**zork**](https://chrome100.dev/board/zork)       | yes               | yes   | no       | untested  | yes         | yes      | yes       | yes      |
-| [**grunt**](https://chrome100.dev/board/grunt)     | yes               | yes   | no       | yes       | yes         | yes      | yes       | yes      |
-| [**jacuzzi**](https://chrome100.dev/board/jacuzzi) | yes               | yes   | no       | yes       | untested    | no       | no        | yes      |
-| [**corsola**](https://chrome100.dev/board/corsola) | yes               | yes   | untested | untested  | untested    | untested | untested  | untested |
+| Board Name                                       | X11               | Wifi | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
+|------------------------------------------------  |-------------------|------|----------|-----------|-------------|----------|-----------|----------|
+| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes  | no       | yes       | yes         | yes      | yes       | yes      |
+| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes  | yes      | yes       | yes         | yes      | yes       | yes      |
+| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes  | no       | yes       | yes         | yes      | yes       | yes      |
+| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup> | yes  | untested | untested  | untested    | no       | untested  | untested |
+| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup> | yes  | yes      | yes       | untested    | no       | untested  | untested |
+| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes  | no       | untested  | yes         | yes      | yes       | yes      |
+| [`grunt`](https://chrome100.dev/board/grunt)     | yes               | yes  | no       | yes       | yes         | yes      | yes       | yes      |
+| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes  | no       | yes       | untested    | no       | no        | yes      |
+| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes  | untested | untested  | untested    | untested | untested  | untested |
 
 <sup>1. The kernel is too old.</sup>
 
@@ -85,10 +85,12 @@ PRs and contributions are welcome to help implement these features.
 
 ### Build Instructions:
 1. Find the board name of your Chromebook. You can search for the model name on [chrome100.dev](https://chrome100.dev/).
-1. Clone this repository and cd into it.
-2. Run `sudo ./build_complete.sh <board_name>` to download the required data and build the disk image. If you have an ARM-based Chromebook, pass `arch=arm64` in as an option.
+2. Clone this repository and cd into it.
+3. Run `sudo ./build_complete.sh <board_name>` to download the required data and build the disk image. 
 
-Alternatively, you can run each of the steps manually:
+Note: If you are building for an ARM Chromebook, you need the `qemu-user-static` and `binfmt-support` packages.
+
+#### Alternatively, you can run each of the steps manually:
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
 2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
 3. Unzip the shim and the recovery image if you have not done so already.
@@ -113,10 +115,11 @@ Alternatively, you can run each of the steps manually:
 #### I want to use a different Linux distribution. How can I do that?
 Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs directory into `patch_rootfs.sh` and `build.sh`.
 
-Debian Sid (the rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_rootfs.sh`: 
+Debian Sid (the rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_complete.sh`: 
 ```bash
-sudo ./build_rootfs.sh data/rootfs unstable
+sudo ./build_complete.sh dedede release=unstable
 ```
+
 #### How can I install a desktop environment other than XFCE?
 You can pass the `desktop` argument to the `build_complete.sh` script, like this:
 ```bash
@@ -138,7 +141,7 @@ sudo resize2fs /dev/mmcblk1p4
 
 #### GPU acceleration isn't working, how can I fix this?
 If your kernel version is too old, the standard Mesa drivers will fail to load. Instead, you must download and install the `mesa-amber` drivers. Run the following commands:
-```
+```bash
 sudo apt install libglx-amber0 libegl-amber0
 echo "MESA_LOADER_DRIVER_OVERRIDE=i965" | sudo tee -a /etc/environment
 ```

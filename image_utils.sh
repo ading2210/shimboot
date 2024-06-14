@@ -119,9 +119,9 @@ populate_partitions() {
   local rootfs_mount=/tmp/new_rootfs
   safe_mount "${image_loop}p4" $rootfs_mount
   if [ "$quiet" ]; then
-    rsync --archive --human-readable --hard-links --quiet --sparse $rootfs_dir/ $rootfs_mount/
+    cp -ar $rootfs_dir/* $rootfs_mount
   else
-    rsync --archive --human-readable --hard-links --info=progress2 --sparse $rootfs_dir/ $rootfs_mount/
+    copy_progress $rootfs_dir $rootfs_mount
   fi
   umount $rootfs_mount
 }
@@ -155,8 +155,14 @@ clean_loops() {
     local mountpoints="$(cat /proc/mounts | grep "$loop_device")"
     if [ ! "$mountpoints" ]; then
       losetup -d $loop_device
-    else
-      echo "warning: not removing $loop_device because it is still mounted"
     fi
   done
+}
+
+copy_progress() {
+  local source="$1"
+  local destination="$2"
+  local total_bytes="$(du -sb "$source" | cut -f1)"
+  mkdir -p "$destination"
+  tar -cf - -C "${source}" . | pv -f -s $total_bytes | tar -xf - -C "${destination}"
 }

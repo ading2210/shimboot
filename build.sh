@@ -14,7 +14,7 @@ print_help() {
 }
 
 assert_root
-assert_deps "cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk rsync lz4"
+assert_deps "cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk lz4"
 assert_args "$3"
 parse_args "$@"
 

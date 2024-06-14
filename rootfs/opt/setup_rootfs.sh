@@ -39,7 +39,7 @@ apt-get install -y ca-certificates
 apt-get update
 installed_systemd="$(dpkg-query -W -f='${binary:Package}\n' | grep "systemd")"
 apt-get clean
-apt-get install --reinstall $installed_systemd
+apt-get install -y --reinstall --allow-downgrades $installed_systemd
 
 #enable shimboot services
 systemctl enable kill-frecon.service

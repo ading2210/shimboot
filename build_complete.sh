@@ -13,6 +13,7 @@ print_help() {
   echo "                   gnome, xfce, kde, lxde, gnome-flashback, cinnamon, mate, lxqt"
   echo "  data_dir     - The working directory for the scripts. This defaults to ./data"
   echo "  arch         - The CPU architecture to build the shimboot image for. Set this to 'arm64' if you have an ARM Chromebook."
+  echo "  release      - Set this to either 'bookworm' or 'unstable' to build for Debian stable/unstable."
 }
 
 assert_root
@@ -28,6 +29,7 @@ quiet="${args['quiet']}"
 desktop="${args['desktop']-'xfce'}"
 data_dir="${args['data_dir']}"
 arch="${args['arch']-amd64}"
+release="${args['release']-bookworm}"
 
 arm_boards="
   corsola hana jacuzzi kukui strongbad nyan-big kevin bob
@@ -39,12 +41,12 @@ if grep -q "$board" <<< "$arm_boards"; then
   arch="arm64"
 fi
 
-needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk rsync depmod findmnt lz4"
+needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk depmod findmnt lz4 pv"
 if [ "$(check_deps "$needed_deps")" ]; then
   #install deps automatically on debian and ubuntu
   if [ -f "/etc/debian_version" ]; then
     echo "attempting to install build deps"
-    apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt rsync kmod pv lz4 -y
+    apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt kmod pv lz4 -y
     if [ "$arch" = "arm64" ]; then
       apt-get install qemu-user-static binfmt-support -y
     fi
@@ -142,7 +144,7 @@ if [ ! "$rootfs_dir" ]; then
   mkdir -p $rootfs_dir
 
   echo "building debian rootfs"
-  ./build_rootfs.sh $rootfs_dir bookworm \
+  ./build_rootfs.sh $rootfs_dir $release \
     custom_packages=$desktop_package \
     hostname=shimboot-$board \
     username=user \
