@@ -9,7 +9,7 @@ jobs:
 
     strategy: 
       matrix:
-        board: [dedede, octopus, coral, grunt, nissa, zork]
+        board: [dedede, octopus, coral, grunt, nissa, zork, corsola, jacuzzi]
 
     runs-on: ubuntu-latest
     steps:

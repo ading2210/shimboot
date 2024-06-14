@@ -2,6 +2,10 @@
 
 Shimboot is a collection of scripts for patching a Chrome OS RMA shim to serve as a bootloader for a standard Linux distribution. It allows you to boot a full desktop Debian install on a Chromebook, without needing to unenroll it or modify the firmware.
 
+| <img src="/website/assets/shimboot_demo_1.jpg" alt="Shimboot (KDE) on an HP Chromebook 11 G9 EE." width="400"/> | <img src="/website/assets/shimboot_demo_2.jpg" alt="Shimboot (XFCE) on an Acer Chromebook 311 C722." width="400"/> |  
+| ----- | ----- |
+| Shimboot (KDE) on an HP Chromebook 11 G9 EE | Shimboot (XFCE) on an Acer Chromebook 311 C722 |
+
 ## Features:
 - Run a full Debian installation on a Chromebook
 - Does not modify the firmware
@@ -34,16 +38,17 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. ARM Chromebooks are not supported at the moment.
 
 ### Device Compatibility Table:
-| Feature \ Board Name | [`dedede`](https://chrome100.dev/board/dedede/) | [`octopus`](https://chrome100.dev/board/octopus/) | [`nissa`](https://chrome100.dev/board/nissa/) | [`reks`](https://chrome100.dev/board/reks/) | [`kefka`](https://chrome100.dev/board/kefka) | [`zork`](https://chrome100.dev/board/zork) |
-|----------------------|-------------------------------------------------|---------------------------------------------------|-----------------------------------------------|---------------------------------------------|----------------------------------------------|--------------------------------------------|
-| X11                  | yes                                             | yes                                               | yes                                           | no <sup>[1]</sup>                           | no <sup>[1]</sup>                            | yes                                        |
-| Wifi                 | yes                                             | yes                                               | yes                                           | yes                                         | yes                                          | yes                                        |
-| Internal Audio       | no                                              | yes                                               | no                                            | untested                                    | yes                                          | no                                         |
-| Backlight            | yes                                             | yes                                               | yes                                           | untested                                    | yes                                          | untested                                   |
-| Touchscreen          | yes                                             | yes                                               | yes                                           | untested                                    | untested                                     | yes                                        |
-| 3D Acceleration      | yes                                             | yes                                               | yes                                           | no                                          | no                                           | yes                                        |
-| Bluetooth            | yes                                             | yes                                               | yes                                           | untested                                    | untested                                     | yes                                        |
-| Webcam               | yes                                             | yes                                               | yes                                           | untested                                    | untested                                     | yes                                        |
+| Board Name                                       | X11               | Wifi | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
+|------------------------------------------------  |-------------------|------|----------|-----------|-------------|----------|-----------|----------|
+| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes  | no       | yes       | yes         | yes      | yes       | yes      |
+| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes  | yes      | yes       | yes         | yes      | yes       | yes      |
+| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes  | no       | yes       | yes         | yes      | yes       | yes      |
+| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup> | yes  | untested | untested  | untested    | no       | untested  | untested |
+| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup> | yes  | yes      | yes       | untested    | no       | untested  | untested |
+| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes  | no       | untested  | yes         | yes      | yes       | yes      |
+| [`grunt`](https://chrome100.dev/board/grunt)     | yes               | yes  | no       | yes       | yes         | yes      | yes       | yes      |
+| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes  | no       | yes       | untested    | no       | no        | yes      |
+| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes  | untested | untested  | untested    | untested | untested  | untested |
 
 <sup>1. The kernel is too old.</sup>
 
@@ -62,7 +67,6 @@ On all devices, the following features will not work:
 - Transparent disk compression
 - Full disk encryption
 - Support for more distros (Ubuntu and Arch maybe)
-- Support for ARM based Chromebooks (see [issue #8](https://github.com/ading2210/shimboot/issues/8))
 - Eliminate binwalk dependency
 - Get audio to work on dedede
 - Get kexec working
@@ -76,15 +80,17 @@ PRs and contributions are welcome to help implement these features.
   - WSL2 is supported if you are on Windows
   - Github Codespaces is not supported at the moment
 - A USB drive that is at least 8GB in size
+  - Cheap USB 2.0 drives typically won't work well due to their slow speeds
 - At least 20GB of free disk space
-- An x86-based Chromebook
 
 ### Build Instructions:
 1. Find the board name of your Chromebook. You can search for the model name on [chrome100.dev](https://chrome100.dev/).
-1. Clone this repository and cd into it.
-2. Run `sudo ./build_complete.sh <board_name>` to download the required data and build the disk image.
+2. Clone this repository and cd into it.
+3. Run `sudo ./build_complete.sh <board_name>` to download the required data and build the disk image. 
 
-Alternatively, you can run each of the steps manually:
+Note: If you are building for an ARM Chromebook, you need the `qemu-user-static` and `binfmt-support` packages.
+
+#### Alternatively, you can run each of the steps manually:
 1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
 2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
 3. Unzip the shim and the recovery image if you have not done so already.
@@ -109,10 +115,11 @@ Alternatively, you can run each of the steps manually:
 #### I want to use a different Linux distribution. How can I do that?
 Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs directory into `patch_rootfs.sh` and `build.sh`.
 
-Debian Sid (the rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_rootfs.sh`: 
+Debian Sid (the rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_complete.sh`: 
 ```bash
-sudo ./build_rootfs.sh data/rootfs unstable
+sudo ./build_complete.sh dedede release=unstable
 ```
+
 #### How can I install a desktop environment other than XFCE?
 You can pass the `desktop` argument to the `build_complete.sh` script, like this:
 ```bash
@@ -136,11 +143,13 @@ dd if=/dev/sda of=/dev/mmcblk1 bs=1M oflag=direct status=progress
 
 #### GPU acceleration isn't working, how can I fix this?
 If your kernel version is too old, the standard Mesa drivers will fail to load. Instead, you must download and install the `mesa-amber` drivers. Run the following commands:
-```
+```bash
 sudo apt install libglx-amber0 libegl-amber0
 echo "MESA_LOADER_DRIVER_OVERRIDE=i965" | sudo tee -a /etc/environment
 ```
 You may need to change `i965` to `i915` (or `r100`/`r200` for AMD hardware), depending on what GPU you have.
+
+For ARM Chromebooks, you may have to tweak the [Xorg configuration](https://xkcd.com/963/) instead.
 
 #### Can the rootfs be compressed to save space?
 Compressing the Debian rootfs with a squashfs is supported, and you can do this by running the regular Debian rootfs through `./build_squashfs.sh`. For example:

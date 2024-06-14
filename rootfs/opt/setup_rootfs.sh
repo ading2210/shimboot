@@ -18,10 +18,11 @@ username="$6"
 user_passwd="$7"
 enable_root="$8"
 disable_base_pkgs="$9"
+arch="${10}"
 
 custom_repo="https://shimboot.ading.dev/debian"
 custom_repo_domain="shimboot.ading.dev"
-sources_entry="deb [trusted=yes arch=amd64] ${custom_repo} ${release_name} main"
+sources_entry="deb [trusted=yes arch=$arch] ${custom_repo} ${release_name} main"
 
 export DEBIAN_FRONTEND="noninteractive"
 
@@ -37,7 +38,8 @@ END
 apt-get install -y ca-certificates
 apt-get update
 installed_systemd="$(dpkg-query -W -f='${binary:Package}\n' | grep "systemd")"
-apt-get install --reinstall $installed_systemd
+apt-get clean
+apt-get install -y --reinstall --allow-downgrades $installed_systemd
 
 #enable shimboot services
 systemctl enable kill-frecon.service
