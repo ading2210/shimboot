@@ -29,8 +29,8 @@ create_partitions() {
   make_bootable $image_loop
   #create bootloader partition
   mkfs.ext2 "${image_loop}p3"
-  echo "${PASSWD}" | $CRYPTSETUP_PATH luksFormat "${image_loop}p4"
-  echo "${PASSWD}" | $CRYPTSETUP_PATH luksOpen "${image_loop}p4" rootfs
+  echo "${PASSWD}" | ./$CRYPTSETUP_PATH luksFormat "${image_loop}p4"
+  echo "${PASSWD}" | ./$CRYPTSETUP_PATH luksOpen "${image_loop}p4" rootfs
   mkfs.ext4 /dev/mapper/rootfs
 }
 
@@ -76,10 +76,10 @@ parse_args "$@"
 output_path=$(realpath -m "${1}")
 shim_path=$(realpath -m "${2}")
 rootfs_dir=$(realpath -m "${3}")
-if [ ${args['arch']} ]; then
-  CRYPTSETUP_PATH=$PWD/cryptsetup_arm64
+if [ "${args['arch']}" ]; then
+  CRYPTSETUP_PATH=cryptsetup_arm64
 else
-  CRYPTSETUP_PATH=$PWD/cryptsetup_x86_64
+  CRYPTSETUP_PATH=cryptsetup_x86_64
 fi
 
 printf "Enter the LUKS2 password for the image: "
