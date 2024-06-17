@@ -59,6 +59,23 @@ find_rootfs_partitions() {
   done
 }
 
+find_luksfs_partitions() {
+  local disks=$(fdisk -l | sed -n "s/Disk \(\/dev\/.*\):.*/\1/p")
+  if [ ! "${disks}" ]; then
+    return 1
+  fi
+
+  for disk in $disks; do
+    local partitions=$(fdisk -l $disk | sed -n "s/^[ ]\+\([0-9]\+\).*shimboot_rootfs_luks2:\(.*\)$/\1:\2/p")
+    if [ ! "${partitions}" ]; then
+      continue
+    fi
+    for partition in $partitions; do
+      get_part_dev "$disk" "$partition"
+    done
+  done
+}
+
 find_chromeos_partitions() {
   local roota_partitions="$(cgpt find -l ROOT-A)"
   local rootb_partitions="$(cgpt find -l ROOT-B)"
@@ -79,6 +96,7 @@ find_chromeos_partitions() {
 find_all_partitions() {
   echo "$(find_chromeos_partitions)"
   echo "$(find_rootfs_partitions)"
+  echo "$(find_luksfs_partitions)"
 }
 
 #from original bootstrap.sh
@@ -94,7 +112,7 @@ move_mounts() {
 
 print_license() {
   cat << EOF 
-Shimboot v1.1.0
+Shimboot v1.1.1
 
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
 Copyright (C) 2023 ading2210
@@ -171,7 +189,7 @@ get_selection() {
         print_donor_selector "$rootfs_partitions"
         get_donor_selection "$rootfs_partitions" "$part_path"
       else
-        boot_target $part_path
+        boot_target $part_path $part_name
       fi
       return 1
     fi
@@ -262,10 +280,16 @@ get_donor_selection() {
 
 boot_target() {
   local target="$1"
+  local target_name="$2"
 
   echo "moving mounts to newroot"
   mkdir /newroot
-  mount $target /newroot
+  if [ $target_name -eq 'shimboot_rootfs_luks2' ]; then
+    cryptsetup open $target rootfs
+    mount /dev/mapper/rootfs /newroot
+  else
+    mount $target /newroot
+  fi
   move_mounts /newroot
 
   echo "switching root"
