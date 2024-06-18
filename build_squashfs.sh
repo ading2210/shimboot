@@ -50,19 +50,19 @@ root_squashfs="$rootfs_dir/root.squashfs"
 modules_squashfs="$rootfs_dir/modules.squashfs"
 unionfs_dir="/tmp/unionfs-fuse"
 
-echo "compiling unionfs-fuse"
+print_info "compiling unionfs-fuse"
 compile_unionfs $unionfs_dir/unionfs $unionfs_dir
 
-echo "reading the shim image"
+print_info "reading the shim image"
 extract_initramfs_full $shim_path $rootfs_dir
 rm -rf $rootfs_dir/init
 
-echo "compressing old rootfs"
+print_info "compressing old rootfs"
 mksquashfs $old_dir $root_squashfs -noappend -comp gzip
 
-echo "patching new rootfs"
+print_info "patching new rootfs"
 mv $unionfs_dir/unionfs $rootfs_dir/bin/unionfs
 cp -ar squashfs/* $rootfs_dir/
 chmod +x $rootfs_dir/bin/*
 
-echo "done"
+print_info "done"

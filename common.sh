@@ -6,6 +6,12 @@ if [ "$DEBUG" ]; then
   export DEBUG=1
 fi
 
+ANSI_CLEAR='\033[0m'
+ANSI_BOLD='\033[1m'
+ANSI_RED='\033[1;31m'
+ANSI_GREEN='\033[1;32m'
+ANSI_BLUE='\033[1;34m'
+
 check_deps() {
   local needed_commands="$1"
   for command in $needed_commands; do
@@ -19,9 +25,9 @@ assert_deps() {
   local needed_commands="$1"
   local missing_commands=$(check_deps "$needed_commands")
   if [ "${missing_commands}" ]; then
-    echo "You are missing dependencies needed for this script."
-    echo "Commands needed:"
-    echo "${missing_commands}"
+    print_error "You are missing dependencies needed for this script."
+    print_error "Commands needed:"
+    print_error "${missing_commands}"
     exit 1
   fi
 }
@@ -43,7 +49,7 @@ parse_args() {
 
 assert_root() {
   if [ "$EUID" -ne 0 ]; then
-    echo "this needs to be run as root."
+    print_error "This script needs to be run as root."
     exit 1
   fi
 }
@@ -53,4 +59,16 @@ assert_args() {
     print_help
     exit 1
   fi
+}
+
+print_title() {
+  printf ">> ${ANSI_GREEN}${1}${ANSI_CLEAR}\n"
+}
+
+print_info() {
+  printf "${ANSI_BOLD}${1}${ANSI_CLEAR}\n"
+}
+
+print_error() {
+  printf "${ANSI_RED}${1}${ANSI_CLEAR}\n"
 }
