@@ -62,7 +62,7 @@ populate_partitions() {
   else
     copy_progress $rootfs_dir $rootfs_mount
   fi
-  cp $CRYPTSETUP_PATH $rootfs_mount/sbin/cryptsetup
+  cp $CRYPTSETUP_PATH $rootfs_mount/bin/cryptsetup
   umount $rootfs_mount
   ./$CRYPTSETUP_PATH close rootfs
 }
