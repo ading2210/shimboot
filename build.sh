@@ -11,6 +11,7 @@ print_help() {
   echo "Valid named arguments (specify with 'key=value'):"
   echo "  quiet - Don't use progress indicators which may clog up log files."
   echo "  arch  - Set this to 'arm64' to specify that the shim is for an ARM chromebook."
+  echo "  luks  - Set this to 'true' to build an encrypted image"
 }
 
 assert_root
@@ -21,6 +22,23 @@ parse_args "$@"
 output_path=$(realpath -m "${1}")
 shim_path=$(realpath -m "${2}")
 rootfs_dir=$(realpath -m "${3}")
+
+if [ "${args['luks']}" = 'true' ]; then
+  printf "Enter the LUKS2 password for the image: "
+  read PASSWD
+  luks_enabled=true
+  if [ "${args['arch']}" = 'arm64' ]; then
+    CRYPTSETUP=cryptsetup_arm64
+  else
+    CRYPTSETUP=cryptsetup_x86_64
+  fi
+  CRYPT_PATH=$(realpath -m bootloader/bin/cryptsetup)
+  if [ ! -f $CRYPT_PATH ]; then
+    print_info "downloading cryptsetup binary"
+    curl "https://github.com/FWSmasher/CryptoSmite/raw/main/${CRYPTSETUP}" -o $CRYPT_PATH
+    chmod +x $CRYPT_PATH
+  fi
+fi
 
 print_info "reading the shim image"
 initramfs_dir=/tmp/shim_initramfs
@@ -50,4 +68,5 @@ rm -rf $initramfs_dir $kernel_img
 
 print_info "cleaning up loop devices"
 losetup -d $image_loop
+
 print_info "done"

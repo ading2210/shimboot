@@ -57,7 +57,11 @@ partition_disk() {
     echo x #enter expert mode
     echo n #change the partition name
     echo #accept default partition number
-    echo "shimboot_rootfs:default" #set partition name
+    if [ $luks_enabled ]; then #set partition name
+      echo "shimboot_rootfs_luks2"
+    else
+      echo "shimboot_rootfs:default" 
+    fi
     echo r #return to normal more
 
     #write changes
@@ -83,6 +87,7 @@ safe_mount() {
 create_partitions() {
   local image_loop=$(realpath -m "${1}")
   local kernel_path=$(realpath -m "${2}")
+  local is_luks=${3} # 0 for false 1 for true
 
   #create stateful
   mkfs.ext4 "${image_loop}p1"
@@ -92,7 +97,13 @@ create_partitions() {
   #create bootloader partition
   mkfs.ext2 "${image_loop}p3"
   #create rootfs partition
-  mkfs.ext4 "${image_loop}p4"
+  if [ $is_luks ]; then
+    echo "${PASSWD}" | ./$CRYPTSETUP_PATH luksFormat "${image_loop}p4"
+    echo "${PASSWD}" | ./$CRYPTSETUP_PATH luksOpen "${image_loop}p4" rootfs
+    mkfs.ext4 /dev/mapper/rootfs
+  else 
+    mkfs.ext4 "${image_loop}p4"
+  fi
 }
 
 populate_partitions() {
@@ -117,13 +128,19 @@ populate_partitions() {
 
   #write rootfs to image
   local rootfs_mount=/tmp/new_rootfs
-  safe_mount "${image_loop}p4" $rootfs_mount
+  if [ $is_luks ]; then
+    safe_mount /dev/mapper/rootfs $rootfs_mount
+  else
+    safe_mount "${image_loop}p4" $rootfs_mount
+  fi
+
   if [ "$quiet" ]; then
     cp -ar $rootfs_dir/* $rootfs_mount
   else
     copy_progress $rootfs_dir $rootfs_mount
   fi
   umount $rootfs_mount
+  $CRYPT_PATH close rootfs
 }
 
 create_image() {
