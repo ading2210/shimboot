@@ -37,7 +37,7 @@ arm_boards="
   kukui peach-pi peach-pit stumpy daisy-spring
 "
 if grep -q "$board" <<< "$arm_boards"; then
-  echo "automatically detected arm64 device name"
+  print_info "automatically detected arm64 device name"
   arch="arm64"
 fi
 
@@ -45,7 +45,7 @@ needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt m
 if [ "$(check_deps "$needed_deps")" ]; then
   #install deps automatically on debian and ubuntu
   if [ -f "/etc/debian_version" ]; then
-    echo "attempting to install build deps"
+    print_title "attempting to install build deps"
     apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt kmod pv lz4 -y
     if [ "$arch" = "arm64" ]; then
       apt-get install qemu-user-static binfmt-support -y
@@ -72,7 +72,7 @@ else
   data_dir="$(realpath -m "$data_dir")"
 fi
 
-echo "downloading list of recovery images"
+print_title "downloading list of recovery images"
 reco_url="$(wget -qO- --show-progress $boards_url | python3 -c '
 import json, sys
 
@@ -87,7 +87,7 @@ if "models" in board:
 reco_url = list(board["pushRecoveries"].values())[-1]
 print(reco_url)
 ' $board)"
-echo "found url: $reco_url"
+print_info "found url: $reco_url"
 
 shim_bin="$data_dir/shim_$board.bin"
 shim_zip="$data_dir/shim_$board.zip"
@@ -109,7 +109,7 @@ download_and_unzip() {
 
   if [ ! -f "$bin_path" ]; then
     cleanup_path="$bin_path"
-    echo "extracting $zip_path"
+    print_info "extracting $zip_path"
     local total_bytes="$(unzip -lq $zip_path | tail -1 | xargs | cut -d' ' -f1)"
     if [ ! "$quiet" ]; then
       unzip -p $zip_path | pv -s $total_bytes > $bin_path
@@ -128,10 +128,10 @@ retry_cmd() {
   done
 }
 
-echo "downloading recovery image"
+print_title "downloading recovery image"
 download_and_unzip $reco_url $reco_zip $reco_bin
 
-echo "downloading shim image"
+print_title "downloading shim image"
 download_and_unzip $shim_url $shim_zip $shim_bin
 
 if [ ! "$rootfs_dir" ]; then
@@ -143,7 +143,7 @@ if [ ! "$rootfs_dir" ]; then
   rm -rf $rootfs_dir
   mkdir -p $rootfs_dir
 
-  echo "building debian rootfs"
+  print_title "building debian rootfs"
   ./build_rootfs.sh $rootfs_dir $release \
     custom_packages=$desktop_package \
     hostname=shimboot-$board \
@@ -152,22 +152,22 @@ if [ ! "$rootfs_dir" ]; then
     arch=$arch
 fi
 
-echo "patching debian rootfs"
+print_title "patching debian rootfs"
 retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet"
 
-echo "building final disk image"
+print_title "building final disk image"
 final_image="$data_dir/shimboot_$board.bin"
 rm -rf $final_image
 retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet" "arch=$arch"
-echo "build complete! the final disk image is located at $final_image"
+print_info "build complete! the final disk image is located at $final_image"
 
-echo "cleaning up"
+print_title "cleaning up"
 clean_loops
 
 if [ "$compress_img" ]; then
   image_zip="$data_dir/shimboot_$board.zip"
-  echo "compressing disk image into a zip file"
+  print_title "compressing disk image into a zip file"
   zip -j $image_zip $final_image
-  echo "finished compressing the disk file"
-  echo "the finished zip file can be found at $image_zip" 
+  print_info "finished compressing the disk file"
+  print_info "the finished zip file can be found at $image_zip" 
 fi

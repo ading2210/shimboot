@@ -22,32 +22,32 @@ output_path=$(realpath -m "${1}")
 shim_path=$(realpath -m "${2}")
 rootfs_dir=$(realpath -m "${3}")
 
-echo "reading the shim image"
+print_info "reading the shim image"
 initramfs_dir=/tmp/shim_initramfs
 kernel_img=/tmp/kernel.img
 rm -rf $initramfs_dir $kernel_img
 extract_initramfs_full $shim_path $initramfs_dir $kernel_img "${args['arch']}"
 
-echo "patching initramfs"
+print_info "patching initramfs"
 patch_initramfs $initramfs_dir
 
-echo "creating disk image"
+print_info "creating disk image"
 rootfs_size=$(du -sm $rootfs_dir | cut -f 1)
 rootfs_part_size=$(($rootfs_size * 12 / 10 + 5))
 #create a 20mb bootloader partition
 #rootfs partition is 20% larger than its contents
 create_image $output_path 20 $rootfs_part_size
 
-echo "creating loop device for the image"
+print_info "creating loop device for the image"
 image_loop=$(create_loop ${output_path})
 
-echo "creating partitions on the disk image"
+print_info "creating partitions on the disk image"
 create_partitions $image_loop $kernel_img
 
-echo "copying data into the image"
+print_info "copying data into the image"
 populate_partitions $image_loop $initramfs_dir $rootfs_dir "${args['quiet']}"
 rm -rf $initramfs_dir $kernel_img
 
-echo "cleaning up loop devices"
+print_info "cleaning up loop devices"
 losetup -d $image_loop
-echo "done"
+print_info "done"
