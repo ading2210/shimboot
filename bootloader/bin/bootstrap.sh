@@ -223,6 +223,24 @@ print_donor_selector() {
   done
 }
 
+yes_no_prompt() {
+  local prompt="$1"
+  local var_name="$2"
+
+  while true; do
+    read -p "$prompt" temp_result
+
+    if [ "$temp_result" = "y" ] || [ "$temp_result" = "n" ]; then
+      #the busybox shell has no other way to declare a variable from a string
+      #the declare command and printf -v are both bashisms
+      eval "$var_name='$temp_result'"
+      return 0
+    else
+      echo "invalid selection"
+    fi
+  done
+}
+
 get_donor_selection() {
   local rootfs_partitions="$1"
   local target="$2"
@@ -240,16 +258,9 @@ get_donor_selection() {
 
     if [ "$selection" = "$i" ]; then
       echo "selected $part_path as the donor partition"
-      read -p "would you like to spoof verified mode? this is useful if you're planning on using chrome os while enrolled. (y/n): " use_crossystem
-
-      if [ "$use_crossystem" = "y" ] || [ "$use_crossystem" = "n" ]; then
-        boot_chromeos $target $part_path $use_crossystem
-        return 0
-      else
-        echo "invalid selection"
-        sleep 1
-        return 1
-      fi
+      yes_no_prompt "would you like to spoof verified mode? this is useful if you're planning on using chrome os while enrolled. (y/n): " use_crossystem
+      yes_no_prompt "would you like to spoof an invalid hwid? this will forcibly prevent the device from being enrolled. (y/n): " invalid_hwid
+      boot_chromeos $target $part_path $use_crossystem $invalid_hwid
     fi
 
     i=$((i+1))
@@ -278,6 +289,7 @@ boot_chromeos() {
   local target="$1"
   local donor="$2"
   local use_crossystem="$3"
+  local invalid_hwid="$4"
 
   echo "mounting target"
   mkdir /newroot
@@ -318,6 +330,10 @@ boot_chromeos() {
   if [ "$use_crossystem" = "y" ]; then
     echo "patching crossystem"
     cp /opt/crossystem /newroot/tmp/crossystem
+    if [ "$invalid_hwid" ]; then
+      sed -i 's/block_devmode/hwid/' /newroot/tmp/crossystem
+    fi
+
     cp /newroot/usr/bin/crossystem /newroot/tmp/crossystem_old
     mount -o bind /newroot/tmp/crossystem /newroot/usr/bin/crossystem
   fi
