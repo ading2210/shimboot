@@ -52,6 +52,7 @@ populate_partitions() {
   local bootloader_mount=/tmp/shim_bootloader
   safe_mount "${image_loop}p3" $bootloader_mount
   cp -r $bootloader_dir/* $bootloader_mount
+    cp $CRYPTSETUP_PATH $bootloader_mount/bin/cryptsetup
   umount $bootloader_mount
 
   #write rootfs to image
@@ -62,7 +63,6 @@ populate_partitions() {
   else
     copy_progress $rootfs_dir $rootfs_mount
   fi
-  cp $CRYPTSETUP_PATH $rootfs_mount/bin/cryptsetup
   umount $rootfs_mount
   ./$CRYPTSETUP_PATH close rootfs
 }
