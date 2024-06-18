@@ -64,7 +64,7 @@ populate_partitions() {
   fi
   cp $CRYPTSETUP_PATH $rootfs_mount/sbin/cryptsetup
   umount $rootfs_mount
-  $CRYPTSETUP_PATH close rootfs
+  ./$CRYPTSETUP_PATH close rootfs
 }
 
 
