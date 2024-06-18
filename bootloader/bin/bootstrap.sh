@@ -189,7 +189,7 @@ get_selection() {
         print_donor_selector "$rootfs_partitions"
         get_donor_selection "$rootfs_partitions" "$part_path"
       else
-        boot_target $part_path $part_name
+        boot_target $part_path $part_name $part_type
       fi
       return 1
     fi
@@ -281,10 +281,11 @@ get_donor_selection() {
 boot_target() {
   local target="$1"
   local target_name="$2"
+  local target_type="$3"
 
   echo "moving mounts to newroot"
   mkdir /newroot
-  if [ $target_name -eq 'shimboot_rootfs_luks2' ]; then
+  if [ $target_type = 'shimboot_rootfs_luks2' ]; then
     cryptsetup open $target rootfs
     mount /dev/mapper/rootfs /newroot
   else
