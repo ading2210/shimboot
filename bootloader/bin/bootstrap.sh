@@ -94,7 +94,7 @@ move_mounts() {
 
 print_license() {
   cat << EOF 
-Shimboot v1.1.0
+Shimboot v1.1.1
 
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
 Copyright (C) 2023 ading2210
@@ -181,18 +181,6 @@ get_selection() {
   
   echo "invalid selection"
   sleep 1
-  return 1
-}
-
-contains_word() {
-  local substr="$1"
-  local str="$2"
-  for word in $str; do
-    if [ "$word" = "$substr" ]; then
-      return 0
-    fi
-  done
-
   return 1
 }
 
@@ -326,11 +314,14 @@ boot_chromeos() {
   echo "patching chrome os rootfs"
   cat /newroot/etc/ui_use_flags.txt | sed "/reven_branding/d" | sed "/os_install_service/d" > /newroot/tmp/ui_use_flags.txt
   mount -o bind /newroot/tmp/ui_use_flags.txt /newroot/etc/ui_use_flags.txt
+  cp /opt/mount-encrypted /newroot/tmp/mount-encrypted
+  cp /newroot/usr/sbin/mount-encrypted /newroot/tmp/mount-encrypted.real
+  mount -o bind /newroot/tmp/mount-encrypted /newroot/usr/sbin/mount-encrypted
   
   if [ "$use_crossystem" = "y" ]; then
     echo "patching crossystem"
     cp /opt/crossystem /newroot/tmp/crossystem
-    if [ "$invalid_hwid" ]; then
+    if [ "$invalid_hwid" = "y" ]; then
       sed -i 's/block_devmode/hwid/' /newroot/tmp/crossystem
     fi
 

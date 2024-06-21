@@ -1,0 +1,5 @@
+#!/bin/bash
+
+#this fixes chrome os persistence by adding the "--unsafe" flag to all invocations of mount-encrypted
+
+/tmp/mount-encrypted.real "$@" --unsafe 2>&1 | tee -a /tmp/mount-encrypted.log
