@@ -3,12 +3,13 @@
 #setup the debian rootfs
 #this is meant to be run within the chroot created by debootstrap
 
+
+DEBUG="$1"
 set -e
 if [ "$DEBUG" ]; then
   set -x
 fi
 
-DEBUG="$1"
 release_name="$2"
 packages="$3"
 

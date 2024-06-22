@@ -120,6 +120,11 @@ Debian Sid (the rolling release version of Debian) is also supported if you just
 sudo ./build_complete.sh dedede release=unstable
 ```
 
+There is also experimental support for Alpine Linux. Pass the `distro=alpine` to use it:
+```bash
+sudo ./build_complete.sh dedede distro=alpine
+```
+
 #### How can I install a desktop environment other than XFCE?
 You can pass the `desktop` argument to the `build_complete.sh` script, like this:
 ```bash

@@ -14,6 +14,7 @@ print_help() {
   echo "  data_dir     - The working directory for the scripts. This defaults to ./data"
   echo "  arch         - The CPU architecture to build the shimboot image for. Set this to 'arm64' if you have an ARM Chromebook."
   echo "  release      - Set this to either 'bookworm' or 'unstable' to build for Debian stable/unstable."
+  echo "  distro       - The Linux distro to use. This should be either 'debian' or 'alpine'."
 }
 
 assert_root
@@ -29,7 +30,8 @@ quiet="${args['quiet']}"
 desktop="${args['desktop']-'xfce'}"
 data_dir="${args['data_dir']}"
 arch="${args['arch']-amd64}"
-release="${args['release']-bookworm}"
+release="${args['release']}"
+distro="${args['distro']-debian}"
 
 arm_boards="
   corsola hana jacuzzi kukui strongbad nyan-big kevin bob
@@ -134,22 +136,32 @@ download_and_unzip $reco_url $reco_zip $reco_bin
 print_title "downloading shim image"
 download_and_unzip $shim_url $shim_zip $shim_bin
 
+print_title "building $distro rootfs"
 if [ ! "$rootfs_dir" ]; then
-  rootfs_dir="$(realpath -m data/rootfs_$board)"
   desktop_package="task-$desktop-desktop"
+  rootfs_dir="$(realpath -m data/rootfs_$board)"
   if [ "$(findmnt -T "$rootfs_dir/dev")" ]; then
     sudo umount -l $rootfs_dir/* 2>/dev/null || true
   fi
   rm -rf $rootfs_dir
   mkdir -p $rootfs_dir
 
-  print_title "building debian rootfs"
+  if [ "$distro" = "debian" ]; then
+    release="${release:-bookworm}"
+  elif [ "$distro" = "alpine" ]; then
+    release="${release:-latest-stable}"
+  else
+    print_error "invalid distro selection"
+    exit 1
+  fi
+
   ./build_rootfs.sh $rootfs_dir $release \
     custom_packages=$desktop_package \
     hostname=shimboot-$board \
     username=user \
     user_passwd=user \
-    arch=$arch
+    arch=$arch \
+    distro=$distro
 fi
 
 print_title "patching debian rootfs"
