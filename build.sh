@@ -35,7 +35,8 @@ if [ "${args['luks']}" = 'true' ]; then
   CRYPT_PATH=$(realpath -m bootloader/bin/cryptsetup)
   if [ ! -f $CRYPT_PATH ]; then
     print_info "downloading cryptsetup binary"
-    curl "https://github.com/FWSmasher/CryptoSmite/raw/main/${CRYPTSETUP}" -o $CRYPT_PATH
+    curl -LO "https://github.com/FWSmasher/CryptoSmite/raw/main/${CRYPTSETUP}" 
+    mv $CRYPTSETUP $CRYPT_PATH
     chmod +x $CRYPT_PATH
   fi
 fi
@@ -54,16 +55,16 @@ rootfs_size=$(du -sm $rootfs_dir | cut -f 1)
 rootfs_part_size=$(($rootfs_size * 12 / 10 + 5))
 #create a 20mb bootloader partition
 #rootfs partition is 20% larger than its contents
-create_image $output_path 20 $rootfs_part_size
+create_image $output_path 20 $rootfs_part_size $luks_enabled
 
 print_info "creating loop device for the image"
 image_loop=$(create_loop ${output_path})
 
 print_info "creating partitions on the disk image"
-create_partitions $image_loop $kernel_img
+create_partitions $image_loop $kernel_img $luks_enabled "${PASSWD}" "${CRYPT_PATH}"
 
 print_info "copying data into the image"
-populate_partitions $image_loop $initramfs_dir $rootfs_dir "${args['quiet']}"
+populate_partitions $image_loop $initramfs_dir $rootfs_dir "${args['quiet']}" $luks_enabled  
 rm -rf $initramfs_dir $kernel_img
 
 print_info "cleaning up loop devices"

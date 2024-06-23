@@ -20,6 +20,7 @@ make_bootable() {
 partition_disk() {
   local image_path=$(realpath -m "${1}")
   local bootloader_size=${2}
+  local luks_enabled=${3}
 
   #create partition table with fdisk
   ( 
@@ -58,7 +59,7 @@ partition_disk() {
     echo n #change the partition name
     echo #accept default partition number
     if [ $luks_enabled ]; then #set partition name
-      echo "shimboot_rootfs_luks2"
+      echo "shimboot_rootfs:luks2"
     else
       echo "shimboot_rootfs:default" 
     fi
@@ -88,6 +89,8 @@ create_partitions() {
   local image_loop=$(realpath -m "${1}")
   local kernel_path=$(realpath -m "${2}")
   local is_luks=${3} # 0 for false 1 for true
+  local PASSWD="${4}"
+  local CRYPT_PATH="${5}"
 
   #create stateful
   mkfs.ext4 "${image_loop}p1"
@@ -98,8 +101,8 @@ create_partitions() {
   mkfs.ext2 "${image_loop}p3"
   #create rootfs partition
   if [ $is_luks ]; then
-    echo "${PASSWD}" | ./$CRYPTSETUP_PATH luksFormat "${image_loop}p4"
-    echo "${PASSWD}" | ./$CRYPTSETUP_PATH luksOpen "${image_loop}p4" rootfs
+    echo "${PASSWD}" | $CRYPT_PATH luksFormat "${image_loop}p4"
+    echo "${PASSWD}" | $CRYPT_PATH luksOpen "${image_loop}p4" rootfs
     mkfs.ext4 /dev/mapper/rootfs
   else 
     mkfs.ext4 "${image_loop}p4"
@@ -111,6 +114,7 @@ populate_partitions() {
   local bootloader_dir=$(realpath -m "${2}")
   local rootfs_dir=$(realpath -m "${3}")
   local quiet="$4"
+  local luks_enabled=$5
 
   #mount and write empty file to stateful
   local stateful_mount=/tmp/shim_stateful
@@ -128,7 +132,7 @@ populate_partitions() {
 
   #write rootfs to image
   local rootfs_mount=/tmp/new_rootfs
-  if [ $is_luks ]; then
+  if [ $luks_enabled ]; then
     safe_mount /dev/mapper/rootfs $rootfs_mount
   else
     safe_mount "${image_loop}p4" $rootfs_mount
@@ -147,13 +151,14 @@ create_image() {
   local image_path=$(realpath -m "${1}")
   local bootloader_size=${2}
   local rootfs_size=${3}
+  local luks_enabled=${4}
   
   #stateful + kernel + bootloader + rootfs
   local total_size=$((1 + 32 + $bootloader_size + $rootfs_size))
   rm -rf "${image_path}"
   fallocate -l "${total_size}M" "${image_path}"
 
-  partition_disk $image_path $bootloader_size
+  partition_disk $image_path $bootloader_size $luks_enabled
 }
 
 patch_initramfs() {

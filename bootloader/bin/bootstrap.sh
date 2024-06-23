@@ -59,23 +59,6 @@ find_rootfs_partitions() {
   done
 }
 
-find_luksfs_partitions() {
-  local disks=$(fdisk -l | sed -n "s/Disk \(\/dev\/.*\):.*/\1/p")
-  if [ ! "${disks}" ]; then
-    return 1
-  fi
-
-  for disk in $disks; do
-    local partitions=$(fdisk -l $disk | sed -n "s/^[ ]\+\([0-9]\+\).*shimboot_rootfs_luks2:\(.*\)$/\1:\2/p")
-    if [ ! "${partitions}" ]; then
-      continue
-    fi
-    for partition in $partitions; do
-      get_part_dev "$disk" "$partition"
-    done
-  done
-}
-
 find_chromeos_partitions() {
   local roota_partitions="$(cgpt find -l ROOT-A)"
   local rootb_partitions="$(cgpt find -l ROOT-B)"
@@ -96,7 +79,6 @@ find_chromeos_partitions() {
 find_all_partitions() {
   echo "$(find_chromeos_partitions)"
   echo "$(find_rootfs_partitions)"
-  echo "$(find_luksfs_partitions)"
 }
 
 #from original bootstrap.sh
@@ -189,7 +171,7 @@ get_selection() {
         print_donor_selector "$rootfs_partitions"
         get_donor_selection "$rootfs_partitions" "$part_path"
       else
-        boot_target $part_path $part_name $part_type
+        boot_target $part_path $part_name
       fi
       return 1
     fi
@@ -291,12 +273,11 @@ get_donor_selection() {
 
 boot_target() {
   local target="$1"
-  local target_name="$2"
-  local target_type="$3"
+  local name="$2"
 
   echo "moving mounts to newroot"
   mkdir /newroot
-  if [ $target_type = 'shimboot_rootfs_luks2' ]; then
+  if [ $name = 'luks2' ]; then
     cryptsetup open $target rootfs
     mount /dev/mapper/rootfs /newroot
   else
