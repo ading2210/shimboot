@@ -48,7 +48,7 @@ rc-update add syslog boot
 #add service to kill frecon
 echo "#!/sbin/openrc-run
 
-command="/usr/bin/pkill frecon-lite"
+command='/usr/bin/pkill frecon-lite'
 " > /etc/init.d/kill-frecon
 chmod +x /etc/init.d/kill-frecon
 rc-update add kill-frecon boot
@@ -62,19 +62,44 @@ else
   apk add $packages
 fi
 
+#openrc doesnt work with /etc/modules-load.d for some reason 
+#so we need to copy those to /etc/modules
+module_files="$(ls /etc/modules-load.d)"
+for mod_file in $module_files; do
+  cat "/etc/modules-load.d/$mod_file" >> /etc/modules
+  echo >> /etc/modules
+done
+
 #install base packages
 if [ -z "$disable_base_pkgs" ]; then
-  apk add elogind polkit-elogind udisks2 polkit-elogind sudo zram-init networkmanager networkmanager-tui networkmanager-wifi wpa_supplicant adw-gtk3
+  #install various packages
+  apk add elogind polkit-elogind udisks2 polkit-elogind sudo zram-init networkmanager networkmanager-tui networkmanager-wifi network-manager-applet wpa_supplicant adw-gtk3 cloud-utils-growpart nano mousepad
+  
+  #start desktop services
   rc-update add networkmanager default
   rc-update add wpa_supplicant default
   rc-update add zram-init default
+  rc-update add elogind default
+  rc-update add dbus default
+
+  #configure zram
+  sed -i 's/=zstd/=lzo/' /etc/conf.d/zram-init #set lzo algorithm
+  sed -i '/size0=512/d' /etc/conf.d/zram-init #disable default swap size
+  sed -i '/blk1=1024/d' /etc/conf.d/zram-init #disable default /tmp block size
+  echo "size0=\`LC_ALL=C free -m | awk '/^Mem:/{print int(\$2/2)}'\`" >> /etc/conf.d/zram-init #set swap size to half of physical
+
+  #configure networkmanager
+  mkdir -p /etc/NetworkManager/conf.d
+  echo -e "[main]\nauth-polkit=false" > /etc/NetworkManager/conf.d/any-user.conf
 fi
 
 if [ ! $username ]; then
   read -p "Enter the username for the user account: " username
 fi
 useradd -m $username
-adduser $username plugdev
+usermod -G netdev -a $username
+usermod -G plugdev -a $username
+echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
 
 set_password() {
   local user="$1"
