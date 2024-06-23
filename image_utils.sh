@@ -19,7 +19,8 @@ make_bootable() {
 
 partition_disk() {
   local image_path=$(realpath -m "${1}")
-  local bootloader_size=${2}
+  local bootloader_size="$2"
+  local rootfs_name="$3"
 
   #create partition table with fdisk
   ( 
@@ -57,7 +58,7 @@ partition_disk() {
     echo x #enter expert mode
     echo n #change the partition name
     echo #accept default partition number
-    echo "shimboot_rootfs:default" #set partition name
+    echo "shimboot_rootfs:$rootfs_name" #set partition name
     echo r #return to normal more
 
     #write changes
@@ -128,15 +129,16 @@ populate_partitions() {
 
 create_image() {
   local image_path=$(realpath -m "${1}")
-  local bootloader_size=${2}
-  local rootfs_size=${3}
+  local bootloader_size="$2"
+  local rootfs_size="$3"
+  local rootfs_name="$4"
   
   #stateful + kernel + bootloader + rootfs
   local total_size=$((1 + 32 + $bootloader_size + $rootfs_size))
   rm -rf "${image_path}"
   fallocate -l "${total_size}M" "${image_path}"
 
-  partition_disk $image_path $bootloader_size
+  partition_disk $image_path $bootloader_size $rootfs_name
 }
 
 patch_initramfs() {

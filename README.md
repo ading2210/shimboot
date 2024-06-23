@@ -120,7 +120,7 @@ Debian Sid (the rolling release version of Debian) is also supported if you just
 sudo ./build_complete.sh dedede release=unstable
 ```
 
-There is also experimental support for Alpine Linux. Pass the `distro=alpine` to use it:
+There is also experimental support for Alpine Linux. The Alpine disk image is about half the size compared to Debian. Pass the `distro=alpine` to use it:
 ```bash
 sudo ./build_complete.sh dedede distro=alpine
 ```
