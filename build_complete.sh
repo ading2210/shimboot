@@ -148,6 +148,8 @@ if [ ! "$rootfs_dir" ]; then
 
   if [ "$distro" = "debian" ]; then
     release="${release:-bookworm}"
+  elif [ "$distro" = "ubuntu" ]; then
+    release="${release:-jammy}"
   elif [ "$distro" = "alpine" ]; then
     release="${release:-latest-stable}"
   else

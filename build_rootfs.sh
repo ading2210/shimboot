@@ -60,6 +60,17 @@ if [ "$distro" = "debian" ]; then
   debootstrap --arch $arch $release_name $rootfs_dir http://deb.debian.org/debian/
   chroot_script="/opt/setup_rootfs.sh"
 
+elif [ "$distro" = "ubuntu" ]; then 
+  print_info "bootstraping ubuntu chroot"
+  repo_url="http://archive.ubuntu.com/ubuntu"
+  if [ "$arch" = "amd64" ]; then
+    repo_url="http://archive.ubuntu.com/ubuntu"
+  else 
+    repo_url="http://ports.ubuntu.com"
+  fi
+  debootstrap --arch $arch $release_name $rootfs_dir $repo_url
+  chroot_script="/opt/setup_rootfs.sh"
+
 elif [ "$distro" = "alpine" ]; then
   print_info "downloading alpine package list"
   pkg_list_url="https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/x86_64/"
