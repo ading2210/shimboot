@@ -21,8 +21,11 @@ detect_tty() {
 }
 
 setup_environment() {
-  # Install additional utility programs.
+  #install busybox programs into the tmpfs
   /bin/busybox --install /bin || true
+
+  #create /dev/console so that the boot messages show up properly
+  mount -o bind "$TTY1" /dev/console
 }
 
 main() {
