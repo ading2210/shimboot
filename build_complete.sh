@@ -14,6 +14,7 @@ print_help() {
   echo "  data_dir     - The working directory for the scripts. This defaults to ./data"
   echo "  arch         - The CPU architecture to build the shimboot image for. Set this to 'arm64' if you have an ARM Chromebook."
   echo "  release      - Set this to either 'bookworm' or 'unstable' to build for Debian stable/unstable."
+  echo "  luks         - Set this to 'true' to enable full-drive encryption."
 }
 
 assert_root
@@ -30,6 +31,7 @@ desktop="${args['desktop']-'xfce'}"
 data_dir="${args['data_dir']}"
 arch="${args['arch']-amd64}"
 release="${args['release']-bookworm}"
+luks="${args['luks']-false}"
 
 arm_boards="
   corsola hana jacuzzi kukui strongbad nyan-big kevin bob
@@ -158,7 +160,7 @@ retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet"
 print_title "building final disk image"
 final_image="$data_dir/shimboot_$board.bin"
 rm -rf $final_image
-retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet" "arch=$arch"
+retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet" "arch=$arch" "luks=$luks"
 print_info "build complete! the final disk image is located at $final_image"
 
 print_title "cleaning up"

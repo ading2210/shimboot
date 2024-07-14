@@ -171,7 +171,7 @@ get_selection() {
         print_donor_selector "$rootfs_partitions"
         get_donor_selection "$rootfs_partitions" "$part_path"
       else
-        boot_target $part_path
+        boot_target $part_path $part_name
       fi
       return 1
     fi
@@ -248,7 +248,7 @@ get_donor_selection() {
       echo "selected $part_path as the donor partition"
       yes_no_prompt "would you like to spoof verified mode? this is useful if you're planning on using chrome os while enrolled. (y/n): " use_crossystem
       yes_no_prompt "would you like to spoof an invalid hwid? this will forcibly prevent the device from being enrolled. (y/n): " invalid_hwid
-      boot_chromeos $target $part_path $use_crossystem $invalid_hwid
+      boot_chromeos $target $part_path $part_name $use_crossystem $invalid_hwid
     fi
 
     i=$((i+1))
@@ -261,10 +261,16 @@ get_donor_selection() {
 
 boot_target() {
   local target="$1"
+  local name="$2"
 
   echo "moving mounts to newroot"
   mkdir /newroot
-  mount $target /newroot
+  if [ $name = 'luks2' ]; then
+    cryptsetup open $target rootfs
+    mount /dev/mapper/rootfs /newroot
+  else
+    mount $target /newroot
+  fi
   move_mounts /newroot
 
   echo "switching root"
@@ -276,8 +282,9 @@ boot_target() {
 boot_chromeos() {
   local target="$1"
   local donor="$2"
-  local use_crossystem="$3"
-  local invalid_hwid="$4"
+  local donor_name="$3"
+  local use_crossystem="$4"
+  local invalid_hwid="$5"
 
   echo "mounting target"
   mkdir /newroot
@@ -292,7 +299,12 @@ boot_chromeos() {
   local donor_mount="/newroot/tmp/donor_mnt"
   local donor_files="/newroot/tmp/donor"
   mkdir -p $donor_mount
-  mount -o ro $donor $donor_mount
+  if [ $donor_name = 'shimboot_rootfs_luks2' ]; then
+    cryptsetup luksOpen $donor rootfs
+    mount /dev/mapper/rootfs $donor_mount
+  else
+    mount -o ro $donor $donor_mount
+  fi
 
   echo "copying modules and firmware to tmpfs (this may take a while)"
   copy_progress $donor_mount/lib/modules $donor_files/lib/modules
