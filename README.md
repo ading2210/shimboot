@@ -83,6 +83,11 @@ PRs and contributions are welcome to help implement these features.
   - Cheap USB 2.0 drives typically won't work well due to their slow speeds
 - At least 20GB of free disk space
 
+### Video Tutorial:
+[![thumbnail of the tutorial youtube video](https://img.youtube.com/vi/v327np19RXg/mqdefault.jpg)](https://www.youtube.com/watch?v=v327np19RXg)
+
+[@blueiceyt](https://www.youtube.com/channel/UC2yMjQu-NwJSQb0tRclQMYg) made a nice [video tutorial](https://www.youtube.com/watch?v=v327np19RXg) for Shimboot. It's a lot easier to understand than the instructions on this page, and it'll cover most use cases.
+
 ### Build Instructions:
 1. Find the board name of your Chromebook. You can search for the model name on [chrome100.dev](https://chrome100.dev/).
 2. Clone this repository and cd into it.
