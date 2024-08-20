@@ -165,6 +165,15 @@ Any writes to the squashfs will persist, but they will not be compressed when sa
 
 On the regular XFCE4 image, this brings the rootfs size down to 1.2GB from 3.5GB.
 
+#### I can't connect to some wifi networks.
+You may have to run these commands in order to connect to certain networks:
+```
+$ nmcli connection edit <your connection name>
+> set 802-11-wireless-security.pmf disable
+> save
+> activate
+```
+
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
 
