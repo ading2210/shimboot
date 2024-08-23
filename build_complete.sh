@@ -62,11 +62,21 @@ if [ "$(check_deps "$needed_deps")" ]; then
   if [ -f "/etc/debian_version" ]; then
     print_title "attempting to install build deps"
     apt-get install wget python3 unzip zip debootstrap cpio binwalk pcregrep cgpt kmod pv lz4 -y
-    if [ "$arch" != "$host_arch" ]; then
-      apt-get install qemu-user-static binfmt-support -y
-    fi
   fi
   assert_deps "$needed_deps"
+fi
+
+#install qemu-user-static on debian if needed
+if [ "$arch" != "$host_arch" ]; then
+  if [ -f "/etc/debian_version" ]; then
+    if ! dpkg --get-selections | grep -v deinstall | grep "qemu-user-static\|box64\|fex-emu" > /dev/null; then
+      print_info "automatically installing qemu-user-static because we are building for a different architecture"
+      apt-get install qemu-user-static binfmt-support -y
+    fi
+  else 
+    print_error "Warning: You are building an image for a different CPU architecture. It may fail if you do not have qemu-user-static installed."
+    sleep 1
+  fi
 fi
 
 cleanup_path=""
