@@ -83,6 +83,11 @@ PRs and contributions are welcome to help implement these features.
   - Cheap USB 2.0 drives typically won't work well due to their slow speeds
 - At least 20GB of free disk space
 
+### Video Tutorial:
+[![thumbnail of the tutorial youtube video](https://img.youtube.com/vi/v327np19RXg/mqdefault.jpg)](https://www.youtube.com/watch?v=v327np19RXg)
+
+[@blueiceyt](https://www.youtube.com/channel/UC2yMjQu-NwJSQb0tRclQMYg) made a nice [video tutorial](https://www.youtube.com/watch?v=v327np19RXg) for Shimboot. It's a lot easier to understand than the instructions on this page, and it'll cover most use cases.
+
 ### Build Instructions:
 1. Find the board name of your Chromebook. You can search for the model name on [chrome100.dev](https://chrome100.dev/).
 2. Clone this repository and cd into it.
@@ -171,6 +176,15 @@ sudo ./build.sh image.bin path_to_shim data/rootfs_compressed
 Any writes to the squashfs will persist, but they will not be compressed when saved. For the compression to be the most effective, consider pre-installing most of the software you use with `custom_packages=` before building the squashfs.
 
 On the regular XFCE4 image, this brings the rootfs size down to 1.2GB from 3.5GB.
+
+#### I can't connect to some wifi networks.
+You may have to run these commands in order to connect to certain networks:
+```
+$ nmcli connection edit <your connection name>
+> set 802-11-wireless-security.pmf disable
+> save
+> activate
+```
 
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).

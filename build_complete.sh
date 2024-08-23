@@ -33,14 +33,29 @@ arch="${args['arch']-amd64}"
 release="${args['release']}"
 distro="${args['distro']-debian}"
 
+#a list of all arm board names
 arm_boards="
   corsola hana jacuzzi kukui strongbad nyan-big kevin bob
   veyron-speedy veyron-jerry veyron-minnie scarlet elm
   kukui peach-pi peach-pit stumpy daisy-spring
 "
-if grep -q "$board" <<< "$arm_boards"; then
+#a list of shims that have a patch for the sh1mmer vulnerability
+bad_boards="reef sand snappy pyro"
+if grep -q "$board" <<< "$arm_boards" > /dev/null; then
   print_info "automatically detected arm64 device name"
   arch="arm64"
+fi
+if grep -q "$board" <<< "$bad_boards" > /dev/null; then
+  print_error "Warning: you are attempting to build Shimboot for a board which has a shim that includes a fix for the sh1mmer vulnerability. The resulting image will not boot if you are enrolled."
+  read -p "Press [enter] to continue "
+fi
+
+kernel_arch="$(uname -m)"
+host_arch="unknown"
+if [ "$kernel_arch" = "x86_64" ]; then
+  host_arch="amd64"
+elif [ "$kernel_arch" = "aarch64" ]; then
+  host_arch="arm64"
 fi
 
 needed_deps="wget python3 unzip zip git debootstrap cpio binwalk pcregrep cgpt mkfs.ext4 mkfs.ext2 fdisk depmod findmnt lz4 pv"
@@ -48,12 +63,22 @@ if [ "$(check_deps "$needed_deps")" ]; then
   #install deps automatically on debian and ubuntu
   if [ -f "/etc/debian_version" ]; then
     print_title "attempting to install build deps"
-    apt-get install wget python3-all unzip zip debootstrap cpio binwalk pcregrep cgpt kmod pv lz4 -y
-    if [ "$arch" = "arm64" ]; then
-      apt-get install qemu-user-static binfmt-support -y
-    fi
+    apt-get install wget python3 unzip zip debootstrap cpio binwalk pcregrep cgpt kmod pv lz4 -y
   fi
   assert_deps "$needed_deps"
+fi
+
+#install qemu-user-static on debian if needed
+if [ "$arch" != "$host_arch" ]; then
+  if [ -f "/etc/debian_version" ]; then
+    if ! dpkg --get-selections | grep -v deinstall | grep "qemu-user-static\|box64\|fex-emu" > /dev/null; then
+      print_info "automatically installing qemu-user-static because we are building for a different architecture"
+      apt-get install qemu-user-static binfmt-support -y
+    fi
+  else 
+    print_error "Warning: You are building an image for a different CPU architecture. It may fail if you do not have qemu-user-static installed."
+    sleep 1
+  fi
 fi
 
 cleanup_path=""
