@@ -115,12 +115,19 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 #### I want to use a different Linux distribution. How can I do that?
 Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs directory into `patch_rootfs.sh` and `build.sh`.
 
+Here is a list of distros that are supported out of the box:
+- Debian 12
+- Debian Unstable
+- Alpine Linux
+
+PRs to enable support for other distros are welcome. 
+
 Debian Sid (the rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_complete.sh`: 
 ```bash
 sudo ./build_complete.sh dedede release=unstable
 ```
 
-There is also experimental support for Alpine Linux. The Alpine disk image is about half the size compared to Debian. Pass the `distro=alpine` to use it:
+There is also experimental support for Alpine Linux. The Alpine disk image is about half the size compared to Debian, although some applications are missing. Pass the `distro=alpine` to use it:
 ```bash
 sudo ./build_complete.sh dedede distro=alpine
 ```
