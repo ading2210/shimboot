@@ -12,6 +12,8 @@
 #set -x
 set +x
 
+SHIMBOOT_VERSION="v1.1.2"
+
 invoke_terminal() {
   local tty="$1"
   local title="$2"
@@ -93,8 +95,11 @@ move_mounts() {
 }
 
 print_license() {
+  if [ -f "/opt/.shimboot_version_dev" ]; then
+    suffix="-dev"
+  fi
   cat << EOF 
-Shimboot v1.1.1
+Shimboot ${SHIMBOOT_VERSION}${suffix}
 
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
 Copyright (C) 2023 ading2210
