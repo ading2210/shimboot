@@ -272,6 +272,8 @@ boot_target() {
   mount $target /newroot
   #bind mount /dev/console to show systemd boot msgs
   if [ -f "/bin/frecon-lite" ]; then 
+    rm -f /dev/console
+    touch /dev/console #this has to be a regular file otherwise the system crashes afterwards
     mount -o bind "$TTY1" /dev/console
   fi
   move_mounts /newroot
