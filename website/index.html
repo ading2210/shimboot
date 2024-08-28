@@ -70,20 +70,14 @@ After copying all the firmware from the recovery image and shim to the rootfs, w
 <b id="prebuilt">Prebuilt Images:</b>
 Prebuilt images are available <a href="https://github.com/ading2210/shimboot/releases">here</a>. If there is not a prebuilt image for your board, you must manually build the shimboot image. 
 
-For these images, the root password is "root". The name of the default user is "user" and its password is "user" as well. You should change these credentials as soon as possible.
+For these images, the name of the default user is "user" and its password is "user" as well. You should change these credentials as soon as possible.
 
 <b id="build">Build Instructions:</b>
 1. Find the board name of your Chromebook. You can search for the model name on <a href="https://chrome100.dev/">chrome100.dev</a>.
 1. Clone this repository and cd into it.
 2. Run `sudo ./build_complete.sh [board_name]` to download the required data and build the disk image.
 
-Alternatively, you can run each of the steps manually:
-1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
-2. Download a Chrome OS <a href="https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS">recovery image</a> for your board.
-3. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
-4. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
-5. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
-6. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
+See the <a href="https://github.com/ading2210/shimboot">README</a> for full instructions.
 
 <b id="usage">Booting the Image:</b>
 1. Obtain a shimboot image by downloading a <a href="https://github.com/ading2210/shimboot/releases">prebuilt one</a> or building it yourself. 
@@ -91,8 +85,8 @@ Alternatively, you can run each of the steps manually:
 3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the <a href="https://sh1mmer.me">sh1mmer website</a> (see the "Executing on Chromebook" section).
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
 5. Boot into Debian and log in with the username and password that you configured earlier. The default username/password for the prebuilt images is `user/user`.
-6. Expand the rootfs partition so that it fills up the entire disk by running `sudo growpart /dev/sdX 4` (replacing `sdX` with the block device corresponding to your disk) to expand the partition, then running `sudo resize2fs /dev/sdX4` to expand the filesystem.
-7. Change the root password and regular user password by running `sudo passwd root` and `passwd user`.
+6. Expand the rootfs partition so that it fills up the entire disk by running `sudo expand_rootfs`.
+7. Change your own password by running `passwd user`. The root user is disabled by default.
 
 <b id="copyright">Copyright:</b>
 Shimboot is licensed under the <a href="https://www.gnu.org/licenses/gpl-3.0.txt">GNU GPL v3</a>. Unless otherwise indicated, all code has been written by me, <a href="https://ading.dev">ading2210</a>.

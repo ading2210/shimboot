@@ -12,6 +12,8 @@
 #set -x
 set +x
 
+SHIMBOOT_VERSION="v1.2.0"
+
 invoke_terminal() {
   local tty="$1"
   local title="$2"
@@ -93,8 +95,11 @@ move_mounts() {
 }
 
 print_license() {
+  if [ -f "/opt/.shimboot_version_dev" ]; then
+    suffix="-dev"
+  fi
   cat << EOF 
-Shimboot v1.1.1
+Shimboot ${SHIMBOOT_VERSION}${suffix}
 
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
 Copyright (C) 2023 ading2210
@@ -265,6 +270,12 @@ boot_target() {
   echo "moving mounts to newroot"
   mkdir /newroot
   mount $target /newroot
+  #bind mount /dev/console to show systemd boot msgs
+  if [ -f "/bin/frecon-lite" ]; then 
+    rm -f /dev/console
+    touch /dev/console #this has to be a regular file otherwise the system crashes afterwards
+    mount -o bind "$TTY1" /dev/console
+  fi
   move_mounts /newroot
 
   echo "switching root"

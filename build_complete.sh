@@ -14,6 +14,7 @@ print_help() {
   echo "  data_dir     - The working directory for the scripts. This defaults to ./data"
   echo "  arch         - The CPU architecture to build the shimboot image for. Set this to 'arm64' if you have an ARM Chromebook."
   echo "  release      - Set this to either 'bookworm' or 'unstable' to build for Debian stable/unstable."
+  echo "  distro       - The Linux distro to use. This should be either 'debian', 'ubuntu', or 'alpine'."
 }
 
 assert_root
@@ -29,7 +30,8 @@ quiet="${args['quiet']}"
 desktop="${args['desktop']-'xfce'}"
 data_dir="${args['data_dir']}"
 arch="${args['arch']-amd64}"
-release="${args['release']-bookworm}"
+release="${args['release']}"
+distro="${args['distro']-debian}"
 
 #a list of all arm board names
 arm_boards="
@@ -102,7 +104,12 @@ reco_url="$(wget -qO- --show-progress $boards_url | python3 -c '
 import json, sys
 
 all_builds = json.load(sys.stdin)
-board = all_builds["builds"][sys.argv[1]]
+board_name = sys.argv[1]
+if not board_name in all_builds["builds"]:
+  print("Invalid board name: " + board_name, file=sys.stderr)
+  sys.exit(1)
+  
+board = all_builds["builds"][board_name]
 if "models" in board:
   for device in board["models"].values():
     if device["pushRecoveries"]:
@@ -159,22 +166,46 @@ download_and_unzip $reco_url $reco_zip $reco_bin
 print_title "downloading shim image"
 download_and_unzip $shim_url $shim_zip $shim_bin
 
+print_title "building $distro rootfs"
 if [ ! "$rootfs_dir" ]; then
-  rootfs_dir="$(realpath -m data/rootfs_$board)"
   desktop_package="task-$desktop-desktop"
+  rootfs_dir="$(realpath -m data/rootfs_$board)"
   if [ "$(findmnt -T "$rootfs_dir/dev")" ]; then
     sudo umount -l $rootfs_dir/* 2>/dev/null || true
   fi
   rm -rf $rootfs_dir
   mkdir -p $rootfs_dir
 
-  print_title "building debian rootfs"
+  if [ "$distro" = "debian" ]; then
+    release="${release:-bookworm}"
+  elif [ "$distro" = "ubuntu" ]; then
+    release="${release:-noble}"
+  elif [ "$distro" = "alpine" ]; then
+    release="${release:-edge}"
+  else
+    print_error "invalid distro selection"
+    exit 1
+  fi
+
+  #install a newer debootstrap version if needed
+  if [ -f "/etc/debian_version" ] && [ "$distro" = "ubuntu" -o "$distro" = "debian" ]; then
+    if [ ! -f "/usr/share/debootstrap/scripts/$release" ]; then
+      print_info "installing newer debootstrap version"
+      mirror_url="https://deb.debian.org/debian/pool/main/d/debootstrap/"
+      deb_file="$(curl "https://deb.debian.org/debian/pool/main/d/debootstrap/" | pcregrep -o1 'href="(debootstrap_.+?\.deb)"' | tail -n1)"
+      deb_url="${mirror_url}${deb_file}"
+      wget -q --show-progress "$deb_url" -O "/tmp/$deb_file"
+      apt-get install -y "/tmp/$deb_file"
+    fi
+  fi
+
   ./build_rootfs.sh $rootfs_dir $release \
     custom_packages=$desktop_package \
     hostname=shimboot-$board \
     username=user \
     user_passwd=user \
-    arch=$arch
+    arch=$arch \
+    distro=$distro
 fi
 
 print_title "patching debian rootfs"
@@ -183,7 +214,7 @@ retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet"
 print_title "building final disk image"
 final_image="$data_dir/shimboot_$board.bin"
 rm -rf $final_image
-retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet" "arch=$arch"
+retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet" "arch=$arch" "name=$distro"
 print_info "build complete! the final disk image is located at $final_image"
 
 print_title "cleaning up"

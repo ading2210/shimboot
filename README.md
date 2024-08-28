@@ -6,6 +6,24 @@ Shimboot is a collection of scripts for patching a Chrome OS RMA shim to serve a
 | ----- | ----- |
 | Shimboot (KDE) on an HP Chromebook 11 G9 EE | Shimboot (XFCE) on an Acer Chromebook 311 C722 |
 
+## Table of Contents:
+- [Features](#features)
+- [About](#about)
+  * [Partition Layout](#partition-layout)
+- [Status](#status)
+  * [Device Compatibility Table](#device-compatibility-table)
+  * [TODO](#todo)
+- [Usage](#usage)
+  * [Prerequisites](#prerequisites)
+  * [Video Tutorial](#video-tutorial)
+  * [Build Instructions](#build-instructions)
+  * [Booting the Image](#booting-the-image)
+- [FAQ](#faq)
+- [Copyright](#copyright)
+  * [Copyright Notice](#copyright-notice)
+
+<small><i>Table of contents generated with <a href='http://ecotrust-canada.github.io/markdown-toc/'>markdown-toc</a></i>.</small>
+
 ## Features:
 - Run a full Debian installation on a Chromebook
 - Does not modify the firmware
@@ -95,16 +113,19 @@ PRs and contributions are welcome to help implement these features.
 
 Note: If you are building for an ARM Chromebook, you need the `qemu-user-static` and `binfmt-support` packages.
 
-#### Alternatively, you can run each of the steps manually:
-1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
-2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
-3. Unzip the shim and the recovery image if you have not done so already.
-4. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
-5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
-6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
-7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
-
 [Prebuilt images](https://github.com/ading2210/shimboot/releases) are available if you don't have a suitable device to run the build on.
+
+<details>
+  <summary><b>Alternatively, you can run each of the steps manually:</b></summary>
+  
+  1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
+  2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
+  3. Unzip the shim and the recovery image if you have not done so already.
+  4. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
+  5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
+  6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
+  7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
+</details>
 
 ### Booting the Image:
 1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/releases) or building it yourself. 
@@ -112,17 +133,29 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section).
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
 5. Boot into Debian and log in with the username and password that you configured earlier. The default username/password for the prebuilt images is `user/user`.
-6. Expand the rootfs partition so that it fills up the entire disk by running `sudo growpart /dev/sdX 4` (replacing `sdX` with the block device corresponding to your disk) to expand the partition, then running `sudo resize2fs /dev/sdX4` to expand the filesystem.
-7. Change the user password by running `passwd user`. The root user is disabled by default.
+6. Expand the rootfs partition so that it fills up the entire disk by running `sudo expand_rootfs`.
+7. Change your own password by running `passwd user`. The root user is disabled by default.
 
 ## FAQ:
 
 #### I want to use a different Linux distribution. How can I do that?
 Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs directory into `patch_rootfs.sh` and `build.sh`.
 
+Here is a list of distros that are supported out of the box:
+- Debian 12
+- Debian Unstable
+- Alpine Linux
+
+PRs to enable support for other distros are welcome. 
+
 Debian Sid (the rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_complete.sh`: 
 ```bash
 sudo ./build_complete.sh dedede release=unstable
+```
+
+There is also experimental support for Alpine Linux. The Alpine disk image is about half the size compared to Debian, although some applications are missing. Pass the `distro=alpine` to use it:
+```bash
+sudo ./build_complete.sh dedede distro=alpine
 ```
 
 #### How can I install a desktop environment other than XFCE?
@@ -138,10 +171,12 @@ Shimboot does not touch the internal storage at all, so you will be able to use 
 #### Can I unplug the USB drive while using Debian?
 By default, this is not possible. However, you can simply copy your Debian rootfs onto your internal storage by first using `fdisk` to repartition it, using `dd` to copy the partition, and `resize2fs` to have it take up the entire drive. In the future, loading the OS to RAM may be supported, but this isn't a priority at the moment. You can also just blindly copy the contents of your Shimboot USB to the internal storage without bothering to repartition:
 ```bash
-#assuming the usb drive is on sda and internal storage is on mmcblk1
-sudo dd if=/dev/sda of=/dev/mmcblk1 bs=1M oflag=direct status=progress
-sudo growpart /dev/mmcblk1 4
-sudo resize2fs /dev/mmcblk1p4
+#check the output of this to know what disk you're copying to and from
+fdisk -l
+
+#run this from within the shimboot bootloader
+#this assumes the usb drive is on sda and internal storage is on mmcblk1
+dd if=/dev/sda of=/dev/mmcblk1 bs=1M oflag=direct status=progress
 ```
 
 #### GPU acceleration isn't working, how can I fix this?
@@ -173,6 +208,11 @@ $ nmcli connection edit <your connection name>
 > save
 > activate
 ```
+
+#### Steam doesn't work.
+Steam should be installed using the `sudo apt install steam` command, however it doesn't work out of the box due to security features in the shim kernel preventing the `bwrap` library from working. See [issue #12](https://github.com/ading2210/shimboot/issues/26#issuecomment-2151893062) for more info. 
+
+To get Steam running, install and run it normally. It will fail and show a message saying that "Steam now requires user namespaces to be enabled." Run `fix_bwrap` in your terminal, relaunch Steam, and it should be working again. 
 
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).

@@ -2,11 +2,6 @@
 
 #build the debian rootfs
 
-set -e
-if [ "$DEBUG" ]; then
-  set -x
-fi
-
 . ./common.sh
 
 print_help() {
@@ -20,18 +15,20 @@ print_help() {
   echo "  user_passwd     - The password for the unprivileged user."
   echo "  disable_base    - Disable the base packages such as zram, cloud-utils, and command-not-found."
   echo "  arch            - The CPU architecture to build the rootfs for."
+  echo "  distro          - The Linux distro to use. This should be either 'debian' or 'alpine'."
   echo "If you do not specify the hostname and credentials, you will be prompted for them later."
 }
 
 assert_root
-assert_deps "realpath debootstrap findmnt"
+assert_deps "realpath debootstrap findmnt wget pcregrep tar"
 assert_args "$2"
 parse_args "$@"
 
 rootfs_dir=$(realpath -m "${1}")
 release_name="${2}"
-packages="${args['custom_packages']-'task-xfce-desktop'}"
+packages="${args['custom_packages']-task-xfce-desktop}"
 arch="${args['arch']-amd64}"
+distro="${args['distro']-debian}"
 chroot_mounts="proc sys dev run"
 
 mkdir -p $rootfs_dir
@@ -58,10 +55,59 @@ if [ "$(need_remount "$rootfs_dir")" ]; then
   do_remount "$rootfs_dir"
 fi
 
-debootstrap --arch $arch $release_name $rootfs_dir http://deb.debian.org/debian/
-cp -ar rootfs/* $rootfs_dir
-cp /etc/resolv.conf $rootfs_dir/etc/resolv.conf
+if [ "$distro" = "debian" ]; then
+  print_info "bootstraping debian chroot"
+  debootstrap --arch $arch --components=main,contrib,non-free,non-free-firmware "$release_name" "$rootfs_dir" http://deb.debian.org/debian/
+  chroot_script="/opt/setup_rootfs.sh"
 
+elif [ "$distro" = "ubuntu" ]; then 
+  print_info "bootstraping ubuntu chroot"
+  repo_url="http://archive.ubuntu.com/ubuntu"
+  if [ "$arch" = "amd64" ]; then
+    repo_url="http://archive.ubuntu.com/ubuntu"
+  else 
+    repo_url="http://ports.ubuntu.com"
+  fi
+  debootstrap --arch $arch "$release_name" "$rootfs_dir" "$repo_url"
+  chroot_script="/opt/setup_rootfs.sh"
+
+elif [ "$distro" = "alpine" ]; then
+  print_info "downloading alpine package list"
+  pkg_list_url="https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/x86_64/"
+  pkg_data="$(wget -qO- --show-progress "$pkg_list_url" | grep "apk-tools-static")"
+  pkg_url="$pkg_list_url$(echo "$pkg_data" | pcregrep -o1 '"(.+?.apk)"')"
+
+  print_info "downloading and extracting apk-tools-static"
+  pkg_extract_dir="/tmp/apk-tools-static"
+  pkg_dl_path="$pkg_extract_dir/pkg.apk"
+  apk_static="$pkg_extract_dir/sbin/apk.static"
+  mkdir -p "$pkg_extract_dir"
+  wget -q --show-progress "$pkg_url" -O "$pkg_dl_path"
+  tar --warning=no-unknown-keyword -xzf "$pkg_dl_path" -C "$pkg_extract_dir"
+
+  print_info "bootstraping alpine chroot"
+  real_arch="x86_64"
+  if [ "$arch" = "arm64" ]; then 
+    real_arch="aarch64"
+  fi
+  $apk_static \
+    --arch $real_arch \
+    -X http://dl-cdn.alpinelinux.org/alpine/$release_name/main/ \
+    -U --allow-untrusted \
+    --root "$rootfs_dir" \
+    --initdb add alpine-base
+  chroot_script="/opt/setup_rootfs_alpine.sh"
+
+else
+  print_error "'$distro' is an invalid distro choice."
+  exit 1
+fi
+
+print_info "copying rootfs setup scripts"
+cp -ar rootfs/* "$rootfs_dir"
+cp /etc/resolv.conf "$rootfs_dir/etc/resolv.conf"
+
+print_info "creating bind mounts for chroot"
 trap unmount_all EXIT
 for mountpoint in $chroot_mounts; do
   mount --make-rslave --rbind "/${mountpoint}" "${rootfs_dir}/$mountpoint"
@@ -74,15 +120,15 @@ username="${args['username']}"
 user_passwd="${args['user_passwd']}"
 disable_base="${args['disable_base']}"
 
-chroot_command="/opt/setup_rootfs.sh \
+chroot_command="$chroot_script \
   '$DEBUG' '$release_name' '$packages' \
   '$hostname' '$root_passwd' '$username' \
   '$user_passwd' '$enable_root' '$disable_base' \
   '$arch'" 
 
-LC_ALL=C chroot $rootfs_dir /bin/bash -c "${chroot_command}"
+LC_ALL=C chroot $rootfs_dir /bin/sh -c "${chroot_command}"
 
 trap - EXIT
 unmount_all
 
-echo "rootfs has been created"
+print_info "rootfs has been created"
