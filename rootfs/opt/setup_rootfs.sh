@@ -78,7 +78,7 @@ if [ ! "$disable_base_pkgs" ]; then
 
   #set up zram
   echo "ALGO=lzo" >> /etc/default/zramswap
-  echo "PERCENT=50" >> /etc/default/zramswap
+  echo "PERCENT=100" >> /etc/default/zramswap
 
   #update apt-file cache
   if which apt-file >/dev/null; then

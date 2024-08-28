@@ -13,10 +13,20 @@ fix_perms() {
   chmod u+s "$target_file"
 }
 
+echo "Fixing permissions for /usr/bin/bwrap"
 fix_perms /usr/bin/bwrap
 
+if [ ! -d "$HOME_DIR/.steam/" ]; then
+  echo "Steam not installed, so exiting early."
+  echo "Done."
+  exit 0
+fi
+
+echo "Fixing permissions bwrap binaries in Steam"
 steam_bwraps="$(find "$HOME_DIR/.steam/" -name 'srt-bwrap')"
 for bwrap_bin in $steam_bwraps; do
   cp /usr/bin/bwrap "$bwrap_bin"
   fix_perms "$bwrap_bin"
 done
+
+echo "Done."

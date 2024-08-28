@@ -95,16 +95,19 @@ PRs and contributions are welcome to help implement these features.
 
 Note: If you are building for an ARM Chromebook, you need the `qemu-user-static` and `binfmt-support` packages.
 
-#### Alternatively, you can run each of the steps manually:
-1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
-2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
-3. Unzip the shim and the recovery image if you have not done so already.
-4. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
-5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
-6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
-7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
-
 [Prebuilt images](https://github.com/ading2210/shimboot/releases) are available if you don't have a suitable device to run the build on.
+
+<details>
+  <summary><b>Alternatively, you can run each of the steps manually:</b></summary>
+  
+  1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
+  2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
+  3. Unzip the shim and the recovery image if you have not done so already.
+  4. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
+  5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
+  6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
+  7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
+</details>
 
 ### Booting the Image:
 1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/releases) or building it yourself. 
@@ -191,7 +194,7 @@ $ nmcli connection edit <your connection name>
 #### Steam doesn't work.
 Steam doesn't work out of the box due to security features in the shim kernel preventing the `bwrap` library from working. See [issue #12](https://github.com/ading2210/shimboot/issues/26#issuecomment-2151893062) for more info. 
 
-To get Steam running, install and run it normally. It will fail and show a message saying that "Steam now requires user namespaces to be enabled." Run `fix_brwap` in your terminal, relaunch Steam, and it should be working again. 
+To get Steam running, install and run it normally. It will fail and show a message saying that "Steam now requires user namespaces to be enabled." Run `fix_bwrap` in your terminal, relaunch Steam, and it should be working again. 
 
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
