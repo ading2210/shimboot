@@ -12,7 +12,7 @@
 #set -x
 set +x
 
-SHIMBOOT_VERSION="v1.1.2"
+SHIMBOOT_VERSION="v1.2.0"
 
 invoke_terminal() {
   local tty="$1"
