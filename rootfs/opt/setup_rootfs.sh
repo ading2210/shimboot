@@ -35,6 +35,11 @@ Pin: origin ${custom_repo_domain}
 Pin-Priority: 1001
 END
 
+#enable i386 arch so that steam works 
+if [ "$arch" = "amd64" ]; then
+  dpkg --add-architecture i386
+fi
+
 
 #install certs to prevent apt ssl errors
 apt-get install -y ca-certificates

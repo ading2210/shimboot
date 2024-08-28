@@ -57,7 +57,7 @@ fi
 
 if [ "$distro" = "debian" ]; then
   print_info "bootstraping debian chroot"
-  debootstrap --arch $arch $release_name $rootfs_dir http://deb.debian.org/debian/
+  debootstrap --arch $arch --components=main,contrib,non-free,non-free-firmware "$release_name" "$rootfs_dir" http://deb.debian.org/debian/
   chroot_script="/opt/setup_rootfs.sh"
 
 elif [ "$distro" = "ubuntu" ]; then 
@@ -68,13 +68,13 @@ elif [ "$distro" = "ubuntu" ]; then
   else 
     repo_url="http://ports.ubuntu.com"
   fi
-  debootstrap --arch $arch $release_name $rootfs_dir $repo_url
+  debootstrap --arch $arch "$release_name" "$rootfs_dir" "$repo_url"
   chroot_script="/opt/setup_rootfs.sh"
 
 elif [ "$distro" = "alpine" ]; then
   print_info "downloading alpine package list"
   pkg_list_url="https://dl-cdn.alpinelinux.org/alpine/latest-stable/main/x86_64/"
-  pkg_data="$(wget -qO- --show-progress $pkg_list_url | grep "apk-tools-static")"
+  pkg_data="$(wget -qO- --show-progress "$pkg_list_url" | grep "apk-tools-static")"
   pkg_url="$pkg_list_url$(echo "$pkg_data" | pcregrep -o1 '"(.+?.apk)"')"
 
   print_info "downloading and extracting apk-tools-static"
