@@ -270,6 +270,10 @@ boot_target() {
   echo "moving mounts to newroot"
   mkdir /newroot
   mount $target /newroot
+  #bind mount /dev/console to show systemd boot msgs
+  if [ -f "/bin/frecon-lite" ]; then 
+    mount -o bind "$TTY1" /dev/console
+  fi
   move_mounts /newroot
 
   echo "switching root"
