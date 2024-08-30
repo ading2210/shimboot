@@ -111,6 +111,9 @@ END
 #install desktop and other custom packages
 apt-get install -y $packages
 
+#disable selinux to prevent a harmless error from showing up during the boot
+echo "SELINUX=disabled" | tee -a /etc/selinux/config
+
 if [ ! $username ]; then
   read -p "Enter the username for the user account: " username
 fi

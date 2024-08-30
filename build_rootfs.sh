@@ -104,7 +104,7 @@ else
 fi
 
 print_info "copying rootfs setup scripts"
-cp -ar rootfs/* "$rootfs_dir"
+cp -arv rootfs/* "$rootfs_dir"
 cp /etc/resolv.conf "$rootfs_dir/etc/resolv.conf"
 
 print_info "creating bind mounts for chroot"
