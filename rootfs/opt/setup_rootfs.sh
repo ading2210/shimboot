@@ -69,7 +69,7 @@ Pin-Priority: 1000
 fi
 
 #install the patched systemd
-apt-get upgrade -y
+apt-get upgrade -y --allow-downgrades
 installed_systemd="$(dpkg-query -W -f='${binary:Package}\n' | grep "systemd")"
 apt-get clean
 apt-get install -y --reinstall --allow-downgrades $installed_systemd
