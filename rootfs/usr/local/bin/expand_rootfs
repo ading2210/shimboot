@@ -15,8 +15,10 @@ part_name="$(echo "$part_dev" | rev | cut -d'/' -f1 | rev)"
 part_num="$(cat /proc/partitions | grep "$part_name" | awk '{print $2}')"
 
 echo "Automatically detected root filesystem:"
-echo "Disk: $disk_dev"
-echo "Partition: $part_dev"
+fdisk -l "$disk_dev" | grep "${disk_dev}:" -A 1
+echo
+echo "Automatically detected root partition:"
+fdisk -l "$disk_dev" | grep "${part_dev}"
 echo
 read -p "Press enter to continue, or ctr+c to cancel. "
 
