@@ -143,3 +143,6 @@ set_password "$username" "$user_passwd"
 
 #clean apt caches
 apt-get clean
+
+#enable bash greeter
+echo "/usr/local/bin/shimboot_greeter" >> "/home/$username/.bashrc" 
