@@ -56,18 +56,18 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. ARM Chromebooks are not supported at the moment.
 
 ### Device Compatibility Table:
-| Board Name                                       | X11               | Wifi               | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
-|------------------------------------------------  |-------------------|--------------------|----------|-----------|-------------|----------|-----------|----------|
-| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes                | no       | yes       | yes         | yes      | yes       | yes      |
-| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes                | yes      | yes       | yes         | yes      | yes       | yes      |
-| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes                | no       | yes       | yes         | yes      | yes       | yes      |
-| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup>  | yes                | untested | untested  | untested    | no       | untested  | untested |
-| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup>  | yes                | yes      | yes       | untested    | no       | untested  | untested |
-| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes                | no       | untested  | yes         | yes      | yes       | yes      |
-| [`grunt`](https://chrome100.dev/board/grunt)     | yes               | yes                | no       | yes       | yes         | yes      | yes       | yes      |
-| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes                | no       | yes       | untested    | no       | no        | yes      |
-| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes                | untested | untested  | untested    | untested | untested  | untested |
-| [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes <sup>[2]</sup> | no       | yes       | yes         | yes      | yes       | yes      |
+| Board Name                                       | X11               | Wifi              | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
+|------------------------------------------------  |-------------------|-------------------|----------|-----------|-------------|----------|-----------|----------|
+| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      |
+| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes               | yes      | yes       | yes         | yes      | yes       | yes      |
+| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      |
+| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup>  | yes               | untested | untested  | untested    | no       | untested  | untested |
+| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup>  | yes               | yes      | yes       | untested    | no       | untested  | untested |
+| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes               | no       | untested  | yes         | yes      | yes       | yes      |
+| [`grunt`](https://chrome100.dev/board/grunt)     | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      |
+| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes               | no       | yes       | untested    | no       | no        | yes      |
+| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | untested | untested  | untested    | untested | untested  | untested |
+| [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes      | yes       | yes      |
 
 <sup>1. The kernel is too old.</sup><br>
 <sup>2. 5ghz wifi networks do not work, but 2.4ghz networks do.</sup>

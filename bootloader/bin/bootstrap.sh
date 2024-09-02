@@ -350,9 +350,13 @@ boot_chromeos() {
   echo "patching chrome os rootfs"
   cat /newroot/etc/ui_use_flags.txt | sed "/reven_branding/d" | sed "/os_install_service/d" > /newroot/tmp/ui_use_flags.txt
   mount -o bind /newroot/tmp/ui_use_flags.txt /newroot/etc/ui_use_flags.txt
+
   cp /opt/mount-encrypted /newroot/tmp/mount-encrypted
   cp /newroot/usr/sbin/mount-encrypted /newroot/tmp/mount-encrypted.real
   mount -o bind /newroot/tmp/mount-encrypted /newroot/usr/sbin/mount-encrypted
+  
+  cat /newroot/etc/init/boot-splash.conf | sed '/^script$/a \  pkill frecon-lite || true' > /newroot/tmp/boot-splash.conf
+  mount -o bind /newroot/tmp/boot-splash.conf /newroot/etc/init/boot-splash.conf
   
   if [ "$use_crossystem" = "y" ]; then
     echo "patching crossystem"
@@ -374,9 +378,6 @@ boot_chromeos() {
 
   echo "starting init"
   /sbin/modprobe zram
-  if [ "$rescue_mode" != "1" ]; then
-    pkill frecon-lite
-  fi
   exec_init
 }
 
