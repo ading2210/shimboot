@@ -69,7 +69,7 @@ Pin-Priority: 1000
 fi
 
 #install the patched systemd
-apt-get upgrade -y
+apt-get upgrade -y --allow-downgrades
 installed_systemd="$(dpkg-query -W -f='${binary:Package}\n' | grep "systemd")"
 apt-get clean
 apt-get install -y --reinstall --allow-downgrades $installed_systemd
@@ -111,6 +111,9 @@ END
 #install desktop and other custom packages
 apt-get install -y $packages
 
+#disable selinux to prevent a harmless error from showing up during the boot
+echo "SELINUX=disabled" | tee -a /etc/selinux/config
+
 if [ ! $username ]; then
   read -p "Enter the username for the user account: " username
 fi
@@ -140,3 +143,6 @@ set_password "$username" "$user_passwd"
 
 #clean apt caches
 apt-get clean
+
+#enable bash greeter
+echo "/usr/local/bin/shimboot_greeter" >> "/home/$username/.bashrc" 

@@ -104,6 +104,7 @@ populate_partitions() {
 
   #figure out if we are on a stable release
   local git_tag="$(git tag -l --contains HEAD)"
+  local git_hash="$(git rev-parse --short HEAD)"
 
   #mount and write empty file to stateful
   local stateful_mount=/tmp/shim_stateful
@@ -116,9 +117,9 @@ populate_partitions() {
   #mount and write to bootloader rootfs
   local bootloader_mount="/tmp/shim_bootloader"
   safe_mount "${image_loop}p3" "$bootloader_mount"
-  cp -r $bootloader_dir/* "$bootloader_mount"
+  cp -arv $bootloader_dir/* "$bootloader_mount"
   if [ ! "$git_tag" ]; then #mark it as a dev version if needed
-    touch "$bootloader_mount/opt/.shimboot_version_dev"
+    printf "$git_hash" > "$bootloader_mount/opt/.shimboot_version_dev"
   fi
   umount "$bootloader_mount"
 

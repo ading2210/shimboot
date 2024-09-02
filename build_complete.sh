@@ -37,7 +37,7 @@ distro="${args['distro']-debian}"
 arm_boards="
   corsola hana jacuzzi kukui strongbad nyan-big kevin bob
   veyron-speedy veyron-jerry veyron-minnie scarlet elm
-  kukui peach-pi peach-pit stumpy daisy-spring
+  kukui peach-pi peach-pit stumpy daisy-spring trogdor
 "
 #a list of shims that have a patch for the sh1mmer vulnerability
 bad_boards="reef sand snappy pyro"

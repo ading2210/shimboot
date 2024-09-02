@@ -12,7 +12,7 @@
 #set -x
 set +x
 
-SHIMBOOT_VERSION="v1.2.0"
+rescue_mode=""
 
 invoke_terminal() {
   local tty="$1"
@@ -95,11 +95,13 @@ move_mounts() {
 }
 
 print_license() {
+  local shimboot_version="$(cat /opt/.shimboot_version)"
   if [ -f "/opt/.shimboot_version_dev" ]; then
-    suffix="-dev"
+    local git_hash="$(cat /opt/.shimboot_version_dev)"
+    local suffix="-dev-$git_hash"
   fi
   cat << EOF 
-Shimboot ${SHIMBOOT_VERSION}${suffix}
+Shimboot ${shimboot_version}${suffix}
 
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
 Copyright (C) 2023 ading2210
@@ -164,6 +166,14 @@ get_selection() {
     return 1
   fi
 
+  local selection_cmd="$(echo "$selection" | cut -d' ' -f1)"
+  if [ "$selection_cmd" = "rescue" ]; then
+    selection="$(echo "$selection" | cut -d' ' -f2-)"
+    rescue_mode="1"
+  else
+    rescue_mode=""
+  fi
+
   for rootfs_partition in $rootfs_partitions; do
     local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
     local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
@@ -176,7 +186,7 @@ get_selection() {
         print_donor_selector "$rootfs_partitions"
         get_donor_selection "$rootfs_partitions" "$part_path"
       else
-        boot_target $part_path
+        boot_target "$part_path"
       fi
       return 1
     fi
@@ -253,7 +263,7 @@ get_donor_selection() {
       echo "selected $part_path as the donor partition"
       yes_no_prompt "would you like to spoof verified mode? this is useful if you're planning on using chrome os while enrolled. (y/n): " use_crossystem
       yes_no_prompt "would you like to spoof an invalid hwid? this will forcibly prevent the device from being enrolled. (y/n): " invalid_hwid
-      boot_chromeos $target $part_path $use_crossystem $invalid_hwid
+      boot_chromeos "$target" "$part_path" "$use_crossystem" "$invalid_hwid"
     fi
 
     i=$((i+1))
@@ -262,6 +272,21 @@ get_donor_selection() {
   echo "invalid selection"
   sleep 1
   return 1
+}
+
+exec_init() {
+  if [ "$rescue_mode" = "1" ]; then
+    echo "entering a rescue shell instead of starting init"
+    echo "once you are done fixing whatever is broken, run 'exec /sbin/init' to continue booting the system normally"
+    
+    if [ -f "/bin/bash" ]; then
+      exec /bin/bash < "$TTY1" >> "$TTY1" 2>&1
+    else
+      exec /bin/sh < "$TTY1" >> "$TTY1" 2>&1
+    fi
+  else
+    exec /sbin/init < "$TTY1" >> "$TTY1" 2>&1
+  fi
 }
 
 boot_target() {
@@ -281,7 +306,7 @@ boot_target() {
   echo "switching root"
   mkdir -p /newroot/bootloader
   pivot_root /newroot /newroot/bootloader
-  exec /sbin/init < "$TTY1" >> "$TTY1" 2>&1
+  exec_init
 }
 
 boot_chromeos() {
@@ -289,7 +314,7 @@ boot_chromeos() {
   local donor="$2"
   local use_crossystem="$3"
   local invalid_hwid="$4"
-
+  
   echo "mounting target"
   mkdir /newroot
   mount -o ro $target /newroot
@@ -325,9 +350,13 @@ boot_chromeos() {
   echo "patching chrome os rootfs"
   cat /newroot/etc/ui_use_flags.txt | sed "/reven_branding/d" | sed "/os_install_service/d" > /newroot/tmp/ui_use_flags.txt
   mount -o bind /newroot/tmp/ui_use_flags.txt /newroot/etc/ui_use_flags.txt
+
   cp /opt/mount-encrypted /newroot/tmp/mount-encrypted
   cp /newroot/usr/sbin/mount-encrypted /newroot/tmp/mount-encrypted.real
   mount -o bind /newroot/tmp/mount-encrypted /newroot/usr/sbin/mount-encrypted
+  
+  cat /newroot/etc/init/boot-splash.conf | sed '/^script$/a \  pkill frecon-lite || true' > /newroot/tmp/boot-splash.conf
+  mount -o bind /newroot/tmp/boot-splash.conf /newroot/etc/init/boot-splash.conf
   
   if [ "$use_crossystem" = "y" ]; then
     echo "patching crossystem"
@@ -349,8 +378,7 @@ boot_chromeos() {
 
   echo "starting init"
   /sbin/modprobe zram
-  pkill frecon-lite
-  exec /sbin/init < "$TTY1" >> "$TTY1" 2>&1
+  exec_init
 }
 
 main() {
