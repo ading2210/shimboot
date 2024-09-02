@@ -12,6 +12,8 @@
 #set -x
 set +x
 
+rescue_mode=""
+
 invoke_terminal() {
   local tty="$1"
   local title="$2"
@@ -164,6 +166,14 @@ get_selection() {
     return 1
   fi
 
+  local selection_cmd="$(echo "$selection" | cut -d' ' -f1)"
+  if [ "$selection_cmd" = "rescue" ]; then
+    selection="$(echo "$selection" | cut -d' ' -f2-)"
+    rescue_mode="1"
+  else
+    rescue_mode=""
+  fi
+
   for rootfs_partition in $rootfs_partitions; do
     local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
     local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
@@ -176,7 +186,7 @@ get_selection() {
         print_donor_selector "$rootfs_partitions"
         get_donor_selection "$rootfs_partitions" "$part_path"
       else
-        boot_target $part_path
+        boot_target "$part_path"
       fi
       return 1
     fi
@@ -253,7 +263,7 @@ get_donor_selection() {
       echo "selected $part_path as the donor partition"
       yes_no_prompt "would you like to spoof verified mode? this is useful if you're planning on using chrome os while enrolled. (y/n): " use_crossystem
       yes_no_prompt "would you like to spoof an invalid hwid? this will forcibly prevent the device from being enrolled. (y/n): " invalid_hwid
-      boot_chromeos $target $part_path $use_crossystem $invalid_hwid
+      boot_chromeos "$target" "$part_path" "$use_crossystem" "$invalid_hwid"
     fi
 
     i=$((i+1))
@@ -262,6 +272,21 @@ get_donor_selection() {
   echo "invalid selection"
   sleep 1
   return 1
+}
+
+exec_init() {
+  if [ "$rescue_mode" = "1" ]; then
+    echo "entering a rescue shell instead of starting init"
+    echo "once you are done fixing whatever is broken, run 'exec /sbin/init' to continue booting the system normally"
+    
+    if [ -f "/bin/bash" ]; then
+      exec /bin/bash < "$TTY1" >> "$TTY1" 2>&1
+    else
+      exec /bin/sh < "$TTY1" >> "$TTY1" 2>&1
+    fi
+  else
+    exec /sbin/init < "$TTY1" >> "$TTY1" 2>&1
+  fi
 }
 
 boot_target() {
@@ -281,7 +306,7 @@ boot_target() {
   echo "switching root"
   mkdir -p /newroot/bootloader
   pivot_root /newroot /newroot/bootloader
-  exec /sbin/init < "$TTY1" >> "$TTY1" 2>&1
+  exec_init
 }
 
 boot_chromeos() {
@@ -289,7 +314,7 @@ boot_chromeos() {
   local donor="$2"
   local use_crossystem="$3"
   local invalid_hwid="$4"
-
+  
   echo "mounting target"
   mkdir /newroot
   mount -o ro $target /newroot
@@ -349,8 +374,10 @@ boot_chromeos() {
 
   echo "starting init"
   /sbin/modprobe zram
-  pkill frecon-lite
-  exec /sbin/init < "$TTY1" >> "$TTY1" 2>&1
+  if [ "$rescue_mode" != "1" ]; then
+    pkill frecon-lite
+  fi
+  exec_init
 }
 
 main() {
