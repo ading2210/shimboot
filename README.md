@@ -56,19 +56,21 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. ARM Chromebooks are not supported at the moment.
 
 ### Device Compatibility Table:
-| Board Name                                       | X11               | Wifi | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
-|------------------------------------------------  |-------------------|------|----------|-----------|-------------|----------|-----------|----------|
-| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes  | no       | yes       | yes         | yes      | yes       | yes      |
-| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes  | yes      | yes       | yes         | yes      | yes       | yes      |
-| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes  | no       | yes       | yes         | yes      | yes       | yes      |
-| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup> | yes  | untested | untested  | untested    | no       | untested  | untested |
-| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup> | yes  | yes      | yes       | untested    | no       | untested  | untested |
-| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes  | no       | untested  | yes         | yes      | yes       | yes      |
-| [`grunt`](https://chrome100.dev/board/grunt)     | yes               | yes  | no       | yes       | yes         | yes      | yes       | yes      |
-| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes  | no       | yes       | untested    | no       | no        | yes      |
-| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes  | untested | untested  | untested    | untested | untested  | untested |
+| Board Name                                       | X11               | Wifi               | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
+|------------------------------------------------  |-------------------|--------------------|----------|-----------|-------------|----------|-----------|----------|
+| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes                | no       | yes       | yes         | yes      | yes       | yes      |
+| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes                | yes      | yes       | yes         | yes      | yes       | yes      |
+| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes                | no       | yes       | yes         | yes      | yes       | yes      |
+| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup>  | yes                | untested | untested  | untested    | no       | untested  | untested |
+| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup>  | yes                | yes      | yes       | untested    | no       | untested  | untested |
+| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes                | no       | untested  | yes         | yes      | yes       | yes      |
+| [`grunt`](https://chrome100.dev/board/grunt)     | yes               | yes                | no       | yes       | yes         | yes      | yes       | yes      |
+| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes                | no       | yes       | untested    | no       | no        | yes      |
+| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes                | untested | untested  | untested    | untested | untested  | untested |
+| [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes <sup>[2]</sup> | no       | yes       | yes         | yes      | yes       | yes      |
 
-<sup>1. The kernel is too old.</sup>
+<sup>1. The kernel is too old.</sup><br>
+<sup>2. 5ghz wifi networks do not work, but 2.4ghz networks do.</sup>
 
 This table is incomplete. If you want to contribute a device compatibility report please create a new issue on the Github repository.
 
@@ -213,6 +215,9 @@ $ nmcli connection edit <your connection name>
 Steam should be installed using the `sudo apt install steam` command, however it doesn't work out of the box due to security features in the shim kernel preventing the `bwrap` library from working. See [issue #12](https://github.com/ading2210/shimboot/issues/26#issuecomment-2151893062) for more info. 
 
 To get Steam running, install and run it normally. It will fail and show a message saying that "Steam now requires user namespaces to be enabled." Run `fix_bwrap` in your terminal, relaunch Steam, and it should be working again. 
+
+#### I broke something and the system does not boot anymore.
+If the rootfs fails to boot normally, you may use the rescue mode in the bootloader to enter a shell so you can debug and fix things. You can enter this mode by typing in `rescue <selection>` in the bootloader prompt, replacing `<selection>` with the number that is displayed for your rootfs. For example, `rescue 3` will enter rescue mode for the third boot option (usually Debian).
 
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
