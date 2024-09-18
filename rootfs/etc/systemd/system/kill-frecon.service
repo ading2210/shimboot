@@ -3,7 +3,7 @@ Description=kill frecon to allow xorg to start
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/pkill frecon-lite
+ExecStart=/usr/local/bin/kill_frecon
 RemainAfterExit=true
 
 [Install]

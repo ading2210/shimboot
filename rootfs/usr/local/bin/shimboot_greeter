@@ -1,0 +1,30 @@
+#!/bin/bash
+
+#get shimboot version
+if [ -f "/bootloader/opt/.shimboot_version" ]; then
+  shimboot_version="$(cat /bootloader/opt/.shimboot_version)"
+  if [ -f "/bootloader/opt/.shimboot_version_dev" ]; then
+    shimboot_version+="-dev-$(cat /bootloader/opt/.shimboot_version_dev)"
+  fi
+fi
+
+#get storage stats
+percent_full="$(df -BM / | tail -n1 | awk '{print $5}' | tr -d '%')"
+total_size="$(df -BM / | tail -n1 | awk '{print $2}' | tr -d 'M')"
+
+#print the greeter
+if [ "$shimboot_version" ]; then
+  echo "Welcome to the Shimboot Linux shell. (${shimboot_version})"
+else
+  echo "Welcome to the Shimboot Linux shell."
+fi
+echo "For documentation and to report bugs, please visit the project's Github page:"
+echo " - https://github.com/ading2210/shimboot"
+
+#a rootfs under 7GB should mean that it is not yet expanded
+if [ "$percent_full" -gt 80 ] && [ "$total_size" -lt 7000 ]; then
+  echo
+  echo "Warning: Your storage is nearly full and you have not yet expanded the root filesystem. Run 'sudo expand_rootfs' to fix this."
+fi
+
+echo
