@@ -66,7 +66,7 @@ Driver support depends on the device you are using shimboot on. The `patch_rootf
 | [`zork`](https://chrome100.dev/board/zork)       | yes               | yes               | no       | untested  | yes         | yes      | yes       | yes      |
 | [`grunt`](https://chrome100.dev/board/grunt)     | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      |
 | [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes               | no       | yes       | untested    | no       | no        | yes      |
-| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | untested | untested  | untested    | untested | untested  | untested |
+| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | untested | yes       | untested    | no       | yes       | untested |
 | [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes      | yes       | yes      |
 
 <sup>1. The kernel is too old.</sup><br>
