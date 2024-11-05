@@ -129,21 +129,23 @@ print_selector() {
   echo "│ Shimboot OS Selector │"
   echo "└──────────────────────┘"
 
-  if [ "${rootfs_partitions}" ]; then
+  # Check if there are bootable partitions
+  if [ -n "${rootfs_partitions}" ]; then
+    # Process each rootfs partition entry
     for rootfs_partition in $rootfs_partitions; do
-      #i don't know of a better way to split a string in the busybox shell
-      local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-      local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
+      # Use IFS to split the string, separating by `:`
+      IFS=':' read -r part_path part_name _ <<< "$rootfs_partition"
       echo "${i}) ${part_name} on ${part_path}"
-      i=$((i+1))
+      i=$((i + 1))
     done
   else
-    echo "no bootable partitions found. please see the shimboot documentation to mark a partition as bootable."
+    echo "No bootable partitions found. Refer to the Shimboot documentation to mark a partition as bootable."
   fi
 
-  echo "q) reboot"
-  echo "s) enter a shell"
-  echo "l) view license"
+  echo "Options:"
+  echo "  q) Reboot"
+  echo "  s) Enter a shell"
+  echo "  l) View license"
 }
 
 get_selection() {
@@ -152,7 +154,7 @@ get_selection() {
 
   read -p "Your selection: " selection
   if [ "$selection" = "q" ]; then
-    echo "rebooting now."
+    echo "Rebooting now."
     reboot -f
   elif [ "$selection" = "s" ]; then
     reset
@@ -162,27 +164,25 @@ get_selection() {
     clear
     print_license
     echo
-    read -p "press [enter] to return to the bootloader menu"
+    read -p "Press [enter] to return to the bootloader menu"
     return 1
   fi
 
-  local selection_cmd="$(echo "$selection" | cut -d' ' -f1)"
+  local selection_cmd="${selection%% *}"
   if [ "$selection_cmd" = "rescue" ]; then
-    selection="$(echo "$selection" | cut -d' ' -f2-)"
+    selection="${selection#* }"
     rescue_mode="1"
   else
     rescue_mode=""
   fi
 
   for rootfs_partition in $rootfs_partitions; do
-    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
+    IFS=':' read -r part_path part_name part_flags <<< "$rootfs_partition"
 
     if [ "$selection" = "$i" ]; then
-      echo "selected $part_path"
+      echo "Selected $part_path"
       if [ "$part_flags" = "CrOS" ]; then
-        echo "booting chrome os partition"
+        echo "Booting Chrome OS partition"
         print_donor_selector "$rootfs_partitions"
         get_donor_selection "$rootfs_partitions" "$part_path"
       else
@@ -194,7 +194,7 @@ get_selection() {
     i=$((i+1))
   done
   
-  echo "invalid selection"
+  echo "Invalid selection"
   sleep 1
   return 1
 }
@@ -210,15 +210,13 @@ print_donor_selector() {
   local rootfs_partitions="$1"
   local i=1;
 
-  echo "Choose a partition to copy firmware and modules from:";
+  echo "Choose a partition to copy firmware and modules from:"
 
   for rootfs_partition in $rootfs_partitions; do
-    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
+    IFS=':' read -r part_path part_name part_flags <<< "$rootfs_partition"
 
     if [ "$part_flags" = "CrOS" ]; then
-      continue;
+      continue
     fi
 
     echo "${i}) ${part_name} on ${part_path}"
@@ -239,7 +237,7 @@ yes_no_prompt() {
       eval "$var_name='$temp_result'"
       return 0
     else
-      echo "invalid selection"
+      echo "Invalid selection"
     fi
   done
 }
@@ -247,37 +245,35 @@ yes_no_prompt() {
 get_donor_selection() {
   local rootfs_partitions="$1"
   local target="$2"
-  local i=1;
+  local i=1
   read -p "Your selection: " selection
 
   for rootfs_partition in $rootfs_partitions; do
-    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
+    IFS=':' read -r part_path part_name part_flags <<< "$rootfs_partition"
 
     if [ "$part_flags" = "CrOS" ]; then
-      continue;
+      continue
     fi
 
     if [ "$selection" = "$i" ]; then
-      echo "selected $part_path as the donor partition"
-      yes_no_prompt "would you like to spoof verified mode? this is useful if you're planning on using chrome os while enrolled. (y/n): " use_crossystem
-      yes_no_prompt "would you like to spoof an invalid hwid? this will forcibly prevent the device from being enrolled. (y/n): " invalid_hwid
+      echo "Selected $part_path as the donor partition"
+      yes_no_prompt "Would you like to spoof verified mode? This is useful if you're planning on using Chrome OS while enrolled. (y/n): " use_crossystem
+      yes_no_prompt "Would you like to spoof an invalid HWID? This will forcibly prevent the device from being enrolled. (y/n): " invalid_hwid
       boot_chromeos "$target" "$part_path" "$use_crossystem" "$invalid_hwid"
     fi
 
     i=$((i+1))
   done
 
-  echo "invalid selection"
+  echo "Invalid selection"
   sleep 1
   return 1
 }
 
 exec_init() {
   if [ "$rescue_mode" = "1" ]; then
-    echo "entering a rescue shell instead of starting init"
-    echo "once you are done fixing whatever is broken, run 'exec /sbin/init' to continue booting the system normally"
+    echo "Entering a rescue shell instead of starting init"
+    echo "Once you are done fixing whatever is broken, run 'exec /sbin/init' to continue booting the system normally"
     
     if [ -f "/bin/bash" ]; then
       exec /bin/bash < "$TTY1" >> "$TTY1" 2>&1
@@ -292,18 +288,18 @@ exec_init() {
 boot_target() {
   local target="$1"
 
-  echo "moving mounts to newroot"
+  echo "Preparing new root environment"
   mkdir /newroot
   mount $target /newroot
-  #bind mount /dev/console to show systemd boot msgs
+  # Bind mount /dev/console to show systemd boot messages
   if [ -f "/bin/frecon-lite" ]; then 
     rm -f /dev/console
-    touch /dev/console #this has to be a regular file otherwise the system crashes afterwards
+    touch /dev/console # This must be a regular file or the system crashes
     mount -o bind "$TTY1" /dev/console
   fi
   move_mounts /newroot
 
-  echo "switching root"
+  echo "Switching root"
   mkdir -p /newroot/bootloader
   pivot_root /newroot /newroot/bootloader
   exec_init
@@ -315,22 +311,22 @@ boot_chromeos() {
   local use_crossystem="$3"
   local invalid_hwid="$4"
   
-  echo "mounting target"
+  echo "Mounting target"
   mkdir /newroot
   mount -o ro $target /newroot
 
-  echo "mounting tmpfs"
+  echo "Mounting tmpfs"
   mount -t tmpfs -o mode=1777 none /newroot/tmp
   mount -t tmpfs -o mode=0555 run /newroot/run
   mkdir -p -m 0755 /newroot/run/lock
 
-  echo "mounting donor partition"
+  echo "Mounting donor partition"
   local donor_mount="/newroot/tmp/donor_mnt"
   local donor_files="/newroot/tmp/donor"
   mkdir -p $donor_mount
   mount -o ro $donor $donor_mount
 
-  echo "copying modules and firmware to tmpfs (this may take a while)"
+  echo "Copying modules and firmware to tmpfs (this may take a while)"
   copy_progress $donor_mount/lib/modules $donor_files/lib/modules
   copy_progress $donor_mount/lib/firmware $donor_files/lib/firmware
   mount -o bind $donor_files/lib/modules /newroot/lib/modules
@@ -339,7 +335,7 @@ boot_chromeos() {
   rm -rf $donor_mount
 
   if [ -e "/newroot/etc/init/tpm-probe.conf" ]; then
-    echo "applying chrome os flex patches"
+    echo "Applying Chrome OS Flex patches"
     mkdir -p /newroot/tmp/empty
     mount -o bind /newroot/tmp/empty /sys/class/tpm
 
@@ -347,7 +343,7 @@ boot_chromeos() {
     mount -o bind /newroot/tmp/lsb-release /newroot/etc/lsb-release
   fi
 
-  echo "patching chrome os rootfs"
+  echo "Patching Chrome OS rootfs"
   cat /newroot/etc/ui_use_flags.txt | sed "/reven_branding/d" | sed "/os_install_service/d" > /newroot/tmp/ui_use_flags.txt
   mount -o bind /newroot/tmp/ui_use_flags.txt /newroot/etc/ui_use_flags.txt
 
@@ -359,7 +355,7 @@ boot_chromeos() {
   mount -o bind /newroot/tmp/boot-splash.conf /newroot/etc/init/boot-splash.conf
   
   if [ "$use_crossystem" = "y" ]; then
-    echo "patching crossystem"
+    echo "Patching crossystem"
     cp /opt/crossystem /newroot/tmp/crossystem
     if [ "$invalid_hwid" = "y" ]; then
       sed -i 's/block_devmode/hwid/' /newroot/tmp/crossystem
@@ -369,20 +365,20 @@ boot_chromeos() {
     mount -o bind /newroot/tmp/crossystem /newroot/usr/bin/crossystem
   fi
 
-  echo "moving mounts"
+  echo "Moving mounts"
   move_mounts /newroot
 
-  echo "switching root"
+  echo "Switching root"
   mkdir -p /newroot/tmp/bootloader
   pivot_root /newroot /newroot/tmp/bootloader
 
-  echo "starting init"
+  echo "Starting init"
   /sbin/modprobe zram
   exec_init
 }
 
 main() {
-  echo "starting the shimboot bootloader"
+  echo "Starting the Shimboot bootloader"
 
   enable_debug_console "$TTY2"
 
