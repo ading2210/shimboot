@@ -1,7 +1,8 @@
 #!/bin/busybox sh
 
-#original: https://chromium.googlesource.com/chromiumos/platform/initramfs/+/refs/heads/main/factory_shim/init
+# Chromium OS Factory Shim original init: https://chromium.googlesource.com/chromiumos/platform/initramfs/+/refs/heads/main/factory_shim/init
 
+# Detects available TTY based on the environment
 detect_tty() {
   if [ -f "/bin/frecon-lite" ]; then
     export TTY1="/dev/pts/0"
@@ -12,16 +13,16 @@ detect_tty() {
   fi
 }
 
+# Set up the environment and install any necessary tools
 setup_environment() {
-  # Install additional utility programs.
   /bin/busybox --install /bin || true
 }
 
+# Main function to initialize and run bootstrap
 main() {
   setup_environment
   detect_tty
-  # In case an error is not handled by bootstrapping, stop here
-  # so that an operator can see installation stop.
+  # Execute bootstrap with redirected I/O for logging or halt on error
   exec bootstrap.sh < "$TTY1" >> "$TTY1" 2>&1 || sleep 1d
 }
 
