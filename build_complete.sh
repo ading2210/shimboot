@@ -208,7 +208,7 @@ if [ ! "$rootfs_dir" ]; then
     distro=$distro
 fi
 
-print_title "patching debian rootfs"
+print_title "patching $distro rootfs"
 retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet"
 
 print_title "building final disk image"

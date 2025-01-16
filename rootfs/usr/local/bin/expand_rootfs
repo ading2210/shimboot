@@ -3,6 +3,9 @@
 #this script automatically expands the root filesystem
 
 set -e
+if [ "$DEBUG" ]; then
+  set -x
+fi
 
 if [ "$EUID" -ne 0 ]; then
   echo "This needs to be run as root."
@@ -11,8 +14,7 @@ fi
 
 part_dev="$(findmnt -T / -no SOURCE)"
 disk_dev="$(lsblk --list --noheadings --paths --output PKNAME "$part_dev")"
-part_name="$(echo "$part_dev" | rev | cut -d'/' -f1 | rev)"
-part_num="$(cat /proc/partitions | grep "$part_name" | awk '{print $2}')"
+part_num="$(echo "${part_dev#$disk_dev}" | tr -d 'p')"
 
 echo "Automatically detected root filesystem:"
 fdisk -l "$disk_dev" 2>/dev/null | grep "${disk_dev}:" -A 1

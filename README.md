@@ -64,13 +64,16 @@ Driver support depends on the device you are using shimboot on. The `patch_rootf
 | [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup>  | yes               | untested | untested  | untested    | no       | untested  | untested |
 | [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup>  | yes               | yes      | yes       | untested    | no       | untested  | untested |
 | [`zork`](https://chrome100.dev/board/zork)       | yes               | yes               | no       | untested  | yes         | yes      | yes       | yes      |
-| [`grunt`](https://chrome100.dev/board/grunt)     | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      |
+| [`grunt`](https://chrome100.dev/board/grunt)     | yes<sup>[4]</sup> | yes<sup>[3]</sup> | no       | yes       | yes         | yes      | yes       | yes      |
 | [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes               | no       | yes       | untested    | no       | no        | yes      |
-| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | untested | untested  | untested    | untested | untested  | untested |
+| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | untested | yes       | untested    | no       | yes       | untested |
 | [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes      | yes       | yes      |
+| [`snappy`](https://chrome100.dev/board/snappy)   | yes               | yes               | yes      | yes       | yes         | yes      | yes       | yes      |
 
 <sup>1. The kernel is too old.</sup><br>
-<sup>2. 5ghz wifi networks do not work, but 2.4ghz networks do.</sup>
+<sup>2. 5ghz wifi networks do not work, but 2.4ghz networks do.</sup><br>
+<sup>3. You may need to compile the wifi driver from source. See issue #69.</sup><br>
+<sup>4. X11 and LightDM might have some graphical issues.</sup>
 
 This table is incomplete. If you want to contribute a device compatibility report please create a new issue on the Github repository.
 
