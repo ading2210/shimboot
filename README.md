@@ -2,7 +2,7 @@
 
 Shimboot is a collection of scripts for patching a Chrome OS RMA shim to serve as a bootloader for a standard Linux distribution. It allows you to boot a full desktop Debian install on a Chromebook, without needing to unenroll it or modify the firmware.
 
-| <img src="/website/assets/shimboot_demo_1.jpg" alt="Shimboot (KDE) on an HP Chromebook 11 G9 EE." width="400"/> | <img src="/website/assets/shimboot_demo_2.jpg" alt="Shimboot (XFCE) on an Acer Chromebook 311 C722." width="400"/> |  
+| <img src="/website/assets/shimboot_demo_1.jpg" alt="Shimboot (KDE) on an HP Chromebook 11 G9 EE." width="400"/> | <img src="/website/assets/shimboot_demo_2.jpg" alt="Shimboot (XFCE) on an Acer Chromebook 311 C722." width="400"/> |
 | ----- | ----- |
 | Shimboot (KDE) on an HP Chromebook 11 G9 EE | Shimboot (XFCE) on an Acer Chromebook 311 C722 |
 
@@ -30,7 +30,7 @@ Shimboot is a collection of scripts for patching a Chrome OS RMA shim to serve a
 - Works on enterprise enrolled devices
 - Can boot Chrome OS with no restrictions (useful for enrolled devices)
 - Nearly full device compatibility
-- Optional disk compression 
+- Optional disk compression
 - Multiple desktop environments supported
 
 ## About:
@@ -114,7 +114,19 @@ PRs and contributions are welcome to help implement these features.
 ### Build Instructions:
 1. Find the board name of your Chromebook. You can search for the model name on [chrome100.dev](https://chrome100.dev/).
 2. Clone this repository and cd into it.
-3. Run `sudo ./build_complete.sh <board_name>` to download the required data and build the disk image. 
+3. Run `sudo ./build_complete.sh <board_name>` to download the required data and build the disk image.
+
+#### Or Build with Docker (Experimental)
+**Only do this if you know what you're doing**
+
+Build container
+```bash
+docker build -t shimboot .
+```
+Run container
+```bash
+docker run -v ${PWD}/data:/shimboot/data shimboot <board_name>
+```
 
 Note: If you are building for an ARM Chromebook, you need the `qemu-user-static` and `binfmt-support` packages.
 
@@ -122,18 +134,18 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 
 <details>
   <summary><b>Alternatively, you can run each of the steps manually:</b></summary>
-  
+
   1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
   2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
   3. Unzip the shim and the recovery image if you have not done so already.
   4. Run `mkdir -p data/rootfs` to create a directory to hold the rootfs.
   5. Run `sudo ./build_rootfs.sh data/rootfs bookworm` to build the base rootfs.
   6. Run `sudo ./patch_rootfs.sh path_to_shim path_to_reco data/rootfs` to patch the base rootfs and add any needed drivers.
-  7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`. 
+  7. Run `sudo ./build.sh image.bin path_to_shim data/rootfs` to generate a disk image at `image.bin`.
 </details>
 
 ### Booting the Image:
-1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/releases) or building it yourself. 
+1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/releases) or building it yourself.
 2. Flash the shimboot image to a USB drive or SD card. Use the [Chromebook Recovery Utility](https://chrome.google.com/webstore/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm) or [dd](https://linux.die.net/man/1/dd) if you're on Linux.
 3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section).
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
@@ -151,9 +163,9 @@ Here is a list of distros that are supported out of the box:
 - Debian Unstable
 - Alpine Linux
 
-PRs to enable support for other distros are welcome. 
+PRs to enable support for other distros are welcome.
 
-Debian Sid (the rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_complete.sh`: 
+Debian Sid (the rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_complete.sh`:
 ```bash
 sudo ./build_complete.sh dedede release=unstable
 ```
@@ -215,9 +227,9 @@ $ nmcli connection edit <your connection name>
 ```
 
 #### Steam doesn't work.
-Steam should be installed using the `sudo apt install steam` command, however it doesn't work out of the box due to security features in the shim kernel preventing the `bwrap` library from working. See [issue #12](https://github.com/ading2210/shimboot/issues/26#issuecomment-2151893062) for more info. 
+Steam should be installed using the `sudo apt install steam` command, however it doesn't work out of the box due to security features in the shim kernel preventing the `bwrap` library from working. See [issue #12](https://github.com/ading2210/shimboot/issues/26#issuecomment-2151893062) for more info.
 
-To get Steam running, install and run it normally. It will fail and show a message saying that "Steam now requires user namespaces to be enabled." Run `fix_bwrap` in your terminal, relaunch Steam, and it should be working again. 
+To get Steam running, install and run it normally. It will fail and show a message saying that "Steam now requires user namespaces to be enabled." Run `fix_bwrap` in your terminal, relaunch Steam, and it should be working again.
 
 #### I broke something and the system does not boot anymore.
 If the rootfs fails to boot normally, you may use the rescue mode in the bootloader to enter a shell so you can debug and fix things. You can enter this mode by typing in `rescue <selection>` in the bootloader prompt, replacing `<selection>` with the number that is displayed for your rootfs. For example, `rescue 3` will enter rescue mode for the third boot option (usually Debian).
