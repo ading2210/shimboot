@@ -125,7 +125,7 @@ docker build -t shimboot .
 ```
 Run container
 ```bash
-docker run -v ${PWD}/data:/shimboot/data shimboot
+docker run -v ${PWD}/data:/shimboot/data shimboot <board_name>
 ```
 
 Note: If you are building for an ARM Chromebook, you need the `qemu-user-static` and `binfmt-support` packages.
