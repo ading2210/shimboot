@@ -15,6 +15,9 @@ print_help() {
   echo "  arch         - The CPU architecture to build the shimboot image for. Set this to 'arm64' if you have an ARM Chromebook."
   echo "  release      - Set this to either 'bookworm' or 'unstable' to build for Debian stable/unstable."
   echo "  distro       - The Linux distro to use. This should be either 'debian', 'ubuntu', or 'alpine'."
+  echo "  greeter      - The Greeter to use valid options are: "
+  #Lightdm may be Broken! And Only for Ubuntu At this time of Being
+  echo "                    sddm, lightdm-gtk, lxdm"
 }
 
 assert_root
@@ -32,6 +35,7 @@ data_dir="${args['data_dir']}"
 arch="${args['arch']-amd64}"
 release="${args['release']}"
 distro="${args['distro']-debian}"
+greeter="${args['greeter']-sddm}"
 
 #a list of all arm board names
 arm_boards="
@@ -169,7 +173,11 @@ download_and_unzip $shim_url $shim_zip $shim_bin
 
 print_title "building $distro rootfs"
 if [ ! "$rootfs_dir" ]; then
+  # Include the selected greeter package along with the desktop package
+  greeter_package="${greeter}"
   desktop_package="task-$desktop-desktop"
+  
+  # Root filesystem directory setup
   rootfs_dir="$(realpath -m data/rootfs_$board)"
   if [ "$(findmnt -T "$rootfs_dir/dev")" ]; then
     sudo umount -l $rootfs_dir/* 2>/dev/null || true
@@ -181,6 +189,8 @@ if [ ! "$rootfs_dir" ]; then
     release="${release:-bookworm}"
   elif [ "$distro" = "ubuntu" ]; then
     release="${release:-noble}"
+    # Add the selected greeter to the package list for Ubuntu
+    desktop_package="$desktop_package $greeter_package"
   elif [ "$distro" = "alpine" ]; then
     release="${release:-edge}"
   else
@@ -201,7 +211,7 @@ if [ ! "$rootfs_dir" ]; then
   fi
 
   ./build_rootfs.sh $rootfs_dir $release \
-    custom_packages=$desktop_package \
+    custom_packages="$desktop_package" \
     hostname=shimboot-$board \
     username=user \
     user_passwd=user \
