@@ -16,7 +16,8 @@ print_help() {
   echo "  release      - Set this to either 'bookworm' or 'unstable' to build for Debian stable/unstable."
   echo "  distro       - The Linux distro to use. This should be either 'debian', 'ubuntu', or 'alpine'."
   echo "  greeter      - The Greeter to use valid options are: "
-  #Lightdm may be Broken! And Only for Ubuntu At this time of Being
+  # Lightdm may be Broken! And Only for Ubuntu At this time of Being
+  #And LXDM is giving one error but its working!
   echo "                    sddm, lightdm-gtk, lxdm"
 }
 
@@ -36,6 +37,14 @@ arch="${args['arch']-amd64}"
 release="${args['release']}"
 distro="${args['distro']-debian}"
 greeter="${args['greeter']-sddm}"
+
+# Validate greeter type
+valid_greeters=("sddm" "lightdm-gtk" "lxdm")
+
+if [[ ! " ${valid_greeters[@]} " =~ " ${greeter} " ]]; then
+  echo "Wrong greeter type, correct one and try again. Valid options are: sddm, lightdm-gtk, lxdm."
+  exit 1
+fi
 
 #a list of all arm board names
 arm_boards="
@@ -95,7 +104,7 @@ sigint_handler() {
 }
 trap sigint_handler SIGINT
 
-shim_url="https://ddl.kxtz.dev/api/v1/download?path=/ChromeOS/shims/Raw/$board.zip"
+shim_url="https://dl.darkn.bio/api/raw/?path=/SH1mmer/$board.zip"
 boards_url="https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=ChromeOS"
 
 if [ -z "$data_dir" ]; then
