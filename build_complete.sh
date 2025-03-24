@@ -95,6 +95,18 @@ if [ "$(check_deps "$needed_deps")" ]; then
     apt-get install wget python3 unzip zip debootstrap cpio binwalk pcregrep cgpt kmod pv lz4 -y
   fi
   assert_deps "$needed_deps"
+  
+  # Install a newer debootstrap version if needed
+  if [ -f "/etc/debian_version" ] && [ "$distro" = "ubuntu" -o "$distro" = "debian" ]; then
+    if [ ! -f "/usr/share/debootstrap/scripts/$release" ]; then
+      print_info "installing newer debootstrap version"
+      mirror_url="https://deb.debian.org/debian/pool/main/d/debootstrap/"
+      deb_file="$(curl "https://deb.debian.org/debian/pool/main/d/debootstrap/" | pcregrep -o1 'href="(debootstrap_.+?\.deb)"' | tail -n1)"
+      deb_url="${mirror_url}${deb_file}"
+      wget -q --show-progress "$deb_url" -O "/tmp/$deb_file"
+      apt-get install -y "/tmp/$deb_file"
+    fi
+  fi
 fi
 
 #install qemu-user-static on debian if needed
