@@ -3,6 +3,10 @@
 . ./common.sh
 . ./image_utils.sh
 
+# TO DO:
+# Go To Sleep
+# Todo list created on 22.03.2025 23:10.
+
 print_help() {
   echo "Usage: ./build_complete.sh board_name"
   echo "Valid named arguments (specify with 'key=value'):"
@@ -15,9 +19,9 @@ print_help() {
   echo "  arch         - The CPU architecture to build the shimboot image for. Set this to 'arm64' if you have an ARM Chromebook."
   echo "  release      - Set this to either 'bookworm' or 'unstable' to build for Debian stable/unstable."
   echo "  distro       - The Linux distro to use. This should be either 'debian', 'ubuntu', or 'alpine'."
-  echo "  greeter      - The Greeter to use valid options are: "
+  echo "  display_manager - The Display Manager to use valid options are: "
   # Lightdm may be Broken! And Only for Ubuntu At this time of Being
-  #And LXDM is giving one error but its working!
+  # LXDM is giving one error but its working!
   echo "                    sddm, lightdm-gtk, lxdm"
 }
 
@@ -36,13 +40,24 @@ data_dir="${args['data_dir']}"
 arch="${args['arch']-amd64}"
 release="${args['release']}"
 distro="${args['distro']-debian}"
-greeter="${args['greeter']-sddm}"
+display_manager="${args['display_manager']-lightdm-gtk}"
 
-# Validate greeter type
-valid_greeters=("sddm" "lightdm-gtk" "lxdm")
+# Validate display_manager type
+valid_display_managers=("sddm" "lightdm-gtk" "lxdm")
 
-if [[ ! " ${valid_greeters[@]} " =~ " ${greeter} " ]]; then
-  echo "Wrong greeter type, correct one and try again. Valid options are: sddm, lightdm-gtk, lxdm."
+if [[ ! " ${valid_display_managers[@]} " =~ " ${display_manager} " ]]; then
+  echo "Wrong display manager type, correct one and try again. Valid options are: sddm, lightdm-gtk, lxdm."
+  exit 1
+fi
+
+# Check for distro and display_manager
+if [[ "$distro" == "debian" || "$distro" == "alpine" ]]; then
+  echo "Sorry, you must choose Ubuntu to choose a display manager."
+  exit 1
+fi
+
+if [[ "$distro" == "ubuntu" && -z "$display_manager" ]]; then
+  echo "Please add a display manager from the list in --help"
   exit 1
 fi
 
@@ -104,7 +119,7 @@ sigint_handler() {
 }
 trap sigint_handler SIGINT
 
-shim_url="https://dl.darkn.bio/api/raw/?path=/SH1mmer/$board.zip"
+shim_url="https://ddl.kxtz.dev/api/v1/download?path=/ChromeOS/shims/Raw/$board.zip"
 boards_url="https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=ChromeOS"
 
 if [ -z "$data_dir" ]; then
@@ -182,8 +197,8 @@ download_and_unzip $shim_url $shim_zip $shim_bin
 
 print_title "building $distro rootfs"
 if [ ! "$rootfs_dir" ]; then
-  # Include the selected greeter package along with the desktop package
-  greeter_package="${greeter}"
+  # Include the selected display_manager package along with the desktop package
+  display_manager_package="${display_manager}"
   desktop_package="task-$desktop-desktop"
   
   # Root filesystem directory setup
@@ -198,25 +213,13 @@ if [ ! "$rootfs_dir" ]; then
     release="${release:-bookworm}"
   elif [ "$distro" = "ubuntu" ]; then
     release="${release:-noble}"
-    # Add the selected greeter to the package list for Ubuntu
-    desktop_package="$desktop_package $greeter_package"
+    # Add the selected display_manager to the package list for Ubuntu
+    desktop_package="$desktop_package $display_manager_package"
   elif [ "$distro" = "alpine" ]; then
     release="${release:-edge}"
   else
     print_error "invalid distro selection"
     exit 1
-  fi
-
-  #install a newer debootstrap version if needed
-  if [ -f "/etc/debian_version" ] && [ "$distro" = "ubuntu" -o "$distro" = "debian" ]; then
-    if [ ! -f "/usr/share/debootstrap/scripts/$release" ]; then
-      print_info "installing newer debootstrap version"
-      mirror_url="https://deb.debian.org/debian/pool/main/d/debootstrap/"
-      deb_file="$(curl "https://deb.debian.org/debian/pool/main/d/debootstrap/" | pcregrep -o1 'href="(debootstrap_.+?\.deb)"' | tail -n1)"
-      deb_url="${mirror_url}${deb_file}"
-      wget -q --show-progress "$deb_url" -O "/tmp/$deb_file"
-      apt-get install -y "/tmp/$deb_file"
-    fi
   fi
 
   ./build_rootfs.sh $rootfs_dir $release \
@@ -226,6 +229,40 @@ if [ ! "$rootfs_dir" ]; then
     user_passwd=user \
     arch=$arch \
     distro=$distro
+fi
+
+# Add the section to remove the default display manager and install the selected one
+print_title "removing default display manager"
+
+# Remove the default display manager if it's Ubuntu
+if [ "$distro" = "ubuntu" ]; then
+  current_dm=$(cat /etc/X11/default-display-manager)
+  if [ -n "$current_dm" ]; then
+    print_info "Removing current display manager: $current_dm"
+    sudo apt-get remove --purge -y "$current_dm"
+  fi
+
+  # Install the chosen display_manager
+  print_title "installing selected display manager ($display_manager)"
+  case "$display_manager" in
+    sddm)
+      sudo apt-get install -y sddm
+      ;;
+    lightdm-gtk)
+      sudo apt-get install -y lightdm-gtk-greeter
+      ;;
+    lxdm)
+      sudo apt-get install -y lxdm
+      ;;
+    *)
+      print_error "Invalid display manager type: $display_manager"
+      exit 1
+      ;;
+  esac
+
+  # Optionally, set the new display manager to be the default
+  sudo dpkg-reconfigure "$display_manager"
+  print_info "$display_manager has been installed and set as the default display manager."
 fi
 
 print_title "patching $distro rootfs"
@@ -245,5 +282,5 @@ if [ "$compress_img" ]; then
   print_title "compressing disk image into a zip file"
   zip -j $image_zip $final_image
   print_info "finished compressing the disk file"
-  print_info "the finished zip file can be found at $image_zip" 
+  print_info "the finished zip file can be found at $image_zip"
 fi
