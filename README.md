@@ -56,19 +56,19 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. ARM Chromebooks are not supported at the moment.
 
 ### Device Compatibility Table:
-| Board Name                                       | X11               | Wifi              | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
-|------------------------------------------------  |-------------------|-------------------|----------|-----------|-------------|----------|-----------|----------|
-| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      |
-| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes               | yes      | yes       | yes         | yes      | yes       | yes      |
-| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      |
-| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup>  | yes               | untested | untested  | untested    | no       | untested  | untested |
-| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup>  | yes               | yes      | yes       | untested    | no       | untested  | untested |
-| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes               | no       | untested  | yes         | yes      | yes       | yes      |
-| [`grunt`](https://chrome100.dev/board/grunt)     | yes<sup>[4]</sup> | yes<sup>[3]</sup> | no       | yes       | yes         | yes      | yes       | yes      |
-| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes               | no       | yes       | untested    | no       | no        | yes      |
-| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | untested | yes       | untested    | no       | yes       | untested |
-| [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes      | yes       | yes      |
-| [`snappy`](https://chrome100.dev/board/snappy)   | yes               | yes               | yes      | yes       | yes         | yes      | yes       | yes      |
+| Board Name                                       | X11               | Wifi              | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |Kernel ver.|
+|------------------------------------------------  |-------------------|-------------------|----------|-----------|-------------|----------|-----------|----------|-----------|
+| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      | untested  |
+| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes               | yes      | yes       | yes         | yes      | yes       | yes      | untested  |
+| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      | untested  |
+| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup>  | yes               | untested | untested  | untested    | no       | untested  | untested | untested  |
+| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup>  | yes               | yes      | yes       | untested    | no       | untested  | untested | untested  |
+| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes               | no       | untested  | yes         | yes      | yes       | yes      | untested  |
+| [`grunt`](https://chrome100.dev/board/grunt)     | yes<sup>[4]</sup> | yes<sup>[3]</sup> | no       | yes       | yes         | yes      | yes       | yes      | untested  |
+| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes               | no       | yes       | untested    | no       | no        | yes      | untested  |
+| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | untested | yes       | untested    | no       | yes       | untested | untested  |
+| [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes      | yes       | yes      | untested  |
+| [`snappy`](https://chrome100.dev/board/snappy)   | yes               | yes               | yes      | yes       | yes         | yes      | yes       | yes      | untested  |
 
 <sup>1. The kernel is too old.</sup><br>
 <sup>2. 5ghz wifi networks do not work, but 2.4ghz networks do.</sup><br>
@@ -135,7 +135,7 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 ### Booting the Image:
 1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/releases) or building it yourself. 
 2. Flash the shimboot image to a USB drive or SD card. Use the [Chromebook Recovery Utility](https://chrome.google.com/webstore/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm) or [dd](https://linux.die.net/man/1/dd) if you're on Linux.
-3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section).
+3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section). You do not have to use Sh1mmer on your chromebook unless your chromebook is keyrolled - just hit esc+refresh+power when your chromebook tells you that developer mode is not allowed.
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
 5. Boot into Debian and log in with the username and password that you configured earlier. The default username/password for the prebuilt images is `user/user`.
 6. Expand the rootfs partition so that it fills up the entire disk by running `sudo expand_rootfs`.
@@ -169,6 +169,8 @@ You can pass the `desktop` argument to the `build_complete.sh` script, like this
 sudo ./build_complete.sh grunt desktop=lxde
 ```
 The valid values for this argument are: `gnome`, `xfce`, `kde`, `lxde`, `gnome-flashback`, `cinnamon`, `mate`, and `lxqt`.
+
+You can also install a desktop envoironment through apt.
 
 #### Will this prevent me from using Chrome OS normally?
 Shimboot does not touch the internal storage at all, so you will be able to use Chrome OS as if nothing happened. However, if you are on an enterprise enrolled device, booting Chrome OS again will force a powerwash due to the attempted switch into developer mode.
@@ -221,7 +223,8 @@ To get Steam running, install and run it normally. It will fail and show a messa
 
 #### I broke something and the system does not boot anymore.
 If the rootfs fails to boot normally, you may use the rescue mode in the bootloader to enter a shell so you can debug and fix things. You can enter this mode by typing in `rescue <selection>` in the bootloader prompt, replacing `<selection>` with the number that is displayed for your rootfs. For example, `rescue 3` will enter rescue mode for the third boot option (usually Debian).
-
+#### Can we update the kernel?
+No, as Shimboot runs based on the kernel in the recovery shim and cannot be updated or replaced, otherwise your chromebook will not recognize it as it isn't signed by Google.
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
 
