@@ -296,14 +296,14 @@ boot_target() {
 
   echo "moving mounts to newroot"
   mkdir /newroot
-  mount $target /newroot
   #bind mount /dev/console to show systemd boot msgs
   if [ -f "/bin/frecon-lite" ]; then 
     rm -f /dev/console
     touch /dev/console #this has to be a regular file otherwise the system crashes afterwards
     mount -o bind "$TTY1" /dev/console
   fi
-  if [ $name = 'luks2' ]; then
+  #use cryptsetup to check if the rootfs is encrypted
+  if cryptsetup luksDump "$target" >/dev/null 2>&1; then
     cryptsetup open $target rootfs
     mount /dev/mapper/rootfs /newroot
   else
