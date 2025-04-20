@@ -149,7 +149,7 @@ populate_partitions() {
   fi
   umount $rootfs_mount
   if [ $luks_enabled ]; then
-    $CRYPT_PATH close rootfs
+    $cryptsetup_bin close rootfs
   fi
 }
 
