@@ -67,7 +67,7 @@ print_info "creating loop device for the image"
 image_loop=$(create_loop ${output_path})
 
 print_info "creating partitions on the disk image"
-create_partitions $image_loop $kernel_img $luks_enabled "$crypt_password" "$cryptsetup_path"
+create_partitions $image_loop $kernel_img $luks_enabled "$crypt_password"
 
 print_info "copying data into the image"
 populate_partitions "$image_loop" "$initramfs_dir" "$rootfs_dir" "$quiet" "$luks_enabled"
