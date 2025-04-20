@@ -1,6 +1,4 @@
 #!/bin/bash
-#im gonna forget to remove this wont i
-set -x
 create_loop() {
   local loop_device=$(losetup -f)
   if [ ! -b "$loop_device" ]; then
