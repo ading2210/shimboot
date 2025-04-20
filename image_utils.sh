@@ -1,5 +1,6 @@
 #!/bin/bash
-
+#im gonna forget to remove this wont i
+set -x
 create_loop() {
   local loop_device=$(losetup -f)
   if [ ! -b "$loop_device" ]; then
@@ -86,7 +87,7 @@ create_partitions() {
   local kernel_path=$(realpath -m "${2}")
   local is_luks=${3} # 0 for false 1 for true
   local crypt_password="${4}"
-  local CRYPT_PATH="${5}"
+  local cryptsetup_bin="${5}"
 
   #create stateful
   mkfs.ext4 "${image_loop}p1"
@@ -97,8 +98,8 @@ create_partitions() {
   mkfs.ext2 "${image_loop}p3"
   #create rootfs partition
   if [ $is_luks ]; then
-    echo "$crypt_password" | $CRYPT_PATH luksFormat "${image_loop}p4"
-    echo "$crypt_password" | $CRYPT_PATH luksOpen "${image_loop}p4" rootfs
+    echo "$crypt_password" | $cryptsetup_bin luksFormat "${image_loop}p4"
+    echo "$crypt_password" | $cryptsetup_bin luksOpen "${image_loop}p4" rootfs
     mkfs.ext4 /dev/mapper/rootfs
   else 
     mkfs.ext4 "${image_loop}p4"
