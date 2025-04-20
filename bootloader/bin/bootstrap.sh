@@ -103,6 +103,7 @@ print_license() {
   cat << EOF 
 Shimboot ${shimboot_version}${suffix}
 
+
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
 Copyright (C) 2023 ading2210
 
@@ -291,6 +292,7 @@ exec_init() {
 
 boot_target() {
   local target="$1"
+  local name="$2"
 
   echo "moving mounts to newroot"
   mkdir /newroot
@@ -300,6 +302,12 @@ boot_target() {
     rm -f /dev/console
     touch /dev/console #this has to be a regular file otherwise the system crashes afterwards
     mount -o bind "$TTY1" /dev/console
+  fi
+  if [ $name = 'luks2' ]; then
+    cryptsetup open $target rootfs
+    mount /dev/mapper/rootfs /newroot
+  else
+    mount $target /newroot
   fi
   move_mounts /newroot
 
@@ -328,7 +336,21 @@ boot_chromeos() {
   local donor_mount="/newroot/tmp/donor_mnt"
   local donor_files="/newroot/tmp/donor"
   mkdir -p $donor_mount
-  mount -o ro $donor $donor_mount
+  # rather sloppy, ading might not like this.
+  crypt_output=$(cryptsetup luksDump "$donor" 2>&1)
+
+  if [ $? -eq 0 ]; then
+    cryptsetup luksOpen $donor rootfs
+    mount /dev/mapper/rootfs $donor_mount
+  else
+    if echo "$crypt_output" | grep -q "not a valid LUKS device"; then
+        mount -o ro $donor $donor_mount
+    else
+        echo "An error occurred while checking $donor: $crypt_output"
+        echo "Assuming $donor is unencrypted..."
+        mount -o ro $donor $donor_mount
+    fi
+  fi
 
   echo "copying modules and firmware to tmpfs (this may take a while)"
   copy_progress $donor_mount/lib/modules $donor_files/lib/modules

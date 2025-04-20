@@ -15,6 +15,7 @@ print_help() {
   echo "  arch         - The CPU architecture to build the shimboot image for. Set this to 'arm64' if you have an ARM Chromebook."
   echo "  release      - Set this to either 'bookworm' or 'unstable' to build for Debian stable/unstable."
   echo "  distro       - The Linux distro to use. This should be either 'debian', 'ubuntu', or 'alpine'."
+  echo "  luks         - Set this to 'true' to enable full-drive encryption."
 }
 
 assert_root
@@ -32,6 +33,7 @@ data_dir="${args['data_dir']}"
 arch="${args['arch']-amd64}"
 release="${args['release']}"
 distro="${args['distro']-debian}"
+luks="${args['luks']-false}"
 
 #a list of all arm board names
 arm_boards="
@@ -215,7 +217,7 @@ retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet"
 print_title "building final disk image"
 final_image="$data_dir/shimboot_$board.bin"
 rm -rf $final_image
-retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet" "arch=$arch" "name=$distro"
+retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet" "arch=$arch" "name=$distro" "luks=$luks"
 print_info "build complete! the final disk image is located at $final_image"
 
 print_title "cleaning up"

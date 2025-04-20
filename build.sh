@@ -12,6 +12,7 @@ print_help() {
   echo "  quiet - Don't use progress indicators which may clog up log files."
   echo "  arch  - Set this to 'arm64' to specify that the shim is for an ARM chromebook."
   echo "  name  - The name for the shimboot rootfs partition."
+  echo "  luks  - Set this to 'true' to build an encrypted image"
 }
 
 assert_root
@@ -26,6 +27,26 @@ rootfs_dir=$(realpath -m "${3}")
 quiet="${args['quiet']}"
 arch="${args['arch']}"
 name="${args['name']}"
+if [ "${args['luks']}" = 'true' ]; then
+  printf "Enter the LUKS2 password for the image: "
+  read crypt_password
+  luks_enabled=true
+  if [ "${args['arch']}" = 'arm64' ]; then
+    cryptsetup_name=cryptsetup_aarch64
+  else
+    cryptsetup_name=cryptsetup_x86_64
+  fi
+  cryptsetup_path=$(realpath -m bootloader/bin/cryptsetup)
+  # rather than trying to check if the last downloaded cryptsetup is for the right cpu architecture, it just deletes it and redownloads.
+  if [ -f $cryptsetup_path ]; then
+    rm -f $cryptsetup_path
+  fi
+  print_info "downloading cryptsetup binary"
+  # still using FWSmasher's repo because the shimboot-binaries repo has issues building for aarch64
+  curl -LO "https://github.com/FWSmasher/CryptoSmite/raw/main/${cryptsetup_name}"
+  mv $cryptsetup_name $cryptsetup_path
+  chmod +x $cryptsetup_path
+fi
 
 print_info "reading the shim image"
 initramfs_dir=/tmp/shim_initramfs
@@ -41,18 +62,19 @@ rootfs_size=$(du -sm $rootfs_dir | cut -f 1)
 rootfs_part_size=$(($rootfs_size * 12 / 10 + 5))
 #create a 20mb bootloader partition
 #rootfs partition is 20% larger than its contents
-create_image $output_path 20 $rootfs_part_size $name
+create_image $output_path 20 $rootfs_part_size $luks_enabled
 
 print_info "creating loop device for the image"
 image_loop=$(create_loop ${output_path})
 
 print_info "creating partitions on the disk image"
-create_partitions $image_loop $kernel_img
+create_partitions $image_loop $kernel_img $luks_enabled "${crypt_password}" "${cryptsetup_path}"
 
 print_info "copying data into the image"
-populate_partitions $image_loop $initramfs_dir $rootfs_dir "$quiet"
+populate_partitions "$image_loop" "$initramfs_dir" "$rootfs_dir" "$quiet" "$luks_enabled"
 rm -rf $initramfs_dir $kernel_img
 
 print_info "cleaning up loop devices"
 losetup -d $image_loop
+
 print_info "done"
