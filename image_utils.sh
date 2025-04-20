@@ -154,7 +154,6 @@ populate_partitions() {
 
 create_image() {
   local image_path=$(realpath -m "${1}")
-<<<<<<< HEAD
   local bootloader_size="$2"
   local rootfs_size="$3"
   local rootfs_name="$4"
