@@ -85,7 +85,7 @@ create_partitions() {
   local image_loop=$(realpath -m "${1}")
   local kernel_path=$(realpath -m "${2}")
   local is_luks=${3} # 0 for false 1 for true
-  local PASSWD="${4}"
+  local crypt_password="${4}"
   local CRYPT_PATH="${5}"
 
   #create stateful
@@ -97,8 +97,8 @@ create_partitions() {
   mkfs.ext2 "${image_loop}p3"
   #create rootfs partition
   if [ $is_luks ]; then
-    echo "${PASSWD}" | $CRYPT_PATH luksFormat "${image_loop}p4"
-    echo "${PASSWD}" | $CRYPT_PATH luksOpen "${image_loop}p4" rootfs
+    echo "$crypt_password" | $CRYPT_PATH luksFormat "${image_loop}p4"
+    echo "$crypt_password" | $CRYPT_PATH luksOpen "${image_loop}p4" rootfs
     mkfs.ext4 /dev/mapper/rootfs
   else 
     mkfs.ext4 "${image_loop}p4"
