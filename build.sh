@@ -43,7 +43,7 @@ if [ "${args['luks']}" = 'true' ]; then
   fi
   print_info "downloading cryptsetup binary"
   # still using FWSmasher's repo because the shimboot-binaries repo has issues building for aarch64
-  curl -LO "https://github.com/FWSmasher/CryptoSmite/raw/main/${cryptsetup_name}"
+  wget -qO- --show-progress "https://github.com/FWSmasher/CryptoSmite/raw/main/${cryptsetup_name}"
   mv $cryptsetup_name $cryptsetup_path
   chmod +x $cryptsetup_path
 fi
