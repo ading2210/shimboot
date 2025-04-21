@@ -26,11 +26,11 @@ rootfs_dir=$(realpath -m "${3}")
 
 quiet="${args['quiet']}"
 arch="${args['arch']}"
-name="${args['name']}"
-if [ "${args['luks']}" = 'true' ]; then
-  printf "Enter the LUKS2 password for the image: "
-  read crypt_password
-  luks_enabled=true
+bootloader_part_name="${args['name']}"
+luks_enabled="${args['luks']}"
+
+if [ "$luks_enabled" = 'true' ]; then
+  read -p "Enter the LUKS2 password for the image: " crypt_password
   if [ "${args['arch']}" = 'arm64' ]; then
     cryptsetup_name=cryptsetup_aarch64
   else
@@ -59,15 +59,9 @@ patch_initramfs $initramfs_dir
 print_info "creating disk image"
 rootfs_size=$(du -sm $rootfs_dir | cut -f 1)
 rootfs_part_size=$(($rootfs_size * 12 / 10 + 5))
-if [ "$luks" == "true" ]; then
-  rootfs_part_name="luks2"
-else
-  #assuming bootloader partition is ext4 if not luks2, not really a problem rn but might be later on
-  rootfs_part_name="ext4"
-fi
 #create a 20mb bootloader partition
 #rootfs partition is 20% larger than its contents
-create_image "$output_path" 20 "$rootfs_part_size" "$rootfs_part_name" "$luks_enabled"
+create_image "$output_path" 20 "$rootfs_part_size" "$bootloader_part_name"
 
 print_info "creating loop device for the image"
 image_loop=$(create_loop ${output_path})
@@ -81,5 +75,4 @@ rm -rf $initramfs_dir $kernel_img
 
 print_info "cleaning up loop devices"
 losetup -d $image_loop
-
 print_info "done"

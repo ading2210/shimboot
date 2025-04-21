@@ -19,8 +19,7 @@ make_bootable() {
 partition_disk() {
   local image_path=$(realpath -m "${1}")
   local bootloader_size="$2"
-  local partition_name="$3"
-  local luks_enabled="$4"
+  local rootfs_name="$3"
   #create partition table with fdisk
   ( 
     echo g #new gpt disk label
@@ -57,7 +56,7 @@ partition_disk() {
     echo x #enter expert mode
     echo n #change the partition name
     echo #accept default partition number
-    echo "shimboot_rootfs:$partition_name" #set partition name
+    echo "shimboot_rootfs:$rootfs_name" #set partition name
     echo r #return to normal more
 
     #write changes
@@ -83,7 +82,7 @@ safe_mount() {
 create_partitions() {
   local image_loop=$(realpath -m "${1}")
   local kernel_path=$(realpath -m "${2}")
-  local is_luks=${3} # 0 for false 1 for true
+  local is_luks="${3}"
   local crypt_password="${4}"
 
   #create stateful
@@ -94,7 +93,7 @@ create_partitions() {
   #create bootloader partition
   mkfs.ext2 "${image_loop}p3"
   #create rootfs partition
-  if [ $is_luks ]; then
+  if [ "$is_luks" == "true" ]; then
     echo "$crypt_password" | cryptsetup luksFormat "${image_loop}p4"
     echo "$crypt_password" | cryptsetup luksOpen "${image_loop}p4" rootfs
     mkfs.ext4 /dev/mapper/rootfs
@@ -155,14 +154,12 @@ create_image() {
   local bootloader_size="$2"
   local rootfs_size="$3"
   local rootfs_name="$4"
-  local luks_enabled="$5"
-
   
   #stateful + kernel + bootloader + rootfs
   local total_size=$((1 + 32 + $bootloader_size + $rootfs_size))
   rm -rf "${image_path}"
   fallocate -l "${total_size}M" "${image_path}"
-  partition_disk $image_path $bootloader_size $rootfs_name $luks_enabled
+  partition_disk $image_path $bootloader_size $rootfs_name
 }
 
 patch_initramfs() {
