@@ -19,7 +19,8 @@ make_bootable() {
 partition_disk() {
   local image_path=$(realpath -m "${1}")
   local bootloader_size="$2"
-  local luks_enabled="$3"
+  local partition_name="$3"
+  local luks_enabled="$4"
   #create partition table with fdisk
   ( 
     echo g #new gpt disk label
@@ -56,7 +57,7 @@ partition_disk() {
     echo x #enter expert mode
     echo n #change the partition name
     echo #accept default partition number
-    echo "shimboot_rootfs" #set partition name
+    echo "shimboot_rootfs:$partition_name" #set partition name
     echo r #return to normal more
 
     #write changes
@@ -161,7 +162,7 @@ create_image() {
   local total_size=$((1 + 32 + $bootloader_size + $rootfs_size))
   rm -rf "${image_path}"
   fallocate -l "${total_size}M" "${image_path}"
-  partition_disk $image_path $bootloader_size $luks_enabled
+  partition_disk $image_path $bootloader_size $rootfs_name $luks_enabled
 }
 
 patch_initramfs() {
