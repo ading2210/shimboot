@@ -46,14 +46,8 @@ if [ "$luks_enabled" = 'true' ]; then
   done
   print_info "downloading shimboot-binaries"
   temp_shimboot_binaries="/tmp/shimboot-binaries.tar.gz"
-  #grab latest release from sb-binaries - may need to rework this logic if my plans for multiarch shimboot-binaries go through
   #chunks the tar into /tmp before extracting cryptsetup, might cause issues on interrupt during extraction
-  wget -qO- https://api.github.com/repos/ading2210/shimboot-binaries/releases/latest \
-    | grep browser_download_url \
-    | grep '' \
-    | head -n1 \
-    | cut -d '"' -f 4 \
-    | xargs wget -O "$temp_shimboot_binaries"
+  wget -q --show-progress https://api.github.com/repos/ading2210/shimboot-binaries/releases/latest -O "$temp_shimboot_binaries"
   #extract cryptsetup and delete the archive
   tar -xf "$temp_shimboot_binaries" -C $(realpath -m "bootloader/bin/") "cryptsetup"
   rm "$temp_shimboot_binaries"
