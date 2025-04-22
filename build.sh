@@ -57,6 +57,7 @@ if [ "$luks_enabled" = 'true' ]; then
   #extract cryptsetup and delete the archive
   tar -xf "$temp_shimboot_binaries" -C $(realpath -m "bootloader/bin/") "cryptsetup"
   rm "$temp_shimboot_binaries"
+  chmod +x "$(realpath -m "bootloader/bin/")/cryptsetup"
 fi
 
 print_info "reading the shim image"
