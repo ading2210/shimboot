@@ -12,7 +12,7 @@ print_help() {
   echo "  quiet - Don't use progress indicators which may clog up log files."
   echo "  arch  - Set this to 'arm64' to specify that the shim is for an ARM chromebook."
   echo "  name  - The name for the shimboot rootfs partition."
-  echo "  luks  - Set this to 'true' to build an encrypted image"
+  echo "  luks  - Set this to 'true' to build an encrypted image. Currently not available on arm devices."
 }
 
 assert_root
@@ -29,22 +29,34 @@ arch="${args['arch']}"
 bootloader_part_name="${args['name']}"
 luks_enabled="${args['luks']}"
 
+if [[ "$luks_enabled" == "true" && "$arch" == "arm64" ]]; then
+  print_error "Uh-oh, you are trying to use luks2 encryption on an arm64 board. Unfortunately, rootfs encryption is not available on arm64-based boards at this time. :("
+  exit
+fi
+
 if [ "$luks_enabled" = 'true' ]; then
-  read -p "Enter the LUKS2 password for the image: " crypt_password
-  if [ "${args['arch']}" = 'arm64' ]; then
-    cryptsetup_name=cryptsetup_aarch64
-  else
-    cryptsetup_name=cryptsetup_x86_64
-  fi
-  cryptsetup_path=$(realpath -m bootloader/bin/cryptsetup)
-  # rather than trying to check if the last downloaded cryptsetup is for the right cpu architecture, it just deletes it and redownloads.
-  if [ -f $cryptsetup_path ]; then
-    rm -f $cryptsetup_path
-  fi
-  print_info "downloading cryptsetup binary"
-  # still using FWSmasher's repo because the shimboot-binaries repo has issues building for aarch64
-  wget -O "$cryptsetup_path" "https://github.com/FWSmasher/CryptoSmite/raw/main/${cryptsetup_name}"
-  chmod +x $cryptsetup_path
+  while true; do
+      read -p "Enter the LUKS2 password for the image: " crypt_password
+      read -p "Retype the password: " crypt_password_confirm
+      if [ "$crypt_password" = "$crypt_password_confirm" ]; then
+          break
+      else
+          echo "Passwords do not match. Please try again."
+      fi
+  done
+  print_info "downloading shimboot-binaries"
+  temp_shimboot_binaries="/tmp/shimboot-binaries.tar.gz"
+  #grab latest release from sb-binaries - may need to rework this logic if my plans for multiarch shimboot-binaries go through
+  #chunks the tar into /tmp before extracting cryptsetup, might cause issues on interrupt during extraction
+  wget -qO- https://api.github.com/repos/ading2210/shimboot-binaries/releases/latest \
+    | grep browser_download_url \
+    | grep '' \
+    | head -n1 \
+    | cut -d '"' -f 4 \
+    | xargs wget -O "$temp_shimboot_binaries"
+  #extract cryptsetup and delete the archive
+  tar -xf "$temp_shimboot_binaries" -C $(realpath -m "bootloader/bin/") "cryptsetup"
+  rm "$temp_shimboot_binaries"
 fi
 
 print_info "reading the shim image"

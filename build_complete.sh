@@ -15,7 +15,7 @@ print_help() {
   echo "  arch         - The CPU architecture to build the shimboot image for. Set this to 'arm64' if you have an ARM Chromebook."
   echo "  release      - Set this to either 'bookworm' or 'unstable' to build for Debian stable/unstable."
   echo "  distro       - The Linux distro to use. This should be either 'debian', 'ubuntu', or 'alpine'."
-  echo "  luks         - Set this to 'true' to enable full-drive encryption."
+  echo "  luks         - Set this to 'true' to enable full-drive encryption. Currently not available on arm64-based chromebooks."
 }
 
 assert_root
@@ -51,6 +51,11 @@ fi
 if grep -q "$board" <<< "$bad_boards" > /dev/null; then
   print_error "Warning: you are attempting to build Shimboot for a board which has a shim that includes a fix for the sh1mmer vulnerability. The resulting image will not boot if you are enrolled."
   read -p "Press [enter] to continue "
+fi
+
+if [[ "$luks" == "true" && "$arch" == "arm64" ]]; then
+  print_error "Uh-oh, you are trying to use luks2 encryption on an arm64 board. Unfortunately, rootfs encryption is not available on arm64-based boards at this time. :("
+  exit
 fi
 
 kernel_arch="$(uname -m)"
