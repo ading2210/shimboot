@@ -132,7 +132,7 @@ populate_partitions() {
 
   #write rootfs to image
   local rootfs_mount=/tmp/new_rootfs
-  if [ $luks_enabled ]; then
+  if [ "$luks_enabled" == "true" ]; then
     safe_mount /dev/mapper/rootfs $rootfs_mount
   else
     safe_mount "${image_loop}p4" $rootfs_mount
