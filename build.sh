@@ -47,7 +47,7 @@ if [ "$luks_enabled" = 'true' ]; then
   print_info "downloading shimboot-binaries"
   temp_shimboot_binaries="/tmp/shimboot-binaries.tar.gz"
   #chunks the tar into /tmp before extracting cryptsetup, might cause issues on interrupt during extraction
-  wget -q --show-progress https://api.github.com/repos/ading2210/shimboot-binaries/releases/latest -O "$temp_shimboot_binaries"
+  wget -q --show-progress "https://github.com/ading2210/shimboot-binaries/releases/latest/download/shimboot-binaries.tar.gz" -O "$temp_shimboot_binaries"
   #extract cryptsetup and delete the archive
   tar -xf "$temp_shimboot_binaries" -C $(realpath -m "bootloader/bin/") "cryptsetup"
   rm "$temp_shimboot_binaries"
