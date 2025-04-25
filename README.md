@@ -53,7 +53,7 @@ The main advantages of this approach are that you don't need to touch the device
 Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for the bootloader to recognize them.
 
 ## Status:
-Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. ARM Chromebooks are not supported at the moment.
+Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. 
 
 ### Device Compatibility Table:
 | Board Name                                       | X11               | Wifi              | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
@@ -147,11 +147,20 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs directory into `patch_rootfs.sh` and `build.sh`.
 
 Here is a list of distros that are supported out of the box:
-- Debian 12
+- Debian 12 (Bookworm) - This is the default.
+- Debian 13 (Trixie)
 - Debian Unstable
 - Alpine Linux
 
 PRs to enable support for other distros are welcome. 
+
+Debian Sid (unstable rolling release) and Trixie (upcoming Debian 13 release) is also supported if you just want newer packages, and you can install it by passing an argument to `build_complete.sh`: 
+```bash
+sudo ./build_complete.sh dedede release=unstable
+```
+```bash
+sudo ./build_complete.sh dedede release=trixie
+```
 
 Debian Sid (the rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_complete.sh`: 
 ```bash
@@ -194,6 +203,8 @@ You may need to change `i965` to `i915` (or `r100`/`r200` for AMD hardware), dep
 
 For ARM Chromebooks, you may have to tweak the [Xorg configuration](https://xkcd.com/963/) instead.
 
+You can also try switching between X11 and Wayland, but this requires a different desktop environment than XFCE.
+
 #### Can the rootfs be compressed to save space?
 Compressing the Debian rootfs with a squashfs is supported, and you can do this by running the regular Debian rootfs through `./build_squashfs.sh`. For example:
 ```bash
@@ -221,6 +232,16 @@ To get Steam running, install and run it normally. It will fail and show a messa
 
 #### I broke something and the system does not boot anymore.
 If the rootfs fails to boot normally, you may use the rescue mode in the bootloader to enter a shell so you can debug and fix things. You can enter this mode by typing in `rescue <selection>` in the bootloader prompt, replacing `<selection>` with the number that is displayed for your rootfs. For example, `rescue 3` will enter rescue mode for the third boot option (usually Debian).
+
+#### I see a bunch of 404 errors when I run `apt update`.
+This is normal and completely harmless. The Shimboot package repository does not sign its packages, and it doesn't include translation metadata. This is not required for the functionality of the repo, and can be ignored.
+
+#### I want to install another desktop without building an image myself.
+You can replace the desktop environment in your existing Shimboot installation easily, using APT. For example:
+```bash
+sudo apt install task-cinnamon-desktop *xfce*- thunar- --autoremove
+```
+Replace `task-cinnamon-desktop` with the DE that you want to install (such as `task-kde-desktop`). This installs the other DE and uninstalls XFCE at the same time. Then once the installation has finished, reboot the system.
 
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
