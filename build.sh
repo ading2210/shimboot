@@ -12,7 +12,7 @@ print_help() {
   echo "  quiet - Don't use progress indicators which may clog up log files."
   echo "  arch  - Set this to 'arm64' to specify that the shim is for an ARM chromebook."
   echo "  name  - The name for the shimboot rootfs partition."
-  echo "  luks  - Set this to 'true' to build an encrypted image. Currently not available on arm devices."
+  echo "  luks  - Set this argument to encrypt the rootfs partition. Currently not available on arm64-based chromebooks."
 }
 
 assert_root
@@ -29,20 +29,20 @@ arch="${args['arch']}"
 bootloader_part_name="${args['name']}"
 luks_enabled="${args['luks']}"
 
-if [[ "$luks_enabled" == "true" && "$arch" == "arm64" ]]; then
+if [[ "$luks_enabled" && "$arch" == "arm64" ]]; then
   print_error "Uh-oh, you are trying to use luks2 encryption on an arm64 board. Unfortunately, rootfs encryption is not available on arm64-based boards at this time. :("
   exit
 fi
 
-if [ "$luks_enabled" = 'true' ]; then
+if [ "$luks_enabled" ]; then
   while true; do
-      read -p "Enter the LUKS2 password for the image: " crypt_password
-      read -p "Retype the password: " crypt_password_confirm
-      if [ "$crypt_password" = "$crypt_password_confirm" ]; then
-          break
-      else
-          echo "Passwords do not match. Please try again."
-      fi
+    read -p "Enter the LUKS2 password for the image: " crypt_password
+    read -p "Retype the password: " crypt_password_confirm
+    if [ "$crypt_password" = "$crypt_password_confirm" ]; then
+      break
+    else
+      echo "Passwords do not match. Please try again."
+    fi
   done
   print_info "downloading shimboot-binaries"
   temp_shimboot_binaries="/tmp/shimboot-binaries.tar.gz"

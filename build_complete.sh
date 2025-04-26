@@ -15,7 +15,7 @@ print_help() {
   echo "  arch         - The CPU architecture to build the shimboot image for. Set this to 'arm64' if you have an ARM Chromebook."
   echo "  release      - Set this to either 'bookworm', 'trixie', or 'unstable' to build for Debian 12, 13, or unstable."
   echo "  distro       - The Linux distro to use. This should be either 'debian', 'ubuntu', or 'alpine'."
-  echo "  luks         - Set this to 'true' to enable full-drive encryption. Currently not available on arm64-based chromebooks."
+  echo "  luks         - Set this argument to encrypt the rootfs partition. Currently not available on arm64-based chromebooks."
 }
 
 assert_root
@@ -33,7 +33,7 @@ data_dir="${args['data_dir']}"
 arch="${args['arch']-amd64}"
 release="${args['release']}"
 distro="${args['distro']-debian}"
-luks="${args['luks']-false}"
+luks="${args['luks']}"
 
 #a list of all arm board names
 arm_boards="

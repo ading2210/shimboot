@@ -107,7 +107,7 @@ populate_partitions() {
   local bootloader_dir=$(realpath -m "${2}")
   local rootfs_dir=$(realpath -m "${3}")
   local quiet="$4"
-  local luks_enabled=$5
+  local luks_enabled="$5"
 
   #figure out if we are on a stable release
   local git_tag="$(git tag -l --contains HEAD)"
@@ -132,7 +132,7 @@ populate_partitions() {
 
   #write rootfs to image
   local rootfs_mount=/tmp/new_rootfs
-  if [ "$luks_enabled" == "true" ]; then
+  if [ "$luks_enabled" ]; then
     safe_mount /dev/mapper/rootfs $rootfs_mount
   else
     safe_mount "${image_loop}p4" $rootfs_mount
@@ -144,7 +144,7 @@ populate_partitions() {
     copy_progress $rootfs_dir $rootfs_mount
   fi
   umount $rootfs_mount
-  if [ $luks_enabled ]; then
+  if [ "$luks_enabled" ]; then
     cryptsetup close rootfs
   fi
 }
