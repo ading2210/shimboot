@@ -1,5 +1,4 @@
 #!/bin/bash
-
 create_loop() {
   local loop_device=$(losetup -f)
   if [ ! -b "$loop_device" ]; then
@@ -21,7 +20,6 @@ partition_disk() {
   local image_path=$(realpath -m "${1}")
   local bootloader_size="$2"
   local rootfs_name="$3"
-
   #create partition table with fdisk
   ( 
     echo g #new gpt disk label
@@ -84,6 +82,8 @@ safe_mount() {
 create_partitions() {
   local image_loop=$(realpath -m "${1}")
   local kernel_path=$(realpath -m "${2}")
+  local is_luks="${3}"
+  local crypt_password="${4}"
 
   #create stateful
   mkfs.ext4 "${image_loop}p1"
@@ -93,7 +93,13 @@ create_partitions() {
   #create bootloader partition
   mkfs.ext2 "${image_loop}p3"
   #create rootfs partition
-  mkfs.ext4 "${image_loop}p4"
+  if [ "$is_luks" == "true" ]; then
+    echo "$crypt_password" | cryptsetup luksFormat "${image_loop}p4"
+    echo "$crypt_password" | cryptsetup luksOpen "${image_loop}p4" rootfs
+    mkfs.ext4 /dev/mapper/rootfs
+  else 
+    mkfs.ext4 "${image_loop}p4"
+  fi
 }
 
 populate_partitions() {
@@ -101,6 +107,7 @@ populate_partitions() {
   local bootloader_dir=$(realpath -m "${2}")
   local rootfs_dir=$(realpath -m "${3}")
   local quiet="$4"
+  local luks_enabled=$5
 
   #figure out if we are on a stable release
   local git_tag="$(git tag -l --contains HEAD)"
@@ -125,13 +132,21 @@ populate_partitions() {
 
   #write rootfs to image
   local rootfs_mount=/tmp/new_rootfs
-  safe_mount "${image_loop}p4" $rootfs_mount
+  if [ "$luks_enabled" == "true" ]; then
+    safe_mount /dev/mapper/rootfs $rootfs_mount
+  else
+    safe_mount "${image_loop}p4" $rootfs_mount
+  fi
+
   if [ "$quiet" ]; then
     cp -ar $rootfs_dir/* $rootfs_mount
   else
     copy_progress $rootfs_dir $rootfs_mount
   fi
   umount $rootfs_mount
+  if [ $luks_enabled ]; then
+    cryptsetup close rootfs
+  fi
 }
 
 create_image() {
@@ -144,7 +159,6 @@ create_image() {
   local total_size=$((1 + 32 + $bootloader_size + $rootfs_size))
   rm -rf "${image_path}"
   fallocate -l "${total_size}M" "${image_path}"
-
   partition_disk $image_path $bootloader_size $rootfs_name
 }
 
