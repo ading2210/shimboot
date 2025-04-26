@@ -194,7 +194,11 @@ download_shim() {
       fi
     fi
     print_info "downloading chunk $i / $chunk_count"
-    wget -c -q --show-progress "$chunk_url" -O "$chunk_path"
+    if [ ! "$quiet" ]; then
+      wget -c -q --show-progress "$chunk_url" -O "$chunk_path"
+    else
+      wget -c -q "$chunk_url" -O "$chunk_path"
+    fi
   done
 
   print_info "joining shim file chunks"
