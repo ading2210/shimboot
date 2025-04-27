@@ -93,7 +93,7 @@ create_partitions() {
   #create bootloader partition
   mkfs.ext2 "${image_loop}p3"
   #create rootfs partition
-  if [ "$is_luks" == "true" ]; then
+  if [ "$is_luks" ]; then
     echo "$crypt_password" | cryptsetup luksFormat "${image_loop}p4"
     echo "$crypt_password" | cryptsetup luksOpen "${image_loop}p4" rootfs
     mkfs.ext4 /dev/mapper/rootfs

@@ -12,8 +12,19 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-part_dev="$(findmnt -T / -no SOURCE)"
-disk_dev="$(lsblk --list --noheadings --paths --output PKNAME "$part_dev")"
+root_dev="$(findmnt -T / -no SOURCE)"
+luks="$(echo "$root_dev" | grep "/dev/mapper" || true)"
+
+if [ "$luks" ]; then
+  echo "Note: Root partition is encrypted."
+  kname_dev="$(lsblk --list --noheadings --paths --output KNAME "$root_dev")"
+  kname="$(basename "$kname_dev")"
+  part_dev="/dev/$(basename "/sys/class/block/$kname/slaves/"*)"
+else
+  part_dev="$root_dev"
+fi
+
+disk_dev="$(lsblk --list --noheadings --paths --output PKNAME "$part_dev" | head -n1)"
 part_num="$(echo "${part_dev#$disk_dev}" | tr -d 'p')"
 
 echo "Automatically detected root filesystem:"
@@ -30,8 +41,11 @@ df -h /
 
 echo
 echo "Expanding the partition and filesystem..."
-growpart "$disk_dev" "$part_num"
-resize2fs "$part_dev" 
+growpart "$disk_dev" "$part_num" || true
+if [ "$luks" ]; then
+  /bootloader/bin/cryptsetup resize "$root_dev"
+fi
+resize2fs "$root_dev" || true
 
 echo
 echo "After:"
