@@ -56,24 +56,25 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. 
 
 ### Device Compatibility Table:
-| Board Name                                       | X11               | Wifi              | Speakers | Backlight | Touchscreen | 3D Accel | Bluetooth | Webcam   |
-|------------------------------------------------  |-------------------|-------------------|----------|-----------|-------------|----------|-----------|----------|
-| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      |
-| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes               | yes      | yes       | yes         | yes      | yes       | yes      |
-| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes               | no       | yes       | yes         | yes      | yes       | yes      |
-| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup>  | yes               | untested | untested  | untested    | no       | untested  | untested |
-| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup>  | yes               | yes      | yes       | untested    | no       | untested  | untested |
-| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes               | no       | untested  | yes         | yes      | yes       | yes      |
-| [`grunt`](https://chrome100.dev/board/grunt)     | yes<sup>[4]</sup> | yes<sup>[3]</sup> | no       | yes       | yes         | yes      | yes       | yes      |
-| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes               | no       | yes       | untested    | no       | no        | yes      |
-| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | untested | yes       | untested    | no       | yes       | untested |
-| [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes      | yes       | yes      |
-| [`snappy`](https://chrome100.dev/board/snappy)   | yes               | yes               | yes      | yes       | yes         | yes      | yes       | yes      |
+| Board Name                                       | X11               | Wifi              | Speakers | Backlight | Touchscreen | 3D Accel          | Bluetooth | Webcam   |
+|------------------------------------------------  |-------------------|-------------------|----------|-----------|-------------|-------------------|-----------|----------|
+| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes               | no       | yes       | yes         | yes               | yes       | yes      |
+| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes               | yes      | yes       | yes         | yes               | yes       | yes      |
+| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes               | no       | yes       | yes         | yes               | yes       | yes      |
+| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup>  | yes               | untested | untested  | untested    | no                | untested  | untested |
+| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup>  | yes               | yes      | yes       | untested    | no                | untested  | untested |
+| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes               | no       | yes       | yes         | yes               | yes       | yes      |
+| [`grunt`](https://chrome100.dev/board/grunt)     | yes<sup>[4]</sup> | yes<sup>[3]</sup> | no       | yes       | yes         | yes               | yes       | yes      |
+| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes               | no       | yes       | untested    | no                | no        | yes      |
+| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | no       | yes       | yes         | yes<sup>[5]</sup> | yes       | yes      |
+| [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes               | yes       | yes      |
+| [`snappy`](https://chrome100.dev/board/snappy)   | yes               | yes               | yes      | yes       | yes         | yes               | yes       | yes      |
 
 <sup>1. The kernel is too old.</sup><br>
 <sup>2. 5ghz wifi networks do not work, but 2.4ghz networks do.</sup><br>
 <sup>3. You may need to compile the wifi driver from source. See issue #69.</sup><br>
-<sup>4. X11 and LightDM might have some graphical issues.</sup>
+<sup>4. X11 and LightDM might have some graphical issues.</sup><br>
+<sup>5. You need to use Wayland instead of X11.</sup>
 
 This table is incomplete. If you want to contribute a device compatibility report please create a new issue on the Github repository.
 
@@ -84,6 +85,8 @@ On all devices, expect the following features to work:
 On all devices, the following features will not work:
 - Suspend (disabled by the kernel)
 - Swap (disabled by the kernel)
+
+A possible workaround for audio issues is using a USB sound card. Certain "USB to headphone jack" adapters are complete sound cards, which are supported by Linux. See [issue #234](https://github.com/ading2210/shimboot/issues/234).
 
 ### TODO:
 - Finish Python TUI rewrite (see the `python` branch if you want to help with this)
@@ -160,11 +163,6 @@ sudo ./build_complete.sh dedede release=unstable
 ```
 ```bash
 sudo ./build_complete.sh dedede release=trixie
-```
-
-Debian Sid (the rolling release version of Debian) is also supported if you just want newer packages, and you can install it by passing an argument to `build_complete.sh`: 
-```bash
-sudo ./build_complete.sh dedede release=unstable
 ```
 
 There is also experimental support for Alpine Linux. The Alpine disk image is about half the size compared to Debian, although some applications are missing. Pass the `distro=alpine` to use it:
