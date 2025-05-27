@@ -174,9 +174,11 @@ download_shim() {
   local shim_url_path="$(echo "$boards_index" | grep "/$board/").manifest"
   local shim_url_dir="$(dirname "$shim_url_path")"
   local shim_manifest="$(curl --no-progress-meter "https://cdn.cros.download/$shim_url_path")"
-  local zip_size="$(echo "$shim_manifest" | head -n 1)"
+  local py_load_json="import json, sys; manifest = json.load(sys.stdin)"
+
+  local zip_size="$(echo "$shim_manifest" | python3 -c "$py_load_json; print(manifest['size'])")"
   local zip_size_pretty="$(echo "$zip_size" | numfmt --format %.2f --to=iec)"
-  local shim_chunks="$(echo "$shim_manifest" | tail -n +2)"
+  local shim_chunks="$(echo "$shim_manifest" | python3 -c "$py_load_json; print('\\n'.join(manifest['chunks']))")"
   local chunk_count="$(echo "$shim_chunks" | wc -l)"
   local chunk_size="$((25 * 1024 * 1024))"
 
