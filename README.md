@@ -30,7 +30,7 @@ Shimboot is a collection of scripts for patching a Chrome OS RMA shim to serve a
 - Works on enterprise enrolled devices
 - Can boot Chrome OS with no restrictions (useful for enrolled devices)
 - Nearly full device compatibility
-- Optional disk compression 
+- Optional disk compression and encryption
 - Multiple desktop environments supported
 
 ## About:
@@ -69,6 +69,7 @@ Driver support depends on the device you are using shimboot on. The `patch_rootf
 | [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | no       | yes       | yes         | yes<sup>[5]</sup> | yes       | yes      |
 | [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes               | yes       | yes      |
 | [`snappy`](https://chrome100.dev/board/snappy)   | yes               | yes               | yes      | yes       | yes         | yes               | yes       | yes      |
+| [`hana`](https://chrome100.dev/board/hana)       | yes               | yes               | no       | yes       | untested    | yes               | yes       | no       |
 
 <sup>1. The kernel is too old.</sup><br>
 <sup>2. 5ghz wifi networks do not work, but 2.4ghz networks do.</sup><br>
@@ -100,12 +101,12 @@ PRs and contributions are welcome to help implement these features.
 ## Usage:
 
 ### Prerequisites:
-- A separate Linux PC for the build process (preferably something Debian-based)
+- If building from source, a separate Linux PC for the build process (preferably something Debian-based)
   - WSL2 is supported if you are on Windows
   - Github Codespaces is not supported at the moment
+  - At least 20GB of free disk space is needed on the build device
 - A USB drive that is at least 8GB in size
   - Cheap USB 2.0 drives typically won't work well due to their slow speeds
-- At least 20GB of free disk space
 
 ### Video Tutorial:
 [![thumbnail of the tutorial youtube video](https://img.youtube.com/vi/v327np19RXg/mqdefault.jpg)](https://www.youtube.com/watch?v=v327np19RXg)
@@ -122,7 +123,7 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 [Prebuilt images](https://github.com/ading2210/shimboot/releases) are available if you don't have a suitable device to run the build on.
 
 <details>
-  <summary><b>Alternatively, you can run each of the steps manually:</b></summary>
+  <summary><b>(not recommended) Alternatively, you can run each of the steps manually:</b></summary>
   
   1. Grab a Chrome OS RMA Shim from somewhere. Most of them have already been leaked and aren't too difficult to find.
   2. Download a Chrome OS [recovery image](https://chromiumdash.appspot.com/serving-builds?deviceCategory=ChromeOS) for your board.
@@ -150,7 +151,7 @@ Using any Linux distro is possible, provided that you apply the [proper patches]
 Here is a list of distros that are supported out of the box:
 - Debian 12 (Bookworm) - This is the default.
 - Debian 13 (Trixie)
-- Debian Unstable
+- Debian Unstable (Sid)
 - Alpine Linux
 
 PRs to enable support for other distros are welcome. 
@@ -212,15 +213,6 @@ Any writes to the squashfs will persist, but they will not be compressed when sa
 
 On the regular XFCE4 image, this brings the rootfs size down to 1.2GB from 3.5GB.
 
-#### I can't connect to some wifi networks.
-You may have to run these commands in order to connect to certain networks:
-```
-$ nmcli connection edit <your connection name>
-> set 802-11-wireless-security.pmf disable
-> save
-> activate
-```
-
 #### Steam doesn't work.
 Steam should be installed using the `sudo apt install steam` command, however it doesn't work out of the box due to security features in the shim kernel preventing the `bwrap` library from working. See [issue #12](https://github.com/ading2210/shimboot/issues/26#issuecomment-2151893062) for more info. 
 
@@ -239,13 +231,37 @@ sudo apt install task-cinnamon-desktop *xfce*- thunar- --autoremove
 ```
 Replace `task-cinnamon-desktop` with the DE that you want to install (such as `task-kde-desktop`). This installs the other DE and uninstalls XFCE at the same time. Then once the installation has finished, reboot the system.
 
+#### My Chromebook is enrolled and it doesn't recognize the USB drive.
+Chromebooks that were manufactured after early 2023 contain a patch in the read-only firmware that prevents Shimboot from booting, even if you switch to dev mode. This only affects enrolled devices, and there is no workaround if your device is affected. 
+
+#### How can I encrypt my Shimboot USB?
+You can encrypt the root partition using the `luks` option when building the image. For instance:
+```bash
+sudo ./build_complete.sh corsola luks=1
+```
+The script will prompt you to set an encryption password. When booting the encrypted image, the Shimboot bootloader will prompt you to enter this password.
+
+#### I can't connect to some wifi networks.
+You may have to run these commands in order to connect to certain networks:
+```
+$ nmcli connection edit <your connection name>
+> set 802-11-wireless-security.pmf disable
+> save
+> activate
+```
+
 ## Copyright:
-Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
+Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). 
+
+Unless otherwise indicated, all code has been written by me, [ading2210](https://github.com/ading2210).
+
+Other contributors:
+- [@a1g0r1thm9](https://github.com/a1g0r1thm9) - LUKS2 encryption feature ([PR #300](https://github.com/ading2210/shimboot/pull/300))
 
 ### Copyright Notice:
 ```
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
-Copyright (C) 2023 ading2210
+Copyright (C) 2025 ading2210
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -104,7 +104,7 @@ print_license() {
 Shimboot ${shimboot_version}${suffix}
 
 ading2210/shimboot: Boot desktop Linux from a Chrome OS RMA shim.
-Copyright (C) 2023 ading2210
+Copyright (C) 2025 ading2210
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
