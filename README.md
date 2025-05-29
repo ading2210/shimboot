@@ -53,7 +53,7 @@ The main advantages of this approach are that you don't need to touch the device
 Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for the bootloader to recognize them.
 
 ## Status:
-Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. 
+Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. Both x86_64 and ARM64 chromebooks are supported.
 
 ### Device Compatibility Table:
 | Board Name                                       | X11               | Wifi              | Speakers | Backlight | Touchscreen | 3D Accel          | Bluetooth | Webcam   |
@@ -90,8 +90,6 @@ A possible workaround for audio issues is using a USB sound card. Certain "USB t
 
 ### TODO:
 - Finish Python TUI rewrite (see the `python` branch if you want to help with this)
-- Transparent disk compression
-- Full disk encryption
 - Support for more distros (Ubuntu and Arch maybe)
 - Eliminate binwalk dependency
 - Get audio to work on dedede

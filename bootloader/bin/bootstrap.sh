@@ -295,7 +295,7 @@ boot_target() {
   echo "moving mounts to newroot"
   mkdir /newroot
   #use cryptsetup to check if the rootfs is encrypted
-  if cryptsetup luksDump "$target" >/dev/null 2>&1; then
+  if [ -x "$(command -v cryptsetup)" ] && cryptsetup luksDump "$target" >/dev/null 2>&1; then
     cryptsetup open $target rootfs
     mount /dev/mapper/rootfs /newroot
   else
