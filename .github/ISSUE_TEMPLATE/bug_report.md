@@ -8,6 +8,8 @@ assignees: ''
 ---
 
 <!--
+Important: Please do not delete this issue template!
+
 Before making a bug report please check that:
 - The USB drive/SD card you are using isn't faulty
   - Dirt cheap USB 2.0 drives or fake high capacity ones will not work
