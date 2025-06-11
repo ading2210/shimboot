@@ -73,7 +73,7 @@ Driver support depends on the device you are using shimboot on. The `patch_rootf
 
 <sup>1. The kernel is too old.</sup><br>
 <sup>2. 5ghz wifi networks do not work, but 2.4ghz networks do.</sup><br>
-<sup>3. You may need to compile the wifi driver from source. See issue #69.</sup><br>
+<sup>3. You may need to compile the wifi driver from source. See [#69](https://github.com/ading2210/shimboot/issues/69) and [#317](https://github.com/ading2210/shimboot/issues/317).</sup><br>
 <sup>4. X11 and LightDM might have some graphical issues.</sup><br>
 <sup>5. You need to use Wayland instead of X11.</sup>
 
