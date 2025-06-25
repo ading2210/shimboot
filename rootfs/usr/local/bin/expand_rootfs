@@ -69,6 +69,7 @@ ExecStart=/usr/local/bin/fscheck
 WantedBy=multi-user.target
 EOF
   cat <<EOF > "/usr/local/bin/fscheck"
+#!/bin/bash
 tune2fs -c "$mountcount" "$root_dev" 
 systemctl disable filesystem-check
 rm /usr/local/bin/fscheck
