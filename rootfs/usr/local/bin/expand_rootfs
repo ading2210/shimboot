@@ -50,7 +50,7 @@ resize2fs "$root_dev" || true
 mountcount=$(dumpe2fs "$root_dev" 2>/dev/null | awk -F': *' '/Maximum mount count/ { print $2 }') || true
 
 echo "Setting flags to run filesystem check on next boot..."
-tune2fs -c 1 "$root_dev"
+tune2fs -c 1 "$root_dev" || true
 
 if [ ! "$(pidof systemd)" ]; then
   echo -e "Please run sudo tune2fs -c ${mountcount} ${root_dev} on the next boot."
