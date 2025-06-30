@@ -179,7 +179,7 @@ The valid values for this argument are: `gnome`, `xfce`, `kde`, `lxde`, `gnome-f
 #### Will this prevent me from using Chrome OS normally?
 Shimboot does not touch the internal storage at all, so you will be able to use Chrome OS as if nothing happened. However, if you are on an enterprise enrolled device, booting Chrome OS again will force a powerwash due to the attempted switch into developer mode.
 
-#### How can I boot an unenrolled chromeOS envoirment?  
+#### How can I boot an unenrolled chromeOS environment?  
 You can use the built in script by [HarryJarry1](https://github.com/HarryJarry1) to do this.  Enter vt2, login as root and run:
 ```bash
 bash /bootloader/oobeskip.sh
