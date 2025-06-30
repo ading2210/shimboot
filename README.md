@@ -182,7 +182,7 @@ Shimboot does not touch the internal storage at all, so you will be able to use 
 #### How can I boot an unenrolled chromeOS envoirment?  
 You can use the built in script by [HarryJarry1](https://github.com/HarryJarry1) to do this.  Enter vt2, login as root and run:
 ```bash
-/bootloader/oobeskip.sh
+bash /bootloader/oobeskip.sh
 ```
 #### Can I unplug the USB drive while using Debian?
 By default, this is not possible. However, you can simply copy your Debian rootfs onto your internal storage by first using `fdisk` to repartition it, using `dd` to copy the partition, and `resize2fs` to have it take up the entire drive. In the future, loading the OS to RAM may be supported, but this isn't a priority at the moment. You can also just blindly copy the contents of your Shimboot USB to the internal storage without bothering to repartition:
