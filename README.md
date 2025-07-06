@@ -179,6 +179,11 @@ The valid values for this argument are: `gnome`, `xfce`, `kde`, `lxde`, `gnome-f
 #### Will this prevent me from using Chrome OS normally?
 Shimboot does not touch the internal storage at all, so you will be able to use Chrome OS as if nothing happened. However, if you are on an enterprise enrolled device, booting Chrome OS again will force a powerwash due to the attempted switch into developer mode.
 
+#### How can I boot an unenrolled chromeOS environment?  
+You can use the built in script by [HarryJarry1](https://github.com/HarryJarry1) to do this.  Boot into your local chromeOS root (NOT DEBIAN), enter vt2 (ctrl + alt + f2 (often refresh, or back arrow), login as root by simplying typing in "root" and pressing enter into the screeen that appears and run:
+```bash
+bash /bootloader/opt/oobeskip.sh
+```
 #### Can I unplug the USB drive while using Debian?
 By default, this is not possible. However, you can simply copy your Debian rootfs onto your internal storage by first using `fdisk` to repartition it, using `dd` to copy the partition, and `resize2fs` to have it take up the entire drive. In the future, loading the OS to RAM may be supported, but this isn't a priority at the moment. You can also just blindly copy the contents of your Shimboot USB to the internal storage without bothering to repartition:
 ```bash
