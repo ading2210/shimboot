@@ -56,20 +56,20 @@ Note that rootfs partitions have to be named `shimboot_rootfs:<partname>` for th
 Driver support depends on the device you are using shimboot on. The `patch_rootfs.sh` script attempts to copy all the firmware and drivers from the shim and recovery image into the rootfs, so expect most things to work on other boards. Both x86_64 and ARM64 chromebooks are supported.
 
 ### Device Compatibility Table:
-| Board Name                                       | X11               | Wifi              | Speakers | Backlight | Touchscreen | 3D Accel          | Bluetooth | Webcam   |
-|------------------------------------------------  |-------------------|-------------------|----------|-----------|-------------|-------------------|-----------|----------|
-| [`dedede`](https://chrome100.dev/board/dedede)   | yes               | yes               | no       | yes       | yes         | yes               | yes       | yes      |
-| [`octopus`](https://chrome100.dev/board/octopus) | yes               | yes               | yes      | yes       | yes         | yes               | yes       | yes      |
-| [`nissa`](https://chrome100.dev/board/nissa)     | yes               | yes               | no       | yes       | yes         | yes               | yes       | yes      |
-| [`reks`](https://chrome100.dev/board/reks)       | no<sup>[1]</sup>  | yes               | untested | untested  | untested    | no                | untested  | untested |
-| [`kefka`](https://chrome100.dev/board/kefka)     | no<sup>[1]</sup>  | yes               | yes      | yes       | untested    | no                | untested  | untested |
-| [`zork`](https://chrome100.dev/board/zork)       | yes               | yes               | no       | yes       | yes         | yes               | yes       | yes      |
-| [`grunt`](https://chrome100.dev/board/grunt)     | yes<sup>[4]</sup> | yes<sup>[3]</sup> | no       | yes       | yes         | yes               | yes       | yes      |
-| [`jacuzzi`](https://chrome100.dev/board/jacuzzi) | yes               | yes               | no       | yes       | untested    | no                | no        | yes      |
-| [`corsola`](https://chrome100.dev/board/corsola) | yes               | yes               | no       | yes       | yes         | yes<sup>[5]</sup> | yes       | yes      |
-| [`hatch`](https://chrome100.dev/board/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes               | yes       | yes      |
-| [`snappy`](https://chrome100.dev/board/snappy)   | yes               | yes               | yes      | yes       | yes         | yes               | yes       | yes      |
-| [`hana`](https://chrome100.dev/board/hana)       | yes               | yes               | no       | yes       | untested    | yes               | yes       | no       |
+| Board Name                                          | X11               | Wifi              | Speakers | Backlight | Touchscreen | 3D Accel          | Bluetooth | Webcam   |
+|-----------------------------------------------------|-------------------|-------------------|----------|-----------|-------------|-------------------|-----------|----------|
+| [`dedede`](https://cros.download/recovery/dedede)   | yes               | yes               | no       | yes       | yes         | yes               | yes       | yes      |
+| [`octopus`](https://cros.download/recovery/octopus) | yes               | yes               | yes      | yes       | yes         | yes               | yes       | yes      |
+| [`nissa`](https://cros.download/recovery/nissa)     | yes               | yes               | no       | yes       | yes         | yes               | yes       | yes      |
+| [`reks`](https://cros.download/recovery/reks)       | no<sup>[1]</sup>  | yes               | untested | untested  | untested    | no                | untested  | untested |
+| [`kefka`](https://cros.download/recovery/kefka)     | no<sup>[1]</sup>  | yes               | yes      | yes       | untested    | no                | untested  | untested |
+| [`zork`](https://cros.download/recovery/zork)       | yes               | yes               | no       | yes       | yes         | yes               | yes       | yes      |
+| [`grunt`](https://cros.download/recovery/grunt)     | yes<sup>[4]</sup> | yes<sup>[3]</sup> | no       | yes       | yes         | yes               | yes       | yes      |
+| [`jacuzzi`](https://cros.download/recovery/jacuzzi) | yes               | yes               | no       | yes       | untested    | no                | no        | yes      |
+| [`corsola`](https://cros.download/recovery/corsola) | yes               | yes               | no       | yes       | yes         | yes<sup>[5]</sup> | yes       | yes      |
+| [`hatch`](https://cros.download/recovery/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes               | yes       | yes      |
+| [`snappy`](https://cros.download/recovery/snappy)   | yes               | yes               | yes      | yes       | yes         | yes               | yes       | yes      |
+| [`hana`](https://cros.download/recovery/hana)       | yes               | yes               | no       | yes       | untested    | yes               | yes       | no       |
 
 <sup>1. The kernel is too old.</sup><br>
 <sup>2. 5ghz wifi networks do not work, but 2.4ghz networks do.</sup><br>
@@ -114,7 +114,7 @@ PRs and contributions are welcome to help implement these features.
 [@blueiceyt](https://www.youtube.com/channel/UC2yMjQu-NwJSQb0tRclQMYg) made a nice [video tutorial](https://www.youtube.com/watch?v=v327np19RXg) for Shimboot. It's a lot easier to understand than the instructions on this page, and it'll cover most use cases.
 
 ### Build Instructions:
-1. Find the board name of your Chromebook. You can search for the model name on [chrome100.dev](https://chrome100.dev/).
+1. Find the board name of your Chromebook. You can search for the model name on [cros.download](https://cros.download/recovery).
 2. Clone this repository and cd into it.
 3. Run `sudo ./build_complete.sh <board_name>` to download the required data and build the disk image. 
 
