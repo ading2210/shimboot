@@ -23,6 +23,7 @@ parse_args "$@"
 output_path="$(realpath -m "${1}")"
 shim_path="$(realpath -m "${2}")"
 rootfs_dir="$(realpath -m "${3}")"
+base_dir="$(realpath -m  $(dirname "$0"))"
 
 quiet="${args['quiet']}"
 arch="${args['arch']-amd64}"
@@ -44,9 +45,9 @@ if [ "$luks_enabled" ]; then
   #download the tar into /tmp before extracting cryptsetup
   wget -q --show-progress "https://github.com/ading2210/shimboot-binaries/releases/latest/download/shimboot_binaries_$arch.tar.gz" -O "$temp_shimboot_binaries"
   #extract cryptsetup and delete the archive
-  tar -xf "$temp_shimboot_binaries" -C $(realpath -m "bootloader/bin/") "cryptsetup"
+  tar -xf "$temp_shimboot_binaries" -C "$base_dir/bootloader/bin" "cryptsetup"
   rm "$temp_shimboot_binaries"
-  chmod +x "$(realpath -m "bootloader/bin/")/cryptsetup"
+  chmod +x "$base_dir/bootloader/bin/cryptsetup"
 fi
 
 print_info "reading the shim image"

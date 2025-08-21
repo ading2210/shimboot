@@ -149,8 +149,8 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs directory into `patch_rootfs.sh` and `build.sh`.
 
 Here is a list of distros that are supported out of the box:
-- Debian 12 (Bookworm) - This is the default.
-- Debian 13 (Trixie)
+- Debian 12 (Bookworm)
+- Debian 13 (Trixie) - This is the default.
 - Debian Unstable (Sid)
 - Alpine Linux
 

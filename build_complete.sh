@@ -98,7 +98,7 @@ sigint_handler() {
 }
 trap sigint_handler SIGINT
 
-shim_url="" #set this if you want to download from a third party mirror
+shim_url="https://dl.cros.download/files/$board/$board.zip"
 boards_url="https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=ChromeOS"
 
 if [ -z "$data_dir" ]; then
@@ -168,55 +168,6 @@ download_and_unzip() {
   fi
 }
 
-download_shim() {
-  print_info "downloading shim file manifest"
-  local boards_index="$(curl --no-progress-meter "https://cdn.cros.download/boards.txt")"
-  local shim_url_path="$(echo "$boards_index" | grep "/$board/").manifest"
-  local shim_url_dir="$(dirname "$shim_url_path")"
-  local shim_manifest="$(curl --no-progress-meter "https://cdn.cros.download/$shim_url_path")"
-  local py_load_json="import json, sys; manifest = json.load(sys.stdin)"
-
-  local zip_size="$(echo "$shim_manifest" | python3 -c "$py_load_json; print(manifest['size'])")"
-  local zip_size_pretty="$(echo "$zip_size" | numfmt --format %.2f --to=iec)"
-  local shim_chunks="$(echo "$shim_manifest" | python3 -c "$py_load_json; print('\\n'.join(manifest['chunks']))")"
-  local chunk_count="$(echo "$shim_chunks" | wc -l)"
-  local chunk_size="$((25 * 1024 * 1024))"
-
-  print_info "downloading shim file chunks (total $zip_size_pretty across $chunk_count chunks)"
-  mkdir -p "$shim_dir"
-  local i="0"
-  for shim_chunk in $shim_chunks; do
-    local chunk_url="https://cdn.cros.download/$shim_url_dir/$shim_chunk"
-    local chunk_path="$shim_dir/$shim_chunk"
-    local i="$(($i + 1))"
-    if [ -f "$chunk_path" ]; then
-      local existing_size="$(du -b "$chunk_path" | cut -f1)"
-      if [ "$existing_size" = "$chunk_size" ]; then
-        continue
-      fi
-    fi
-    print_info "downloading chunk $i / $chunk_count"
-    if [ ! "$quiet" ]; then
-      wget -c -q --show-progress "$chunk_url" -O "$chunk_path"
-    else
-      wget -c -q "$chunk_url" -O "$chunk_path"
-    fi
-  done
-
-  print_info "joining shim file chunks"
-  cleanup_path="$shim_zip"
-  if [ ! -f "$shim_bin" ]; then
-    cat "$shim_dir/"* | pv -s "$zip_size" > "$shim_zip"
-    rm -rf "$shim_dir"
-  fi
-  cleanup_path=""
-
-  print_info "extracting shim file"
-  if [ ! -f "$shim_bin" ]; then
-    extract_zip "$shim_zip" "$shim_bin"
-  fi
-}
-
 retry_cmd() {
   local cmd="$@"
   for i in 1 2 3 4 5; do
@@ -229,11 +180,7 @@ download_and_unzip "$reco_url" "$reco_zip" "$reco_bin"
 
 print_title "downloading shim image"
 if [ ! -f "$shim_bin" ]; then
-  if [ "$shim_url" ]; then
-    download_and_unzip "$shim_url" "$shim_zip" "$shim_bin"
-  else
-    download_shim "$shim_url" "$shim_zip" "$shim_bin"
-  fi
+  download_and_unzip "$shim_url" "$shim_zip" "$shim_bin"
 fi
 
 print_title "building $distro rootfs"
@@ -247,7 +194,7 @@ if [ ! "$rootfs_dir" ]; then
   mkdir -p $rootfs_dir
 
   if [ "$distro" = "debian" ]; then
-    release="${release:-bookworm}"
+    release="${release:-trixie}"
   elif [ "$distro" = "ubuntu" ]; then
     release="${release:-noble}"
   elif [ "$distro" = "alpine" ]; then
@@ -262,7 +209,7 @@ if [ ! "$rootfs_dir" ]; then
     if [ ! -f "/usr/share/debootstrap/scripts/$release" ]; then
       print_info "installing newer debootstrap version"
       mirror_url="https://deb.debian.org/debian/pool/main/d/debootstrap/"
-      deb_file="$(curl "https://deb.debian.org/debian/pool/main/d/debootstrap/" | pcregrep -o1 'href="(debootstrap_.+?\.deb)"' | tail -n1)"
+      deb_file="$(wget -q -O - "https://deb.debian.org/debian/pool/main/d/debootstrap/" | pcregrep -o1 'href="(debootstrap_.+?\.deb)"' | tail -n1)"
       deb_url="${mirror_url}${deb_file}"
       wget -q --show-progress "$deb_url" -O "/tmp/$deb_file"
       apt-get install -y "/tmp/$deb_file"
