@@ -16,9 +16,14 @@ print_help() {
 }
 
 assert_root
-assert_deps "cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk lz4"
+assert_deps "cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk lz4 7z"
 assert_args "$3"
 parse_args "$@"
+
+if ! supported_binwalk; then 
+  print_error "your version of binwalk is unsupported. you need binwalk 2.3.4 or older"
+  exit 1
+fi
 
 output_path="$(realpath -m "${1}")"
 shim_path="$(realpath -m "${2}")"

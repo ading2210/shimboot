@@ -250,6 +250,20 @@ $ nmcli connection edit <your connection name>
 > activate
 ```
 
+#### My binwalk version is unsupported.
+
+[Binwalk](https://github.com/ReFirmLabs/binwalk) is a tool that the Shimboot build scripts use to find and extract the initramfs from the shim kernel. Newer versions of binwalk (v3.x and higher) were rewritten in Rust for performance reasons. However, the new version is still feature incomplete and does not work for Shimboot's purposes. 
+
+Therefore, you need the older version of binwalk (v2.x) which was written in Python. To install it, run the following commands:
+
+```
+git clone https://salsa.debian.org/pkg-security-team/binwalk.git -b debian/2.4.3+dfsg1-2 --depth=1
+cd binwalk
+sudo python3 setup.py install
+```
+
+See the old [binwalk install instructions](https://salsa.debian.org/pkg-security-team/binwalk/-/blob/debian/2.4.3+dfsg1-2/INSTALL.md?ref_type=tags) for more information.
+
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). 
 

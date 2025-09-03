@@ -26,6 +26,7 @@ custom_repo_domain="shimboot.ading.dev"
 sources_entry="deb [trusted=yes arch=$arch] ${custom_repo} ${release_name} main"
 
 export DEBIAN_FRONTEND="noninteractive"
+source /etc/profile
 
 #add shimboot repos
 echo -e "${sources_entry}\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list
