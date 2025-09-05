@@ -47,6 +47,37 @@ if [ "$luks" ]; then
 fi
 resize2fs "$root_dev" || true
 
+mountcount=$(dumpe2fs "$root_dev" 2>/dev/null | awk -F': *' '/Maximum mount count/ { print $2 }') || true
+
+echo "Setting flags to run filesystem check on next boot..."
+tune2fs -c 1 "$root_dev" || true
+
+if [ ! "$(pidof systemd)" ]; then
+  echo -e "Please run sudo tune2fs -c ${mountcount} ${root_dev} on the next boot."
+else
+ cat <<EOF > "/lib/systemd/system/filesystem-check.service"
+[Unit]
+Description=Disable filesystem check
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/usr/local/bin/fscheck
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  cat <<EOF > "/usr/local/bin/fscheck"
+#!/bin/bash
+tune2fs -c "$mountcount" "$root_dev" 
+systemctl disable filesystem-check
+rm /usr/local/bin/fscheck
+EOF
+  chmod +x /usr/local/bin/fscheck || true
+  systemctl enable filesystem-check || true
+fi
+
 echo
 echo "After:"
 df -h /
