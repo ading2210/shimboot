@@ -13,6 +13,11 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: remove snap
+        uses: ading2210/gh-actions-remove-snap@v1
+        with:
+          disable_man_db: 'true'
+
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
