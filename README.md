@@ -243,7 +243,7 @@ The script will prompt you to set an encryption password. When booting the encry
 
 #### I can't connect to some wifi networks.
 You may have to run these commands in order to connect to certain networks:
-```
+```bash
 $ nmcli connection edit <your connection name>
 > set 802-11-wireless-security.pmf disable
 > save
@@ -256,13 +256,31 @@ $ nmcli connection edit <your connection name>
 
 Therefore, you need the older version of binwalk (v2.x) which was written in Python. To install it, run the following commands:
 
-```
+```bash
 git clone https://salsa.debian.org/pkg-security-team/binwalk.git -b debian/2.4.3+dfsg1-2 --depth=1
 cd binwalk
 sudo python3 setup.py install
 ```
 
 See the old [binwalk install instructions](https://salsa.debian.org/pkg-security-team/binwalk/-/blob/debian/2.4.3+dfsg1-2/INSTALL.md?ref_type=tags) for more information.
+
+#### How do I upgrade to a newer version of Debian?
+
+The process is similar to [an upgrade on a normal system](https://wiki.debian.org/DebianUpgrade), although be sure to keep any old files if prompted. Here's a quick rundown:
+
+1. Backup any important data in case of a failure. Ensure that you have lots of free disk space, otherwise you will likely end up with a broken system
+2. `sources.list`. Assuming an upgrade from Bookworm to Trixie, start by changing your `/etc/apt/sources.list` to replace `bookworm` with `trixie`:
+```
+deb [trusted=yes arch=amd64] https://shimboot.ading.dev/debian trixie main
+deb http://deb.debian.org/debian trixie main contrib non-free-firmware non-free
+```
+3. Run the following commands
+```bash
+sudo apt update
+sudo apt upgrade --without-new-pkgs
+sudo apt full-upgrade
+reboot
+```
 
 ## Copyright:
 Shimboot is licensed under the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.txt). 
