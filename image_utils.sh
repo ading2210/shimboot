@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 create_loop() {
   local loop_device=$(losetup -f)
   if [ ! -b "$loop_device" ]; then

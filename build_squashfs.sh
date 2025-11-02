@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #build a rootfs that uses a squashfs + unionfs
 #consists of a minimal busybox system containing:
