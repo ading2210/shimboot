@@ -2,5 +2,10 @@
 
 #this script handles unmounting the console and killing frecon so that xorg can start
 
-umount -l /dev/console 
-pkill frecon-lite
+#wait for display manager to be ready before killing frecon
+#this helps prevent black screen issues on some devices (e.g., AMD Zork)
+sleep 2
+
+#unmount console and kill frecon
+umount -l /dev/console 2>/dev/null || true
+pkill frecon-lite 2>/dev/null || true
