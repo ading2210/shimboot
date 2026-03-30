@@ -1,0 +1,23 @@
+#!/bin/bash
+
+print_help() {
+  echo "Usage: sudo set_timezone timezone"
+  echo "    See https://nodatime.org/TimeZones for a list of valid time zones."
+  echo "    If you can't open the link by clicking it, try holding control and clicking."
+}
+
+#yoinked these two if statements from common.sh because i need them
+if [ "$EUID" -ne 0 ]; then
+  printf "\033[1;31mThis script needs to be run as root.\033[0m\n"
+  exit 1
+fi
+
+if [ -z "$1" ]; then
+  print_help
+  exit 1
+fi
+
+
+time_zone="$1"
+ln -sf "/usr/share/zoneinfo/${1}" "/etc/localtime"
+printf "Time zone changed to \033[1;32m${time_zone}\033[0m.\n"
