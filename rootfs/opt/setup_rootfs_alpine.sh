@@ -19,6 +19,9 @@ enable_root="$8"
 disable_base_pkgs="$9"
 arch="${10}"
 
+#set PATH to execute binaries
+export PATH="/sbin:/bin:/usr/bin:/usr/local/bin:/usr/sbin"
+
 #set hostname and apk repos
 setup-hostname "$hostname"
 setup-apkrepos \
