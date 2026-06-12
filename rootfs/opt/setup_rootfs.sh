@@ -25,10 +25,12 @@ custom_repo="https://shimboot.ading.dev/debian"
 custom_repo_domain="shimboot.ading.dev"
 sources_entry="deb [trusted=yes arch=$arch] ${custom_repo} ${release_name} main"
 
+security_repo_entry="deb http://deb.debian.org/debian-security ${release_name}-security main contrib non-free"
+
 export DEBIAN_FRONTEND="noninteractive"
 
 #add shimboot repos
-echo -e "${sources_entry}\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list
+echo -e "${sources_entry}\n${security_repo_entry}\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list
 tee -a /etc/apt/preferences << END
 Package: *
 Pin: origin ${custom_repo_domain}
@@ -39,6 +41,7 @@ END
 if [ "$arch" = "amd64" ]; then
   dpkg --add-architecture i386
 fi
+
 
 
 #install certs to prevent apt ssl errors
