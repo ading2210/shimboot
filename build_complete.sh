@@ -275,7 +275,8 @@ if [ ! "$rootfs_dir" ]; then
     username=user \
     user_passwd=user \
     arch=$arch \
-    distro=$distro
+    distro=$distro \
+    additional_repos="deb http://deb.debian.org/debian-security ${release}-security main contrib non-free"
 fi
 
 print_title "patching $distro rootfs"

@@ -20,17 +20,24 @@ user_passwd="$7"
 enable_root="$8"
 disable_base_pkgs="$9"
 arch="${10}"
+additional_repos="${11}"
 
 custom_repo="https://shimboot.ading.dev/debian"
 custom_repo_domain="shimboot.ading.dev"
 sources_entry="deb [trusted=yes arch=$arch] ${custom_repo} ${release_name} main"
 
-security_repo_entry="deb http://deb.debian.org/debian-security ${release_name}-security main contrib non-free"
+# parse repos argument
+IFS=',' read -r -a _repos <<< "$additional_repos"
+additional_repos_entry=""
+for r in "${_repos[@]}"; do
+  [ -z "$r" ] && continue
+  additional_repos_entry+="$r"$'\n'
+done
 
 export DEBIAN_FRONTEND="noninteractive"
 
 #add shimboot repos
-echo -e "${sources_entry}\n${security_repo_entry}\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list
+echo -e "${sources_entry}\n${additional_repos_entry}\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list
 tee -a /etc/apt/preferences << END
 Package: *
 Pin: origin ${custom_repo_domain}

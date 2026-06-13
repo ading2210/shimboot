@@ -16,6 +16,7 @@ print_help() {
   echo "  disable_base    - Disable the base packages such as zram, cloud-utils, and command-not-found."
   echo "  arch            - The CPU architecture to build the rootfs for."
   echo "  distro          - The Linux distro to use. This should be either 'debian' or 'alpine'."
+  echo "  additional_repos- The additional repos to use for the installation of debian-based systems (for example, the debian security repo)
   echo "If you do not specify the hostname and credentials, you will be prompted for them later."
 }
 
@@ -119,12 +120,13 @@ enable_root="${args['enable_root']}"
 username="${args['username']}"
 user_passwd="${args['user_passwd']}"
 disable_base="${args['disable_base']}"
+additional_repos="${args['additional_repos']}"
 
 chroot_command="$chroot_script \
   '$DEBUG' '$release_name' '$packages' \
   '$hostname' '$root_passwd' '$username' \
   '$user_passwd' '$enable_root' '$disable_base' \
-  '$arch'" 
+  '$arch' '$additional_repos'" 
 
 LC_ALL=C chroot $rootfs_dir /bin/sh -c "${chroot_command}"
 
