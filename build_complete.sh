@@ -16,7 +16,7 @@ print_help() {
   echo "  release      - Set this to either 'bookworm', 'trixie', or 'unstable' to build for Debian 12, 13, or unstable."
   echo "  distro       - The Linux distro to use. This should be either 'debian', 'ubuntu', or 'alpine'."
   echo "  luks         - Set this argument to encrypt the rootfs partition."
-  echo "  add_sec_repo - Whether to add the security repo for debian-based distros."
+  echo "  add_sec_repo - Whether to add the security repo for debian-based distros. Set to any value to enable."
 }
 
 assert_root
