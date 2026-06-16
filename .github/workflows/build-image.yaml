@@ -34,7 +34,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get upgrade -y
-          sudo DEBUG=1 ./build_complete.sh ${{ matrix.board }} compress_img=1 quiet=1
+          sudo DEBUG=1 ./build_complete.sh ${{ matrix.board }} compress_img=1 quiet=1 add_sec_repo=1
 
       - name: upload img
         uses: actions/upload-artifact@v4

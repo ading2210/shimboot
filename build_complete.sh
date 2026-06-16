@@ -16,6 +16,7 @@ print_help() {
   echo "  release      - Set this to either 'bookworm', 'trixie', or 'unstable' to build for Debian 12, 13, or unstable."
   echo "  distro       - The Linux distro to use. This should be either 'debian', 'ubuntu', or 'alpine'."
   echo "  luks         - Set this argument to encrypt the rootfs partition."
+  echo "  add_sec_repo - Whether to add the security repo for debian-based distros."
 }
 
 assert_root
@@ -34,6 +35,7 @@ arch="${args['arch']-amd64}"
 release="${args['release']}"
 distro="${args['distro']-debian}"
 luks="${args['luks']}"
+add_sec_repo="${args['add_sec_repo']}"
 
 #a list of all arm board names
 arm_boards="
@@ -270,8 +272,11 @@ if [ ! "$rootfs_dir" ]; then
   fi
 
   additional_repos=""
-  if [ "$distro" = "debian" ]; then
-    additional_repos="deb http://deb.debian.org/debian-security ${release}-security main contrib non-free"
+  if [ "$add_sec_repo" != "" ]; then
+    if [ "$distro" = "debian" ]; then
+      print_info "adding debian security repo"
+      additional_repos="deb http://deb.debian.org/debian-security ${release}-security main contrib non-free"
+    fi
   fi
 
   ./build_rootfs.sh $rootfs_dir $release \
@@ -281,7 +286,7 @@ if [ ! "$rootfs_dir" ]; then
     user_passwd=user \
     arch=$arch \
     distro=$distro \
-    additional_repos=$additional_repos
+    additional_repos="$additional_repos"
 fi
 
 print_title "patching $distro rootfs"
