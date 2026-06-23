@@ -26,7 +26,11 @@ custom_repo="https://shimboot.ading.dev/debian"
 custom_repo_domain="shimboot.ading.dev"
 sources_entry="deb [trusted=yes arch=$arch] ${custom_repo} ${release_name} main"
 
-# parse repos argument
+# parse repos argument(expects something like: deb ...,deb ...   
+#                             - without trailing or starting whitespace
+#                             (though it will just add whitespace to /etc/apt/sources.list
+#                             if this is the case))
+#                             - and if there is just one deb line, it should work fine in that case as well
 IFS=',' read -r -a _repos <<< "$additional_repos"
 additional_repos_entry=""
 for r in "${_repos[@]}"; do
@@ -36,7 +40,7 @@ done
 
 export DEBIAN_FRONTEND="noninteractive"
 
-#add shimboot repos
+#add shimboot repos and any additional repos
 echo -e "${sources_entry}\n${additional_repos_entry}\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list
 tee -a /etc/apt/preferences << END
 Package: *
@@ -48,8 +52,6 @@ END
 if [ "$arch" = "amd64" ]; then
   dpkg --add-architecture i386
 fi
-
-
 
 #install certs to prevent apt ssl errors
 apt-get install -y ca-certificates
