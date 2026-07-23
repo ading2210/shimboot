@@ -271,7 +271,6 @@ if [ ! "$rootfs_dir" ]; then
 
   additional_repos=""
   if [ "$distro" = "debian" ]; then
-    print_info "adding debian security repo"
     additional_repos="deb http://deb.debian.org/debian-security ${release}-security main contrib non-free"
   fi
 
