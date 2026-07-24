@@ -237,7 +237,7 @@ if [ ! "$rootfs_dir" ]; then
     username=user \
     user_passwd=user \
     arch="$arch" \
-    distro="$distro"
+    distro="$distro" \
     additional_repos="$additional_repos"
 fi
 
