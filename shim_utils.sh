@@ -3,11 +3,22 @@
 #utilties for reading shim disk images
 
 run_binwalk() {
-  if binwalk -h | grep -- '--run-as' >/dev/null; then
-    binwalk "$@" --run-as=root
-  else
-    binwalk "$@"
+  binwalk_cmd="python3 -m binwalk"
+  if ! $binwalk_cmd -h > /dev/null; then
+    binwalk_cmd="binwalk"
   fi
+  if $binwalk_cmd -h | grep -- '--run-as' >/dev/null; then
+    $binwalk_cmd "$@" --run-as=root
+  else
+    $binwalk_cmd "$@"
+  fi
+}
+
+#binwalk 3.x and newer is not supported
+#see https://github.com/ReFirmLabs/binwalk/issues/829
+supported_binwalk() {
+  #the --version flag only exists on the newer binwalk
+  ! run_binwalk --version >/dev/null 2>&1
 }
 
 #extract the initramfs from a kernel image

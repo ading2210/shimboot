@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ ! -x "./common.sh" ]; then
+  echo "error: other shell scripts are not executable. please clone this repository with the git command instead of downloading the .zip archive from the github website."
+  exit 1
+fi
+
 . ./common.sh
 . ./image_utils.sh
 
@@ -22,7 +27,7 @@ assert_root
 assert_args "$1"
 parse_args "$@"
 
-base_dir="$(realpath -m  $(dirname "$0"))"
+base_dir="$(realpath -m "$(dirname "$0")")"
 board="$1"
 
 compress_img="${args['compress_img']}"
@@ -71,7 +76,13 @@ if [ "$(check_deps "$needed_deps")" ]; then
   #install deps automatically on debian and ubuntu
   if [ -f "/etc/debian_version" ]; then
     print_title "attempting to install build deps"
-    apt-get install wget python3 unzip zip debootstrap cpio binwalk pcregrep cgpt kmod pv lz4 cryptsetup -y
+    apt-get install wget python3 unzip zip debootstrap cpio binwalk cgpt kmod pv lz4 cryptsetup -y
+    if apt-cache show pcre2-utils 2>/dev/null; then
+      apt-get install pcre2-utils -y
+    else
+      apt-get install pcregrep -y
+    fi
+    create_aliases
   fi
   assert_deps "$needed_deps"
 fi
@@ -91,14 +102,14 @@ fi
 
 cleanup_path=""
 sigint_handler() {
-  if [ $cleanup_path ]; then
-    rm -rf $cleanup_path
+  if [ "$cleanup_path" ]; then
+    rm -rf "$cleanup_path"
   fi
   exit 1
 }
 trap sigint_handler SIGINT
 
-shim_url="" #set this if you want to download from a third party mirror
+shim_url="https://dl.cros.download/files/$board/$board.zip"
 boards_url="https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=ChromeOS"
 
 if [ -z "$data_dir" ]; then
@@ -108,7 +119,7 @@ else
 fi
 
 print_title "downloading list of recovery images"
-reco_url="$(wget -qO- --show-progress $boards_url | python3 -c '
+reco_url="$(wget -qO- --show-progress "$boards_url" | python3 -c '
 import json, sys
 
 all_builds = json.load(sys.stdin)
@@ -126,12 +137,11 @@ if "models" in board:
 
 reco_url = list(board["pushRecoveries"].values())[-1]
 print(reco_url)
-' $board)"
+' "$board")"
 print_info "found url: $reco_url"
 
 shim_bin="$data_dir/shim_$board.bin"
 shim_zip="$data_dir/shim_$board.zip"
-shim_dir="$data_dir/shim_${board}_chunks"
 reco_bin="$data_dir/reco_$board.bin"
 reco_zip="$data_dir/reco_$board.zip"
 mkdir -p "$data_dir"
@@ -157,7 +167,7 @@ download_and_unzip() {
   local bin_path="$3"
   if [ ! -f "$bin_path" ]; then
     if [ ! "$quiet" ]; then
-      wget -q --show-progress $url -O "$zip_path" -c
+      wget -q --show-progress "$url" -O "$zip_path" -c
     else
       wget -q "$url" -O "$zip_path" -c
     fi
@@ -165,55 +175,6 @@ download_and_unzip() {
 
   if [ ! -f "$bin_path" ]; then
     extract_zip "$zip_path" "$bin_path"
-  fi
-}
-
-download_shim() {
-  print_info "downloading shim file manifest"
-  local boards_index="$(curl --no-progress-meter "https://cdn.cros.download/boards.txt")"
-  local shim_url_path="$(echo "$boards_index" | grep "/$board/").manifest"
-  local shim_url_dir="$(dirname "$shim_url_path")"
-  local shim_manifest="$(curl --no-progress-meter "https://cdn.cros.download/$shim_url_path")"
-  local py_load_json="import json, sys; manifest = json.load(sys.stdin)"
-
-  local zip_size="$(echo "$shim_manifest" | python3 -c "$py_load_json; print(manifest['size'])")"
-  local zip_size_pretty="$(echo "$zip_size" | numfmt --format %.2f --to=iec)"
-  local shim_chunks="$(echo "$shim_manifest" | python3 -c "$py_load_json; print('\\n'.join(manifest['chunks']))")"
-  local chunk_count="$(echo "$shim_chunks" | wc -l)"
-  local chunk_size="$((25 * 1024 * 1024))"
-
-  print_info "downloading shim file chunks (total $zip_size_pretty across $chunk_count chunks)"
-  mkdir -p "$shim_dir"
-  local i="0"
-  for shim_chunk in $shim_chunks; do
-    local chunk_url="https://cdn.cros.download/$shim_url_dir/$shim_chunk"
-    local chunk_path="$shim_dir/$shim_chunk"
-    local i="$(($i + 1))"
-    if [ -f "$chunk_path" ]; then
-      local existing_size="$(du -b "$chunk_path" | cut -f1)"
-      if [ "$existing_size" = "$chunk_size" ]; then
-        continue
-      fi
-    fi
-    print_info "downloading chunk $i / $chunk_count"
-    if [ ! "$quiet" ]; then
-      wget -c -q --show-progress "$chunk_url" -O "$chunk_path"
-    else
-      wget -c -q "$chunk_url" -O "$chunk_path"
-    fi
-  done
-
-  print_info "joining shim file chunks"
-  cleanup_path="$shim_zip"
-  if [ ! -f "$shim_bin" ]; then
-    cat "$shim_dir/"* | pv -s "$zip_size" > "$shim_zip"
-    rm -rf "$shim_dir"
-  fi
-  cleanup_path=""
-
-  print_info "extracting shim file"
-  if [ ! -f "$shim_bin" ]; then
-    extract_zip "$shim_zip" "$shim_bin"
   fi
 }
 
@@ -229,25 +190,21 @@ download_and_unzip "$reco_url" "$reco_zip" "$reco_bin"
 
 print_title "downloading shim image"
 if [ ! -f "$shim_bin" ]; then
-  if [ "$shim_url" ]; then
-    download_and_unzip "$shim_url" "$shim_zip" "$shim_bin"
-  else
-    download_shim "$shim_url" "$shim_zip" "$shim_bin"
-  fi
+  download_and_unzip "$shim_url" "$shim_zip" "$shim_bin"
 fi
 
 print_title "building $distro rootfs"
 if [ ! "$rootfs_dir" ]; then
   desktop_package="task-$desktop-desktop"
-  rootfs_dir="$(realpath -m data/rootfs_$board)"
+  rootfs_dir="$(realpath -m "data/rootfs_$board")"
   if [ "$(findmnt -T "$rootfs_dir/dev")" ]; then
-    sudo umount -l $rootfs_dir/* 2>/dev/null || true
+    sudo umount -l "$rootfs_dir"/* 2>/dev/null || true
   fi
-  rm -rf $rootfs_dir
-  mkdir -p $rootfs_dir
+  rm -rf "$rootfs_dir"
+  mkdir -p "$rootfs_dir"
 
   if [ "$distro" = "debian" ]; then
-    release="${release:-bookworm}"
+    release="${release:-trixie}"
   elif [ "$distro" = "ubuntu" ]; then
     release="${release:-noble}"
   elif [ "$distro" = "alpine" ]; then
@@ -262,7 +219,7 @@ if [ ! "$rootfs_dir" ]; then
     if [ ! -f "/usr/share/debootstrap/scripts/$release" ]; then
       print_info "installing newer debootstrap version"
       mirror_url="https://deb.debian.org/debian/pool/main/d/debootstrap/"
-      deb_file="$(curl "https://deb.debian.org/debian/pool/main/d/debootstrap/" | pcregrep -o1 'href="(debootstrap_.+?\.deb)"' | tail -n1)"
+      deb_file="$(wget -q -O - "https://deb.debian.org/debian/pool/main/d/debootstrap/" | pcregrep -o1 'href="(debootstrap_.+?\.deb)"' | tail -n1)"
       deb_url="${mirror_url}${deb_file}"
       wget -q --show-progress "$deb_url" -O "/tmp/$deb_file"
       apt-get install -y "/tmp/$deb_file"
@@ -274,23 +231,23 @@ if [ ! "$rootfs_dir" ]; then
     additional_repos="deb http://deb.debian.org/debian-security ${release}-security main contrib non-free"
   fi
 
-  ./build_rootfs.sh $rootfs_dir $release \
-    custom_packages=$desktop_package \
-    hostname=shimboot-$board \
+  ./build_rootfs.sh "$rootfs_dir" "$release" \
+    custom_packages="$desktop_package" \
+    hostname="shimboot-$board" \
     username=user \
     user_passwd=user \
-    arch=$arch \
-    distro=$distro \
+    arch="$arch" \
+    distro="$distro"
     additional_repos="$additional_repos"
 fi
 
 print_title "patching $distro rootfs"
-retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet"
+retry_cmd ./patch_rootfs.sh "$shim_bin" "$reco_bin" "$rootfs_dir" "quiet=$quiet"
 
 print_title "building final disk image"
 final_image="$data_dir/shimboot_$board.bin"
-rm -rf $final_image
-retry_cmd ./build.sh $final_image $shim_bin $rootfs_dir "quiet=$quiet" "arch=$arch" "name=$distro" "luks=$luks"
+rm -rf "$final_image"
+retry_cmd ./build.sh "$final_image" "$shim_bin" "$rootfs_dir" "quiet=$quiet" "arch=$arch" "name=$distro" "luks=$luks"
 print_info "build complete! the final disk image is located at $final_image"
 
 print_title "cleaning up"
@@ -299,7 +256,7 @@ clean_loops
 if [ "$compress_img" ]; then
   image_zip="$data_dir/shimboot_$board.zip"
   print_title "compressing disk image into a zip file"
-  zip -j $image_zip $final_image
+  zip -j "$image_zip" "$final_image"
   print_info "finished compressing the disk file"
   print_info "the finished zip file can be found at $image_zip" 
 fi

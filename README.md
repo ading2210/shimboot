@@ -69,11 +69,13 @@ Driver support depends on the device you are using shimboot on. The `patch_rootf
 | [`corsola`](https://cros.download/recovery/corsola) | yes               | yes               | no       | yes       | yes         | yes<sup>[5]</sup> | yes       | yes      |
 | [`hatch`](https://cros.download/recovery/hatch)     | yes               | yes<sup>[2]</sup> | no       | yes       | yes         | yes               | yes       | yes      |
 | [`snappy`](https://cros.download/recovery/snappy)   | yes               | yes               | yes      | yes       | yes         | yes               | yes       | yes      |
-| [`hana`](https://cros.download/recovery/hana)       | yes               | yes               | no       | yes       | untested    | yes               | yes       | no       |
+| [`hana`](https://cros.download/recovery/hana)       | yes<sup>[5]</sup> | yes               | no       | yes       | untested    | yes               | yes       | no       |
+| [`brya`](https://cros.download/recovery/brya)       | yes               | yes               | no       | yes       | untested    | yes               | yes       | yes      |
+| [`trogdor`](https://cros.download/recovery/trogdor) | yes               | no                | no       | yes       | untested    | yes               | untested  | untested |
 
 <sup>1. The kernel is too old.</sup><br>
 <sup>2. 5ghz wifi networks do not work, but 2.4ghz networks do.</sup><br>
-<sup>3. You may need to compile the wifi driver from source. See issue #69.</sup><br>
+<sup>3. You may need to compile the wifi driver from source. See [#69](https://github.com/ading2210/shimboot/issues/69) and [#317](https://github.com/ading2210/shimboot/issues/317).</sup><br>
 <sup>4. X11 and LightDM might have some graphical issues.</sup><br>
 <sup>5. You need to use Wayland instead of X11.</sup>
 
@@ -142,6 +144,8 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 5. Boot into Debian and log in with the username and password that you configured earlier. The default username/password for the prebuilt images is `user/user`.
 6. Expand the rootfs partition so that it fills up the entire disk by running `sudo expand_rootfs`.
 7. Change your own password by running `passwd user`. The root user is disabled by default.
+8. Set up locales by running `sudo dpkg-reconfigure locales`
+9. Change the timezone if needed by running `sudo dpkg-reconfigure tzdata`
 
 ## FAQ:
 
@@ -149,8 +153,8 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 Using any Linux distro is possible, provided that you apply the [proper patches](https://github.com/ading2210/chromeos-systemd) to systemd and recompile it. Most distros have some sort of bootstrapping tool that allows you to install it to a directory on your host PC. Then, you can just pass that rootfs directory into `patch_rootfs.sh` and `build.sh`.
 
 Here is a list of distros that are supported out of the box:
-- Debian 12 (Bookworm) - This is the default.
-- Debian 13 (Trixie)
+- Debian 12 (Bookworm)
+- Debian 13 (Trixie) - This is the default.
 - Debian Unstable (Sid)
 - Alpine Linux
 
@@ -243,11 +247,43 @@ The script will prompt you to set an encryption password. When booting the encry
 
 #### I can't connect to some wifi networks.
 You may have to run these commands in order to connect to certain networks:
-```
+```bash
 $ nmcli connection edit <your connection name>
 > set 802-11-wireless-security.pmf disable
 > save
 > activate
+```
+
+#### My binwalk version is unsupported.
+
+[Binwalk](https://github.com/ReFirmLabs/binwalk) is a tool that the Shimboot build scripts use to find and extract the initramfs from the shim kernel. Newer versions of binwalk (v3.x and higher) were rewritten in Rust for performance reasons. However, the new version is still feature incomplete and does not work for Shimboot's purposes. 
+
+Therefore, you need the older version of binwalk (v2.x) which was written in Python. To install it, run the following commands:
+
+```bash
+git clone https://salsa.debian.org/pkg-security-team/binwalk.git -b debian/2.4.3+dfsg1-2 --depth=1
+cd binwalk
+sudo python3 setup.py install
+```
+
+See the old [binwalk install instructions](https://salsa.debian.org/pkg-security-team/binwalk/-/blob/debian/2.4.3+dfsg1-2/INSTALL.md?ref_type=tags) for more information.
+
+#### How do I upgrade to a newer version of Debian?
+
+The process is similar to [an upgrade on a normal system](https://wiki.debian.org/DebianUpgrade), although be sure to keep any old files if prompted. Here's a quick rundown:
+
+1. Backup any important data in case of a failure. Ensure that you have lots of free disk space, otherwise you will likely end up with a broken system
+2. `sources.list`. Assuming an upgrade from Bookworm to Trixie, start by changing your `/etc/apt/sources.list` to replace `bookworm` with `trixie`:
+```
+deb [trusted=yes arch=amd64] https://shimboot.ading.dev/debian trixie main
+deb http://deb.debian.org/debian trixie main contrib non-free-firmware non-free
+```
+3. Run the following commands
+```bash
+sudo apt update
+sudo apt upgrade --without-new-pkgs
+sudo apt full-upgrade
+reboot
 ```
 
 ## Copyright:

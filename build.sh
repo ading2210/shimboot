@@ -20,13 +20,19 @@ assert_deps "cpio binwalk pcregrep realpath cgpt mkfs.ext4 mkfs.ext2 fdisk lz4"
 assert_args "$3"
 parse_args "$@"
 
+if ! supported_binwalk; then 
+  print_error "your version of binwalk is unsupported. you need binwalk 2.3.4 or older"
+  exit 1
+fi
+
 output_path="$(realpath -m "${1}")"
 shim_path="$(realpath -m "${2}")"
 rootfs_dir="$(realpath -m "${3}")"
+base_dir="$(realpath -m  $(dirname "$0"))"
 
 quiet="${args['quiet']}"
 arch="${args['arch']-amd64}"
-bootloader_part_name="${args['name']}"
+bootloader_part_name="${args['name']-default}"
 luks_enabled="${args['luks']}"
 
 if [ "$luks_enabled" ]; then
@@ -44,9 +50,9 @@ if [ "$luks_enabled" ]; then
   #download the tar into /tmp before extracting cryptsetup
   wget -q --show-progress "https://github.com/ading2210/shimboot-binaries/releases/latest/download/shimboot_binaries_$arch.tar.gz" -O "$temp_shimboot_binaries"
   #extract cryptsetup and delete the archive
-  tar -xf "$temp_shimboot_binaries" -C $(realpath -m "bootloader/bin/") "cryptsetup"
+  tar -xf "$temp_shimboot_binaries" -C "$base_dir/bootloader/bin" "cryptsetup"
   rm "$temp_shimboot_binaries"
-  chmod +x "$(realpath -m "bootloader/bin/")/cryptsetup"
+  chmod +x "$base_dir/bootloader/bin/cryptsetup"
 fi
 
 print_info "reading the shim image"
@@ -59,14 +65,14 @@ print_info "patching initramfs"
 patch_initramfs "$initramfs_dir"
 
 print_info "creating disk image"
-rootfs_size="$(du -sm $rootfs_dir | cut -f 1)"
-rootfs_part_size="$(($rootfs_size * 12 / 10 + 5))"
+rootfs_size="$(du -sm "$rootfs_dir" | cut -f 1)"
+rootfs_part_size="$((rootfs_size * 12 / 10 + 5))"
 #create a 20mb bootloader partition
 #rootfs partition is 20% larger than its contents
 create_image "$output_path" 20 "$rootfs_part_size" "$bootloader_part_name"
 
 print_info "creating loop device for the image"
-image_loop="$(create_loop ${output_path})"
+image_loop="$(create_loop "$output_path")"
 
 print_info "creating partitions on the disk image"
 create_partitions "$image_loop" "$kernel_img" "$luks_enabled" "$crypt_password"

@@ -20,7 +20,7 @@ invoke_terminal() {
   shift
   shift
   # Copied from factory_installer/factory_shim_service.sh.
-  echo "${title}" >>${tty}
+  echo "${title}" >>"${tty}"
   setsid sh -c "exec script -afqc '$*' /dev/null <${tty} >>${tty} 2>&1 &"
 }
 
@@ -51,7 +51,7 @@ find_rootfs_partitions() {
   fi
 
   for disk in $disks; do
-    local partitions=$(fdisk -l $disk | sed -n "s/^[ ]\+\([0-9]\+\).*shimboot_rootfs:\(.*\)$/\1:\2/p")
+    local partitions=$(fdisk -l "$disk" | sed -n "s/^[ ]\+\([0-9]\+\).*shimboot_rootfs:\(.*\)$/\1:\2/p")
     if [ ! "${partitions}" ]; then
       continue
     fi
@@ -79,8 +79,8 @@ find_chromeos_partitions() {
 }
 
 find_all_partitions() {
-  echo "$(find_chromeos_partitions)"
-  echo "$(find_rootfs_partitions)"
+  find_chromeos_partitions
+  find_rootfs_partitions
 }
 
 #from original bootstrap.sh
@@ -132,8 +132,8 @@ print_selector() {
   if [ "${rootfs_partitions}" ]; then
     for rootfs_partition in $rootfs_partitions; do
       #i don't know of a better way to split a string in the busybox shell
-      local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-      local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
+      local part_path=$(echo "$rootfs_partition" | cut -d ":" -f 1)
+      local part_name=$(echo "$rootfs_partition" | cut -d ":" -f 2)
       echo "${i}) ${part_name} on ${part_path}"
       i=$((i+1))
     done
@@ -175,9 +175,9 @@ get_selection() {
   fi
 
   for rootfs_partition in $rootfs_partitions; do
-    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
+    local part_path=$(echo "$rootfs_partition" | cut -d ":" -f 1)
+    local part_name=$(echo "$rootfs_partition" | cut -d ":" -f 2)
+    local part_flags=$(echo "$rootfs_partition" | cut -d ":" -f 3)
 
     if [ "$selection" = "$i" ]; then
       echo "selected $part_path"
@@ -213,9 +213,9 @@ print_donor_selector() {
   echo "Choose a partition to copy firmware and modules from:";
 
   for rootfs_partition in $rootfs_partitions; do
-    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
+    local part_path=$(echo "$rootfs_partition" | cut -d ":" -f 1)
+    local part_name=$(echo "$rootfs_partition" | cut -d ":" -f 2)
+    local part_flags=$(echo "$rootfs_partition" | cut -d ":" -f 3)
 
     if [ "$part_flags" = "CrOS" ]; then
       continue;
@@ -251,9 +251,9 @@ get_donor_selection() {
   read -p "Your selection: " selection
 
   for rootfs_partition in $rootfs_partitions; do
-    local part_path=$(echo $rootfs_partition | cut -d ":" -f 1)
-    local part_name=$(echo $rootfs_partition | cut -d ":" -f 2)
-    local part_flags=$(echo $rootfs_partition | cut -d ":" -f 3)
+    local part_path=$(echo "$rootfs_partition" | cut -d ":" -f 1)
+    local part_name=$(echo "$rootfs_partition" | cut -d ":" -f 2)
+    local part_flags=$(echo "$rootfs_partition" | cut -d ":" -f 3)
 
     if [ "$part_flags" = "CrOS" ]; then
       continue;
@@ -296,10 +296,10 @@ boot_target() {
   mkdir /newroot
   #use cryptsetup to check if the rootfs is encrypted
   if [ -x "$(command -v cryptsetup)" ] && cryptsetup luksDump "$target" >/dev/null 2>&1; then
-    cryptsetup open $target rootfs
-    mount /dev/mapper/rootfs /newroot
+    cryptsetup open --allow-discards "$target" rootfs
+    mount -o discard,noatime /dev/mapper/rootfs /newroot
   else
-    mount $target /newroot
+    mount -o discard,noatime "$target" /newroot
   fi
   #bind mount /dev/console to show systemd boot msgs
   if [ -f "/bin/frecon-lite" ]; then 
@@ -323,7 +323,7 @@ boot_chromeos() {
   
   echo "mounting target"
   mkdir /newroot
-  mount -o ro $target /newroot
+  mount -o ro "$target" /newroot
 
   echo "mounting tmpfs"
   mount -t tmpfs -o mode=1777 none /newroot/tmp
@@ -333,15 +333,15 @@ boot_chromeos() {
   echo "mounting donor partition"
   local donor_mount="/newroot/tmp/donor_mnt"
   local donor_files="/newroot/tmp/donor"
-  mkdir -p $donor_mount
-  mount -o ro $donor $donor_mount
+  mkdir -p "$donor_mount"
+  mount -o ro "$donor" "$donor_mount"
   echo "copying modules and firmware to tmpfs (this may take a while)"
-  copy_progress $donor_mount/lib/modules $donor_files/lib/modules
-  copy_progress $donor_mount/lib/firmware $donor_files/lib/firmware
-  mount -o bind $donor_files/lib/modules /newroot/lib/modules
-  mount -o bind $donor_files/lib/firmware /newroot/lib/firmware
-  umount $donor_mount
-  rm -rf $donor_mount
+  copy_progress "$donor_mount/lib/modules" "$donor_files/lib/modules"
+  copy_progress $donor_mount/lib/firmware "$donor_files/lib/firmware"
+  mount -o bind "$donor_files/lib/modules" /newroot/lib/modules
+  mount -o bind "$donor_files/lib/firmware" /newroot/lib/firmware
+  umount "$donor_mount"
+  rm -rf "$donor_mount"
 
   if [ -e "/newroot/etc/init/tpm-probe.conf" ]; then
     echo "applying chrome os flex patches"

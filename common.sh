@@ -72,3 +72,14 @@ print_info() {
 print_error() {
   printf "${ANSI_RED}${1}${ANSI_CLEAR}\n"
 }
+
+#pcregrep got replaced by pcre2grep on newer systems
+create_aliases() {
+  if command -v pcre2grep &> /dev/null; then
+    pcregrep() {
+      pcre2grep "$@"
+    }
+  fi
+}
+
+create_aliases

@@ -28,6 +28,7 @@ sources_entry="deb [trusted=yes arch=$arch] ${custom_repo} ${release_name} main"
 
 additional_repos_entry="${additional_repos//,/$'\n'}"
 export DEBIAN_FRONTEND="noninteractive"
+source /etc/profile
 
 #add shimboot repos and any additional repos
 echo -e "${sources_entry}\n$(cat /etc/apt/sources.list)\n${additional_repos_entry}" > /etc/apt/sources.list
@@ -43,7 +44,8 @@ if [ "$arch" = "amd64" ]; then
 fi
 
 #install certs to prevent apt ssl errors
-apt-get install -y ca-certificates
+#also install locales
+apt-get install -y ca-certificates locales
 apt-get update
 
 #fix apt repos for ubuntu
@@ -74,13 +76,14 @@ apt-get upgrade -y --allow-downgrades
 installed_systemd="$(dpkg-query -W -f='${binary:Package}\n' | grep "systemd")"
 apt-get clean
 apt-get install -y --reinstall --allow-downgrades $installed_systemd
+apt-get install -y systemd-resolved systemd-timesyncd
 
 #enable shimboot services
 systemctl enable kill-frecon.service
 
 #install base packages
 if [ ! "$disable_base_pkgs" ]; then
-  apt-get install -y cloud-utils zram-tools sudo command-not-found bash-completion libfuse2 libfuse3-*
+  apt-get install -y cloud-utils zram-tools sudo command-not-found bash-completion libfuse2 libfuse3-* croskbd
 
   #set up zram
   echo "ALGO=lzo" >> /etc/default/zramswap
@@ -115,20 +118,20 @@ apt-get install -y $packages
 #disable selinux to prevent a harmless error from showing up during the boot
 echo "SELINUX=disabled" >> /etc/selinux/config
 
-if [ ! $username ]; then
+if [ ! "$username" ]; then
   read -p "Enter the username for the user account: " username
 fi
-useradd -m -s /bin/bash -G sudo $username
+useradd -m -s /bin/bash -G sudo "$username"
 
 set_password() {
   local user="$1"
   local password="$2"
   if [ ! "$password" ]; then
-    while ! passwd $user; do
+    while ! passwd "$user"; do
       echo "Failed to set password for $user, please try again."
     done
   else
-    yes "$password" | passwd $user
+    yes "$password" | passwd "$user"
   fi
 }
 
@@ -136,7 +139,7 @@ if [ "$enable_root" ]; then
   echo "Enter a root password:"
   set_password root "$root_passwd"
 else
-  usermod -a -G sudo $username
+  usermod -a -G sudo "$username"
 fi
 
 echo "Enter a user password:"

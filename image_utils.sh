@@ -5,19 +5,19 @@ create_loop() {
     #we might run out of loop devices, see https://stackoverflow.com/a/66020349
     local major=$(grep loop /proc/devices | cut -c3)
     local number="$(echo "$loop_device" | grep -Eo '[0-9]+' | tail -n1)"
-    mknod $loop_device b $major $number
+    mknod "$loop_device" b "$major" "$number"
   fi
-  losetup -P $loop_device "${1}"
-  echo $loop_device
+  losetup -P "$loop_device" "${1}"
+  echo "$loop_device"
 }
 
 #set required flags on the kernel partition
 make_bootable() {
-  cgpt add -i 2 -S 1 -T 5 -P 10 -l kernel $1
+  cgpt add -i 2 -S 1 -T 5 -P 10 -l kernel "$1"
 }
 
 partition_disk() {
-  local image_path=$(realpath -m "${1}")
+  local image_path="$(realpath -m "$1")"
   local bootloader_size="$2"
   local rootfs_name="$3"
   #create partition table with fdisk
@@ -61,7 +61,7 @@ partition_disk() {
 
     #write changes
     echo w
-  ) | fdisk $image_path > /dev/null
+  ) | fdisk "$image_path" > /dev/null
 }
 
 safe_mount() {
@@ -69,43 +69,43 @@ safe_mount() {
   local dest="$2"
   local opts="$3"
   
-  umount $dest 2> /dev/null || /bin/true
-  rm -rf $dest
-  mkdir -p $dest
+  umount "$dest" 2> /dev/null || /bin/true
+  rm -rf "$dest"
+  mkdir -p "$dest"
   if [ "$opts" ]; then
-    mount $source $dest -o $opts
+    mount "$source" "$dest" -o "$opts"
   else
-    mount $source $dest
+    mount "$source" "$dest"
   fi
 }
 
 create_partitions() {
-  local image_loop=$(realpath -m "${1}")
-  local kernel_path=$(realpath -m "${2}")
-  local is_luks="${3}"
-  local crypt_password="${4}"
+  local image_loop="$(realpath -m "$1")"
+  local kernel_path="$(realpath -m "$2")"
+  local is_luks="$3"
+  local crypt_password="$4"
 
   #create stateful
   mkfs.ext4 "${image_loop}p1"
   #copy kernel
-  dd if=$kernel_path of="${image_loop}p2" bs=1M oflag=sync
-  make_bootable $image_loop
+  dd if="$kernel_path" of="${image_loop}p2" bs=1M oflag=sync
+  make_bootable "$image_loop"
   #create bootloader partition
   mkfs.ext2 "${image_loop}p3"
   #create rootfs partition
   if [ "$is_luks" ]; then
     echo "$crypt_password" | cryptsetup luksFormat "${image_loop}p4"
     echo "$crypt_password" | cryptsetup luksOpen "${image_loop}p4" rootfs
-    mkfs.ext4 /dev/mapper/rootfs
+    mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0 /dev/mapper/rootfs
   else 
-    mkfs.ext4 "${image_loop}p4"
+    mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0 "${image_loop}p4"
   fi
 }
 
 populate_partitions() {
-  local image_loop=$(realpath -m "${1}")
-  local bootloader_dir=$(realpath -m "${2}")
-  local rootfs_dir=$(realpath -m "${3}")
+  local image_loop="$(realpath -m "$1")"
+  local bootloader_dir="$(realpath -m "$2")"
+  local rootfs_dir="$(realpath -m "$3")"
   local quiet="$4"
   local luks_enabled="$5"
 
@@ -114,70 +114,70 @@ populate_partitions() {
   local git_hash="$(git rev-parse --short HEAD)"
 
   #mount and write empty file to stateful
-  local stateful_mount=/tmp/shim_stateful
-  safe_mount "${image_loop}p1" $stateful_mount
-  mkdir -p $stateful_mount/dev_image/etc/
-  mkdir -p $stateful_mount/dev_image/factory/sh
-  touch $stateful_mount/dev_image/etc/lsb-factory
-  umount $stateful_mount
+  local stateful_mount="/tmp/shim_stateful"
+  safe_mount "${image_loop}p1" "$stateful_mount"
+  mkdir -p "$stateful_mount/dev_image/etc/"
+  mkdir -p "$stateful_mount/dev_image/factory/sh"
+  touch "$stateful_mount/dev_image/etc/lsb-factory"
+  umount "$stateful_mount"
 
   #mount and write to bootloader rootfs
   local bootloader_mount="/tmp/shim_bootloader"
   safe_mount "${image_loop}p3" "$bootloader_mount"
-  cp -arv $bootloader_dir/* "$bootloader_mount"
+  cp -arv "$bootloader_dir"/* "$bootloader_mount"
   if [ ! "$git_tag" ]; then #mark it as a dev version if needed
-    printf "$git_hash" > "$bootloader_mount/opt/.shimboot_version_dev"
+    printf '%s' "$git_hash" > "$bootloader_mount/opt/.shimboot_version_dev"
   fi
   umount "$bootloader_mount"
 
   #write rootfs to image
-  local rootfs_mount=/tmp/new_rootfs
+  local rootfs_mount="/tmp/new_rootfs"
   if [ "$luks_enabled" ]; then
-    safe_mount /dev/mapper/rootfs $rootfs_mount
+    safe_mount /dev/mapper/rootfs "$rootfs_mount"
   else
-    safe_mount "${image_loop}p4" $rootfs_mount
+    safe_mount "${image_loop}p4" "$rootfs_mount"
   fi
 
   if [ "$quiet" ]; then
-    cp -ar $rootfs_dir/* $rootfs_mount
+    cp -ar "$rootfs_dir/"* "$rootfs_mount"
   else
-    copy_progress $rootfs_dir $rootfs_mount
+    copy_progress "$rootfs_dir" "$rootfs_mount"
   fi
-  umount $rootfs_mount
+  umount "$rootfs_mount"
   if [ "$luks_enabled" ]; then
     cryptsetup close rootfs
   fi
 }
 
 create_image() {
-  local image_path=$(realpath -m "${1}")
+  local image_path="$(realpath -m "$1")"
   local bootloader_size="$2"
   local rootfs_size="$3"
   local rootfs_name="$4"
   
   #stateful + kernel + bootloader + rootfs
-  local total_size=$((1 + 32 + $bootloader_size + $rootfs_size))
+  local total_size="$((1 + 32 + bootloader_size + rootfs_size))"
   rm -rf "${image_path}"
   fallocate -l "${total_size}M" "${image_path}"
-  partition_disk $image_path $bootloader_size $rootfs_name
+  partition_disk "$image_path" "$bootloader_size" "$rootfs_name"
 }
 
 patch_initramfs() {
-  local initramfs_path=$(realpath -m $1)
+  local initramfs_path="$(realpath -m "$1")"
 
   rm "${initramfs_path}/init" -f
   cp -r bootloader/* "${initramfs_path}/"
 
-  find ${initramfs_path}/bin -name "*" -exec chmod +x {} \;
+  find "$initramfs_path"/bin -name "*" -exec chmod +x {} \;
 }
 
 #clean up unused loop devices
 clean_loops() {
-  local loop_devices="$(losetup -a | awk -F':' {'print $1'})"
+  local loop_devices="$(losetup -a | awk -F':' '{print $1}')"
   for loop_device in $loop_devices; do
     local mountpoints="$(cat /proc/mounts | grep "$loop_device")"
     if [ ! "$mountpoints" ]; then
-      losetup -d $loop_device
+      losetup -d "$loop_device"
     fi
   done
 }
@@ -187,5 +187,5 @@ copy_progress() {
   local destination="$2"
   local total_bytes="$(du -sb "$source" | cut -f1)"
   mkdir -p "$destination"
-  tar -cf - -C "${source}" . | pv -f -s $total_bytes | tar -xf - -C "${destination}"
+  tar -cf - -C "${source}" . | pv -f -s "$total_bytes" | tar -xf - -C "${destination}"
 }
