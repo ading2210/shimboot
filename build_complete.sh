@@ -226,13 +226,19 @@ if [ ! "$rootfs_dir" ]; then
     fi
   fi
 
+  additional_repos=""
+  if [ "$distro" = "debian" ]; then
+    additional_repos="deb http://deb.debian.org/debian-security ${release}-security main contrib non-free"
+  fi
+
   ./build_rootfs.sh "$rootfs_dir" "$release" \
     custom_packages="$desktop_package" \
     hostname="shimboot-$board" \
     username=user \
     user_passwd=user \
     arch="$arch" \
-    distro="$distro"
+    distro="$distro" \
+    additional_repos="$additional_repos"
 fi
 
 print_title "patching $distro rootfs"

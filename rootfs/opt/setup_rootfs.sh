@@ -20,16 +20,18 @@ user_passwd="$7"
 enable_root="$8"
 disable_base_pkgs="$9"
 arch="${10}"
+additional_repos="${11}"
 
 custom_repo="https://shimboot.ading.dev/debian"
 custom_repo_domain="shimboot.ading.dev"
 sources_entry="deb [trusted=yes arch=$arch] ${custom_repo} ${release_name} main"
 
+additional_repos_entry="${additional_repos//,/$'\n'}"
 export DEBIAN_FRONTEND="noninteractive"
 source /etc/profile
 
-#add shimboot repos
-echo -e "${sources_entry}\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list
+#add shimboot repos and any additional repos
+echo -e "${sources_entry}\n$(cat /etc/apt/sources.list)\n${additional_repos_entry}" > /etc/apt/sources.list
 tee -a /etc/apt/preferences << END
 Package: *
 Pin: origin ${custom_repo_domain}
@@ -40,7 +42,6 @@ END
 if [ "$arch" = "amd64" ]; then
   dpkg --add-architecture i386
 fi
-
 
 #install certs to prevent apt ssl errors
 #also install locales
