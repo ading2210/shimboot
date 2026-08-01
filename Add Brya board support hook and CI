@@ -1,0 +1,1 @@
+Adds a local-only hook to copy board-specific kernel modules and firmware from data/board_modules/<board>/ into the built rootfs.  Exports BOARD in build_complete.sh and passes the board name to patch_rootfs.  Adds brya to the CI build matrix
