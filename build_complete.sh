@@ -279,7 +279,10 @@ if [ ! "$rootfs_dir" ]; then
 fi
 
 print_title "patching $distro rootfs"
-retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet"
+# export BOARD so patch_rootfs.sh can find board-specific modules in data/board_modules/$BOARD
+export BOARD="$board"
+retry_cmd ./patch_rootfs.sh $shim_bin $reco_bin $rootfs_dir "quiet=$quiet" "$board"
+unset BOARD
 
 print_title "building final disk image"
 final_image="$data_dir/shimboot_$board.bin"
