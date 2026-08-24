@@ -137,7 +137,11 @@ Note: If you are building for an ARM Chromebook, you need the `qemu-user-static`
 ### Booting the Image:
 1. Obtain a shimboot image by downloading a [prebuilt one](https://github.com/ading2210/shimboot/releases) or building it yourself. 
 2. Flash the shimboot image to a USB drive or SD card. Use the [Chromebook Recovery Utility](https://chrome.google.com/webstore/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm) or [dd](https://linux.die.net/man/1/dd) if you're on Linux.
-3. Enable developer mode on your Chromebook. If the Chromebook is enrolled, follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section).
+3. Enable developer mode on your Chromebook by pressing Esc + Refresh + Power, and once you get into the initial recovery screen, press Ctrl + D on your keyboard to confirm booting into Developer Mode.
+
+   - If the Chromebook is enrolled, there are two workarounds. On many modern Chromebooks, if Developer Mode immediately prompts you to re-enable OS verification (and also notes that Developer Mode is blocked by policy), you can bypass this by returning to the initial recovery screen. This would be clicking Esc + Refresh + Power again.
+   - If your enrolled Chromebook has never been upgraded to v112 before (check `chrome://version`), you can also follow the instructions on the [sh1mmer website](https://sh1mmer.me) (see the "Executing on Chromebook" section).
+
 4. Plug the USB into your Chromebook and enter recovery mode. It should detect the USB and run the shimboot bootloader.
 5. Boot into Debian and log in with the username and password that you configured earlier. The default username/password for the prebuilt images is `user/user`.
 6. Expand the rootfs partition so that it fills up the entire disk by running `sudo expand_rootfs`.
